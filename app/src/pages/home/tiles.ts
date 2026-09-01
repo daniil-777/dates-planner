@@ -19,6 +19,7 @@
  * | Memories | `#F31DED` | Gifts |
  * | Statement | `#256F3A` | Subscriptions |
  * | Settings | `#5B738B` | Home |
+ * | How it works | `#A45D00` | Cafes |
  *
  * A tile's accent is passed to CSS as `--home-accent` and used for the icon, the rule
  * across the top and the hover border — never for text, which stays on the theme's own
@@ -26,7 +27,8 @@
  */
 
 export type HomeTileId =
-  'scan' | 'ledger' | 'events' | 'calendar' | 'memories' | 'statement' | 'settings'
+  | 'scan' | 'ledger' | 'events' | 'calendar' | 'memories' | 'statement' | 'settings'
+  | 'howItWorks'
 
 export interface HomeTileSpec {
   id: HomeTileId
@@ -101,5 +103,13 @@ export const HOME_TILES: readonly HomeTileSpec[] = [
     icon: 'action-settings',
     accent: '#5B738B',
     hint: 'People, model, data',
+  },
+  {
+    id: 'howItWorks',
+    to: '/how-it-works',
+    label: 'How it works',
+    icon: 'learning-assistant',
+    accent: '#A45D00',
+    hint: 'The model, explained',
   },
 ]

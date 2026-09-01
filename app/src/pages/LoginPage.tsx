@@ -93,7 +93,7 @@ export function LoginPage({ onAuthenticated, notice = null }: LoginPageProps) {
         <header className="login__head">
           <BrandMark className="login__mark" />
           <h1 className="login__title">Two-Way Match</h1>
-          <p className="login__tagline">Spend management for two</p>
+          <p className="login__tagline">Date management for two</p>
         </header>
 
         <form className="login__form" onSubmit={handleSubmit} noValidate>

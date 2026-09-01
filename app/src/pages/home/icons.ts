@@ -5,7 +5,7 @@
  * empty box and logs a warning on every paint, so the page imports exactly what it draws.
  */
 
-// The seven tiles of FRONTEND-CONTRACT §8.
+// The eight tiles of FRONTEND-CONTRACT §8.
 import '@ui5/webcomponents-icons/dist/camera.js'
 import '@ui5/webcomponents-icons/dist/money-bills.js'
 import '@ui5/webcomponents-icons/dist/travel-itinerary.js'
@@ -13,6 +13,7 @@ import '@ui5/webcomponents-icons/dist/appointment-2.js'
 import '@ui5/webcomponents-icons/dist/heart.js'
 import '@ui5/webcomponents-icons/dist/newspaper.js'
 import '@ui5/webcomponents-icons/dist/action-settings.js'
+import '@ui5/webcomponents-icons/dist/learning-assistant.js'
 
 // The next-up strip: a nudge, a date in the diary, a year come round again.
 import '@ui5/webcomponents-icons/dist/bell.js'

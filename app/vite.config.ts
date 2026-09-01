@@ -51,7 +51,7 @@ export default defineConfig({
       manifest: {
         name: 'Two-Way Match',
         short_name: '2WM',
-        description: 'Household spend management',
+        description: 'Household date management',
         theme_color: '#0070F2',
         background_color: '#ffffff',
         display: 'standalone',

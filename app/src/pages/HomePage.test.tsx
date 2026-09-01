@@ -242,6 +242,7 @@ describe('the home grid', () => {
       '/memories',
       '/statement',
       '/settings',
+      '/how-it-works',
     ])
 
     for (const spec of HOME_TILES) {
@@ -346,7 +347,12 @@ describe('the home grid', () => {
 
     renderHome()
 
-    expect(screen.getAllByTestId('home-tile-shimmer')).toHaveLength(HOME_TILES.length)
+    // Every tile whose figure is still in flight shimmers. The write-up tile is the one
+    // exception by design: its figure is a constant (the article is a static asset), so it
+    // has nothing to wait for and shimmering would be a lie.
+    const awaited = HOME_TILES.filter(spec => spec.id !== 'howItWorks')
+    expect(screen.getAllByTestId('home-tile-shimmer')).toHaveLength(awaited.length)
+    expect(tile('howItWorks')).not.toHaveAttribute('aria-busy', 'true')
     // The destinations are reachable while their numbers are still in the post.
     expect(tile('ledger')).toHaveAttribute('href', '/ledger')
     expect(tile('ledger')).toHaveAttribute('aria-busy', 'true')

@@ -1,6 +1,6 @@
 # Two-Way Match
 
-> Spend management for a household.
+> Date management for a household.
 
 A private web app for however many people share the bill: scan a receipt, let a model
 post it to the right category, say who paid and which trip or dinner it belongs to,

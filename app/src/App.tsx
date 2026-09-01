@@ -2,6 +2,7 @@ import { Component, Suspense, lazy } from 'react'
 import type { ComponentType, ErrorInfo, ReactNode } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { AppShell } from './components/AppShell'
+import { AuthGate } from './components/AuthGate'
 import { ErrorState } from './components/ErrorState'
 import { LoadingSkeleton } from './components/LoadingSkeleton'
 import { HomePage } from './pages/HomePage'
@@ -38,6 +39,9 @@ const CalendarPage = lazyPage(() => import('./pages/CalendarPage'), 'CalendarPag
 const MemoriesPage = lazyPage(() => import('./pages/MemoriesPage'), 'MemoriesPage')
 const StatementPage = lazyPage(() => import('./pages/StatementPage'), 'StatementPage')
 const SettingsPage = lazyPage(() => import('./pages/SettingsPage'), 'SettingsPage')
+// The engineering write-up. Lazy because it is a 60 KB iframe host nobody loads on a
+// cold start, and it must never sit in the first-paint bundle.
+const HowItWorksPage = lazyPage(() => import('./pages/HowItWorksPage'), 'HowItWorksPage')
 
 interface BoundaryState {
   error: unknown
@@ -75,7 +79,8 @@ class RouteErrorBoundary extends Component<{ children: ReactNode }, BoundaryStat
  */
 export function App() {
   return (
-    <AppShell>
+    <AuthGate>
+      <AppShell>
       <RouteErrorBoundary>
         <Suspense fallback={<LoadingSkeleton rows={4} />}>
           <Routes>
@@ -88,11 +93,13 @@ export function App() {
             <Route path="/memories/*" element={<MemoriesPage />} />
             <Route path="/statement/*" element={<StatementPage />} />
             <Route path="/settings/*" element={<SettingsPage />} />
+            <Route path="/how-it-works" element={<HowItWorksPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Suspense>
       </RouteErrorBoundary>
-    </AppShell>
+      </AppShell>
+    </AuthGate>
   )
 }
 

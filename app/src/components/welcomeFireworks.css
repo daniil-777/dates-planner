@@ -1,0 +1,200 @@
+/*
+ * The sign-in firework. Three seconds, then `WelcomeFireworks` unmounts itself.
+ *
+ * Everything animated here is `transform` and `opacity` only — the two properties a
+ * browser can hand to the compositor — so eighty-odd particles cost no layout and no
+ * repaint. `will-change` is deliberately absent: the elements live for three seconds and
+ * promoting each one to its own layer costs more memory on a phone than it saves.
+ */
+
+.twm-fw {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  overflow: hidden;
+  /* The whole overlay is inert. A tap during the animation reaches the app underneath. */
+  pointer-events: none;
+}
+
+/* A soft wash so the greeting has something to sit on, whatever page is behind it. */
+.twm-fw__wash {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse 80% 60% at 50% 45%,
+    rgb(255 255 255 / 0.82) 0%,
+    rgb(255 255 255 / 0.5) 45%,
+    rgb(255 255 255 / 0) 78%
+  );
+  animation: twm-fw-wash 3s ease-out forwards;
+}
+
+:root[data-theme='dark'] .twm-fw__wash,
+:root:not([data-theme='light']) .twm-fw__wash {
+  background: radial-gradient(
+    ellipse 80% 60% at 50% 45%,
+    rgb(12 16 22 / 0.86) 0%,
+    rgb(12 16 22 / 0.55) 45%,
+    rgb(12 16 22 / 0) 78%
+  );
+}
+
+@keyframes twm-fw-wash {
+  0% { opacity: 0; }
+  12% { opacity: 1; }
+  72% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* ------------------------------------------------------------------ *
+ *  The pop
+ * ------------------------------------------------------------------ */
+
+/* An expanding ring at each burst origin — the flash the particles come out of. */
+.twm-fw__ring {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  margin: -7px 0 0 -7px;
+  border-radius: 50%;
+  border: 2px solid hsl(var(--hue) 95% 62%);
+  opacity: 0;
+  animation: twm-fw-ring 0.72s cubic-bezier(0.2, 0.7, 0.3, 1) var(--delay) both;
+}
+
+@keyframes twm-fw-ring {
+  0% { opacity: 0.95; transform: scale(0.3); border-width: 3px; }
+  100% { opacity: 0; transform: scale(9); border-width: 0.5px; }
+}
+
+/* ------------------------------------------------------------------ *
+ *  Hearts and stars
+ * ------------------------------------------------------------------ */
+
+.twm-fw__p {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  margin: -11px 0 0 -11px;
+  opacity: 0;
+  color: hsl(var(--hue) 92% 60%);
+  animation: twm-fw-fly 2.35s cubic-bezier(0.15, 0.75, 0.25, 1) var(--delay) both;
+}
+
+.twm-fw__p svg {
+  width: 100%;
+  height: 100%;
+  fill: currentColor;
+  /* The glow is what makes it read as a firework rather than as falling clip-art. */
+  filter: drop-shadow(0 0 6px hsl(var(--hue) 95% 62% / 0.85));
+  animation: twm-fw-spin var(--spin) linear var(--delay) infinite;
+}
+
+.twm-fw__p--star {
+  color: hsl(var(--hue) 96% 66%);
+}
+
+/* Travel: out fast, then drift and fade. */
+@keyframes twm-fw-fly {
+  0% { opacity: 0; transform: translate3d(0, 0, 0) scale(0.15); }
+  10% { opacity: 1; }
+  65% { opacity: 1; }
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--dx), var(--dy), 0) scale(var(--scale));
+  }
+}
+
+/* Spin lives on the inner svg so it composes with the outer translate instead of
+   fighting it for the same transform property. */
+@keyframes twm-fw-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(var(--rot)); }
+}
+
+/* ------------------------------------------------------------------ *
+ *  The greeting
+ * ------------------------------------------------------------------ */
+
+.twm-fw__card {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  transform: translate(-50%, -50%);
+  width: min(92vw, 30rem);
+  text-align: center;
+  animation: twm-fw-card 3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes twm-fw-card {
+  0% { opacity: 0; transform: translate(-50%, -42%) scale(0.86); }
+  14% { opacity: 1; transform: translate(-50%, -50%) scale(1.04); }
+  22% { transform: translate(-50%, -50%) scale(1); }
+  76% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -56%) scale(0.97); }
+}
+
+.twm-fw__hello {
+  margin: 0;
+  font-size: clamp(2.4rem, 9vw, 3.6rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  background: linear-gradient(100deg, #0070f2 0%, #7858ff 38%, #f31ded 72%, #ff8c3a 100%);
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: twm-fw-sheen 3s ease-in-out both;
+}
+
+@keyframes twm-fw-sheen {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 100% 50%; }
+}
+
+.twm-fw__line {
+  margin: 0.55rem 0 0;
+  font-size: clamp(0.98rem, 3.6vw, 1.2rem);
+  font-weight: 500;
+  line-height: 1.45;
+  color: #354a5f;
+  text-shadow: 0 1px 0 rgb(255 255 255 / 0.6);
+}
+
+:root[data-theme='dark'] .twm-fw__line,
+:root:not([data-theme='light']) .twm-fw__line {
+  color: #d8e0e8;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.5);
+}
+
+/* ------------------------------------------------------------------ *
+ *  Reduced motion
+ * ------------------------------------------------------------------ */
+
+/*
+ * The particles are not rendered at all in this mode (WelcomeFireworks.tsx skips them), so
+ * what is left is the greeting — which holds still, for the same three seconds, and fades.
+ * The sentence is the point; the fireworks are the decoration.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .twm-fw__card {
+    animation: twm-fw-quiet 3s ease-out both;
+  }
+
+  .twm-fw__hello {
+    animation: none;
+    background-position: 30% 50%;
+  }
+
+  .twm-fw__wash {
+    animation: twm-fw-quiet 3s ease-out both;
+  }
+
+  @keyframes twm-fw-quiet {
+    0% { opacity: 0; }
+    8% { opacity: 1; }
+    80% { opacity: 1; }
+    100% { opacity: 0; }
+  }
+}

@@ -56,7 +56,7 @@ const MORE_NAV = [HOME_ITEM, ...OVERFLOW_NAV]
 const MORE_BUTTON_ID = 'twm-more-nav'
 
 const PRODUCT_TITLE = 'Two-Way Match'
-const TAGLINE = 'Household spend management'
+const TAGLINE = 'Household date management'
 const ACTIVE_PERSON_KEY = 'twm.activePerson'
 
 /* ------------------------------------------------------------------ *

@@ -116,7 +116,7 @@ What the generator produces, with the four edits this app actually needs. Commen
 _schema-version: '3.2'
 ID: twoway-match
 version: 1.0.0
-description: Two-Way Match — household spend management
+description: Two-Way Match — household date management
 
 parameters:
   enable-parallel-deployments: true

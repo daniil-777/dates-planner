@@ -61,7 +61,7 @@ describe('LoginPage', () => {
 
     // The product, not a generic form.
     expect(screen.getByRole('heading', { name: 'Two-Way Match' })).toBeInTheDocument()
-    expect(screen.getByText('Spend management for two')).toBeInTheDocument()
+    expect(screen.getByText('Date management for two')).toBeInTheDocument()
     expect(screen.getByText(/Remember me for 7 days/)).toBeInTheDocument()
   })
 

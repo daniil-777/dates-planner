@@ -21,6 +21,7 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { AuthError, me } from '@/api/auth'
 import { LoginPage } from '@/pages/LoginPage'
+import { WelcomeFireworks } from '@/components/WelcomeFireworks'
 import '@/pages/login/login.css'
 
 export interface AuthGateProps {
@@ -44,6 +45,13 @@ function Deciding() {
 export function AuthGate({ children, fallback }: AuthGateProps) {
   const [phase, setPhase] = useState<Phase>('checking')
   const [notice, setNotice] = useState<string | null>(null)
+  /**
+   * Set only by {@link handleAuthenticated} — the callback `LoginPage` fires after a
+   * successful sign-in — and never by the mount-time check. That is the whole distinction
+   * between "you just signed in" and "you reloaded a page you were already signed into",
+   * and it is why a refresh does not set off fireworks.
+   */
+  const [celebrate, setCelebrate] = useState(false)
   // Guards against StrictMode's double-invoked mount effect: one check, one request.
   const asked = useRef(false)
 
@@ -70,10 +78,26 @@ export function AuthGate({ children, fallback }: AuthGateProps) {
     void check()
   }, [check])
 
-  if (phase === 'checking') return <>{fallback ?? <Deciding />}</>
-  if (phase === 'authenticated') return <>{children}</>
+  const handleAuthenticated = useCallback((): void => {
+    setCelebrate(true)
+    void check()
+  }, [check])
 
-  return <LoginPage notice={notice} onAuthenticated={() => void check()} />
+  if (phase === 'checking') return <>{fallback ?? <Deciding />}</>
+
+  // The app renders underneath from the first frame, so the three seconds are spent on a
+  // loaded page rather than in front of one. The overlay takes no pointer events, so a tap
+  // that lands during it reaches whatever it was aimed at.
+  if (phase === 'authenticated') {
+    return (
+      <>
+        {children}
+        {celebrate ? <WelcomeFireworks onDone={() => setCelebrate(false)} /> : null}
+      </>
+    )
+  }
+
+  return <LoginPage notice={notice} onAuthenticated={handleAuthenticated} />
 }
 
 export default AuthGate

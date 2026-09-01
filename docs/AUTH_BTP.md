@@ -58,7 +58,7 @@ belongs in review, not in a build step.
 {
   "xsappname": "twoway-match",
   "tenant-mode": "dedicated",
-  "description": "Two-Way Match — spend management for a household",
+  "description": "Two-Way Match — date management for a household",
 
   "scopes": [
     {

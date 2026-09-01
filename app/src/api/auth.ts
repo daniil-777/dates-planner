@@ -96,9 +96,20 @@ export function parseUser(payload: unknown): AuthUser | null {
   if (holder.authenticated === false) return null
 
   const username = readString(holder, ['username', 'user', 'name', 'id'])
-  if (username === null) return null
+  const personName = readString(holder, ['personName', 'displayName', 'name'])
 
-  return { username, displayName: readString(holder, ['displayName', 'name']) }
+  // `authenticated: true` is the answer; a username is not required to believe it.
+  // In development with no AUTH_* configured the server authenticates every request and
+  // reports {authenticated: true, username: null, personName: 'Partner A'} — there is no
+  // login to name. Insisting on a username here locked the whole app behind a sign-in
+  // form that nothing could satisfy, which is the worst possible failure mode for a
+  // credential-free dev setup.
+  if (username === null) {
+    if (holder.authenticated !== true) return null
+    return { username: personName ?? 'Signed in', displayName: personName }
+  }
+
+  return { username, displayName: personName }
 }
 
 /** Parses a JSON body, tolerating an empty one (a 204 logout has no body). */

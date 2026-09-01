@@ -113,6 +113,12 @@ export function HomePage() {
     memories: figureFromBoth<Memory[], Expense[]>(memoriesQuery, expensesQuery, memoriesFigure),
     statement: figureFrom<Statement[]>(statementsQuery, statementFigure),
     settings: figureFrom<Person[]>(peopleQuery, peopleFigure),
+    // The write-up is a static asset, so its figure never loads and never fails —
+    // it is simply what the article is.
+    howItWorks: {
+      status: 'ready',
+      figure: { kind: 'text', value: '10 sections', emphasis: 'number', caption: 'and a PDF' },
+    },
   }
 
   // The strip waits only while it has nothing at all to draw; once one stream has answered

@@ -116,7 +116,7 @@ test.describe('the app comes up', () => {
     // document title is what a browser tab and an installed PWA display.
     const shellbar = page.locator('ui5-shellbar')
     await expect(shellbar).toHaveAttribute('primary-title', 'Two-Way Match')
-    await expect(shellbar).toHaveAttribute('secondary-title', 'Household spend management')
+    await expect(shellbar).toHaveAttribute('secondary-title', 'Household date management')
     await expect(page).toHaveTitle(/Two-Way Match/)
   })
 
