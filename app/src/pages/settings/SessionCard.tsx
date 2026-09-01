@@ -17,12 +17,14 @@ import { Button, MessageStrip } from '@ui5/webcomponents-react'
 import '@ui5/webcomponents-icons/dist/log.js'
 import { me, type AuthUser } from '@/api/auth'
 import { useSignOut } from '@/components/useSignOut'
+import { useI18n } from '@/i18n'
 import { SettingsCard } from './SettingsCard'
 
 export function SessionCard() {
   const [user, setUser] = useState<AuthUser | null>(null)
   // Shared with the ShellBar's profile menu — see components/useSignOut.ts.
   const { signOut, busy, problem } = useSignOut()
+  const { t } = useI18n()
 
   useEffect(() => {
     let live = true
@@ -45,13 +47,20 @@ export function SessionCard() {
   return (
     <SettingsCard
       icon="log"
-      title="Session"
-      subtitle="Who this browser is signed in as, and how to stop being signed in."
+      title={t('settings.session.title', 'Session')}
+      subtitle={t(
+        'settings.session.subtitle',
+        'Who this browser is signed in as, and how to stop being signed in.',
+      )}
     >
       <p className="twm-settings-intro">
         {name === null
-          ? 'This browser has a session on the ledger.'
-          : `Signed in as ${name}. Sessions last a week, on this browser only.`}
+          ? t('settings.session.anonymous', 'This browser has a session on the ledger.')
+          : t(
+              'settings.session.signedInAs',
+              'Signed in as {name}. Sessions last a week, on this browser only.',
+              { name },
+            )}
       </p>
 
       {problem === null ? null : (
@@ -61,7 +70,7 @@ export function SessionCard() {
       )}
 
       <Button design="Transparent" icon="log" disabled={busy} onClick={signOut}>
-        {busy ? 'Signing out…' : 'Sign out'}
+        {busy ? t('shell.signingout', 'Signing out…') : t('shell.signout', 'Sign out')}
       </Button>
     </SettingsCard>
   )

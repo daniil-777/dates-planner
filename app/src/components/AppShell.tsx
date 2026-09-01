@@ -18,6 +18,7 @@ import { usePeople } from '../api/hooks'
 import { tokens } from '../theme'
 import { PersonAvatar } from './PersonAvatar'
 import { useSignOut } from './useSignOut'
+import { useI18n } from '@/i18n'
 import './components.css'
 
 /**
@@ -154,6 +155,13 @@ export function AppShell({ children }: AppShellProps) {
   const [switcherOpen, setSwitcherOpen] = useState(false)
   // One implementation, shared with the Session card in Settings — see useSignOut.ts.
   const signingOut = useSignOut()
+  const { t } = useI18n()
+
+  /** Nav labels come from the dictionary, keyed by route; the array stays the contract. */
+  const navLabel = (item: { to: string; label: string }): string => {
+    const key = item.to === '/ledger' ? 'expenses' : item.to.replace('/', '')
+    return t(`nav.${key}`, item.label)
+  }
   const [switcherOpener, setSwitcherOpener] = useState<HTMLElement | undefined>(undefined)
   const [moreOpen, setMoreOpen] = useState(false)
 
@@ -206,7 +214,7 @@ export function AppShell({ children }: AppShellProps) {
           <ShellBar
             className="twm-shellbar"
             primaryTitle={PRODUCT_TITLE}
-            secondaryTitle={TAGLINE}
+            secondaryTitle={t('app.tagline', TAGLINE)}
             logo={<img src="/favicon.svg" alt="" />}
             onLogoClick={() => navigate(HOME_ITEM.to)}
             profile={activePerson ? <PersonAvatar person={activePerson} size="M" /> : undefined}
@@ -233,7 +241,7 @@ export function AppShell({ children }: AppShellProps) {
                 }
               >
                 <Icon name={item.icon} className="twm-bottomnav__icon" />
-                <span className="twm-bottomnav__label">{item.label}</span>
+                <span className="twm-bottomnav__label">{navLabel(item)}</span>
               </NavLink>
             ))}
 
@@ -250,7 +258,7 @@ export function AppShell({ children }: AppShellProps) {
               onClick={() => setMoreOpen(true)}
             >
               <Icon name="overflow" className="twm-bottomnav__icon" />
-              <span className="twm-bottomnav__label">More</span>
+              <span className="twm-bottomnav__label">{t('nav.more', 'More')}</span>
             </button>
           </nav>
         )}
@@ -281,7 +289,7 @@ export function AppShell({ children }: AppShellProps) {
                   }}
                 >
                   <Icon name={item.icon} />
-                  <span>{item.label}</span>
+                  <span>{navLabel(item)}</span>
                 </button>
               ))}
             </div>
@@ -349,7 +357,11 @@ export function AppShell({ children }: AppShellProps) {
                 }}
               >
                 <Icon name="log" aria-hidden="true" />
-                <span>{signingOut.busy ? 'Signing out…' : 'Sign out'}</span>
+                <span>
+                  {signingOut.busy
+                    ? t('shell.signingout', 'Signing out…')
+                    : t('shell.signout', 'Sign out')}
+                </span>
               </button>
               {signingOut.problem === null ? null : (
                 <span className="twm-switcher__signout-error">{signingOut.problem}</span>

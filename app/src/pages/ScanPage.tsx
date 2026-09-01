@@ -17,6 +17,7 @@ import type { ReactElement } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { MessageStrip, Text, Title, Toast } from '@ui5/webcomponents-react'
 import { useCategories, useDeleteExpense, useEvents, useHealth, usePeople } from '@/api/hooks'
+import { useI18n } from '@/i18n'
 import type { Expense, MomentCode } from '@/api/types'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { ErrorState } from '@/components/ErrorState'
@@ -65,6 +66,7 @@ export function ScanPage(): ReactElement {
   // "not mock" then: a strip that flashes on every page load would be noise, and the real
   // answer arrives in milliseconds.
   const health = useHealth()
+  const { t } = useI18n()
   const docAiIsMock = health.data?.docai === 'mock'
   const deleteExpense = useDeleteExpense()
   const queue = useScanQueue()
@@ -269,9 +271,12 @@ export function ScanPage(): ReactElement {
 
   return (
     <div className="scan-page">
-      <Title level="H2">Scan</Title>
+      <Title level="H2">{t('scan.title', 'Scan')}</Title>
       <Text className="scan-hint">
-        Photograph a receipt. Document AI reads it, the classifier files it, you confirm it.
+        {t(
+          'scan.hint',
+          'Photograph a receipt. Document AI reads it, the classifier files it, you confirm it.',
+        )}
       </Text>
 
       {/*
@@ -287,9 +292,10 @@ export function ScanPage(): ReactElement {
       */}
       {docAiIsMock ? (
         <MessageStrip design="Critical" hideCloseButton className="scan-mock-strip">
-          Demo extraction — no Document AI credentials are configured, so these amounts come
-          from a bundled sample receipt and not from your photo. Check every field before
-          posting.
+          {t(
+            'scan.mock',
+            'Demo extraction — no Document AI credentials are configured, so these amounts come from a bundled sample receipt and not from your photo. Check every field before posting.',
+          )}
         </MessageStrip>
       ) : null}
 

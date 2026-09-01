@@ -25,6 +25,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ThemeProvider } from '@ui5/webcomponents-react'
 import { setTheme } from '@ui5/webcomponents-base/dist/config/Theme.js'
 import { registerSW } from 'virtual:pwa-register'
+import { I18nProvider } from './i18n'
 import { App } from './App'
 
 /* ------------------------------------------------------------------ *
@@ -132,7 +133,9 @@ createRoot(container).render(
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <BrowserRouter>
-          <App />
+          <I18nProvider>
+            <App />
+          </I18nProvider>
         </BrowserRouter>
       </ThemeProvider>
     </QueryClientProvider>

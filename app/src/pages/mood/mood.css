@@ -78,6 +78,9 @@
   background: var(--sapField_Background, #fff);
   color: inherit;
   font: inherit;
+  /* 16px: anything smaller makes iOS zoom on focus, and the zoom outlives the focus —
+     the whole app then sits "a bit bigger than the screen". login.css says the same. */
+  font-size: 1rem;
   resize: vertical;
 }
 

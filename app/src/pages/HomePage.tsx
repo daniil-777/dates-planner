@@ -21,6 +21,7 @@
  */
 
 import { useMemo } from 'react'
+import { useI18n } from '@/i18n'
 import { Title } from '@ui5/webcomponents-react'
 import type {
   CalendarEntry,
@@ -67,6 +68,7 @@ import { NEXT_UP_HORIZON_DAYS, addIsoDays, anniversarySeeds, buildNextUp } from 
 const NEXT_UP_COUNT = 3
 
 export function HomePage() {
+  const { t } = useI18n()
   const today = todayIso()
   const period = currentPeriod()
   const horizonEnd = useMemo(() => addIsoDays(today, NEXT_UP_HORIZON_DAYS), [today])
@@ -111,7 +113,12 @@ export function HomePage() {
     // than the tile is worth, and the page itself opens in one tap.
     mood: {
       status: 'ready',
-      figure: { kind: 'text', value: 'Check in', emphasis: 'number', caption: 'two seconds' },
+      figure: {
+        kind: 'text',
+        value: t('tile.mood.value', 'Check in'),
+        emphasis: 'number',
+        caption: t('tile.mood.caption', 'two seconds'),
+      },
     },
     ledger: figureFrom<PeriodTotals>(periodQuery, monthFigure),
     events: figureFrom<Event[]>(eventsQuery, events => eventsFigure(events, today)),

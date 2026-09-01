@@ -19,6 +19,7 @@
  */
 
 import { useEffect, useId, useRef, useState, type FormEvent } from 'react'
+import { useI18n } from '@/i18n'
 import { AuthError, login, type AuthUser } from '@/api/auth'
 import { BrandMark } from './login/BrandMark'
 import { AlertIcon, EyeIcon, EyeOffIcon, ShieldIcon } from './login/icons'
@@ -38,6 +39,7 @@ export interface LoginPageProps {
 const UNEXPECTED = 'Could not sign in. Try again.'
 
 export function LoginPage({ onAuthenticated, notice = null }: LoginPageProps) {
+  const { t } = useI18n()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [revealed, setRevealed] = useState(false)
@@ -93,13 +95,13 @@ export function LoginPage({ onAuthenticated, notice = null }: LoginPageProps) {
         <header className="login__head">
           <BrandMark className="login__mark" />
           <h1 className="login__title">Two-Way Match</h1>
-          <p className="login__tagline">Date management for two</p>
+          <p className="login__tagline">{t('login.tagline', 'Date management for two')}</p>
         </header>
 
         <form className="login__form" onSubmit={handleSubmit} noValidate>
           <div className="login-field">
             <label className="login-field__label" htmlFor={usernameId}>
-              Username
+              {t('login.username', 'Username')}
             </label>
             <div className="login-field__box">
               <input
@@ -123,7 +125,7 @@ export function LoginPage({ onAuthenticated, notice = null }: LoginPageProps) {
 
           <div className="login-field">
             <label className="login-field__label" htmlFor={passwordId}>
-              Password
+              {t('login.password', 'Password')}
             </label>
             <div className="login-field__box">
               <input
@@ -165,7 +167,7 @@ export function LoginPage({ onAuthenticated, notice = null }: LoginPageProps) {
 
           <button type="submit" className="login__submit" disabled={busy} aria-busy={busy}>
             {busy && <span className="login__spin" aria-hidden="true" />}
-            {busy ? 'Signing in…' : 'Sign in'}
+            {busy ? t('login.working', 'Signing in…') : t('login.submit', 'Sign in')}
           </button>
 
           <p className="login__note">

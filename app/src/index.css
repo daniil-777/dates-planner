@@ -40,6 +40,7 @@
 
 * {
   box-sizing: border-box;
+
 }
 
 html,
@@ -579,5 +580,38 @@ a {
 
   .twm-main {
     padding: 0;
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ *  iOS input zoom
+ * ------------------------------------------------------------------ */
+
+/*
+ * Safari zooms the page when focus lands in a control whose font is under 16px, and the
+ * zoom outlives the focus — the app is then permanently "a bit bigger than the screen"
+ * until a pinch. The viewport meta's maximum-scale suppresses the auto-zoom (deliberate
+ * pinch zoom still works on iOS); this rule removes the cause as well, for every plain
+ * form control now and in the future. UI5 web components render their inputs in shadow
+ * DOM where this cannot reach — they inherit --sapFontSize, raised for coarse pointers
+ * below.
+ */
+input,
+select,
+textarea {
+  font-size: max(1rem, 1em);
+}
+
+/* On touch screens, UI5's own inputs must clear the same 16px bar. Scoped to coarse
+   pointers so desktop keeps the denser Fiori metrics it was designed around. */
+@media (pointer: coarse) {
+  ui5-input,
+  ui5-textarea,
+  ui5-combobox,
+  ui5-select,
+  ui5-date-picker,
+  ui5-step-input {
+    font-size: 1rem;
+    --sapFontSize: 1rem;
   }
 }

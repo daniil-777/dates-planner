@@ -24,6 +24,7 @@ import { Button, MessageStrip, Text, Title } from '@ui5/webcomponents-react'
 import { useCreateMood, useDetectMood, useMoods } from '@/api/hooks'
 import type { Mood, MoodSuggestion } from '@/api/types'
 import { useActivePerson } from '@/components/AppShell'
+import { useI18n } from '@/i18n'
 import { ErrorState } from '@/components/ErrorState'
 import { LoadingSkeleton } from '@/components/LoadingSkeleton'
 import { ApiError } from '@/api/client'
@@ -61,6 +62,7 @@ export function MoodPage(): ReactElement {
   const createMood = useCreateMood()
   const detect = useDetectMood()
   const { person } = useActivePerson()
+  const { t } = useI18n()
 
   const [level, setLevel] = useState<number | null>(null)
   const [note, setNote] = useState('')
@@ -128,9 +130,13 @@ export function MoodPage(): ReactElement {
 
   return (
     <div className="mood-page">
-      <Title level="H2">Mood</Title>
+      <Title level="H2">{t('mood.title', 'Mood')}</Title>
       <Text className="mood-hint">
-        How is {person?.name ?? 'today'} doing? Tap a face — or let the camera have a guess.
+        {person === null
+          ? t('mood.hint.today', 'How is today going? Tap a face — or let the camera have a guess.')
+          : t('mood.hint.named', 'How is {name} doing? Tap a face — or let the camera have a guess.', {
+              name: person.name,
+            })}
       </Text>
 
       {/* ------------------------------------------------ the picker */}
@@ -150,7 +156,7 @@ export function MoodPage(): ReactElement {
               <span className="mood-scale__emoji" aria-hidden="true">
                 {entry.face}
               </span>
-              <span className="mood-scale__word">{entry.word}</span>
+              <span className="mood-scale__word">{t(`mood.level.${entry.level}`, entry.word)}</span>
             </button>
           ))}
         </div>
@@ -165,7 +171,7 @@ export function MoodPage(): ReactElement {
 
         <textarea
           className="mood-note"
-          placeholder="A sentence about it, if you want (optional)"
+          placeholder={t('mood.note.placeholder', 'A sentence about it, if you want (optional)')}
           maxLength={NOTE_LIMIT}
           value={note}
           onChange={event => setNote(event.target.value)}
@@ -178,7 +184,7 @@ export function MoodPage(): ReactElement {
             disabled={level === null || createMood.isPending}
             onClick={() => level !== null && save(level, suggestion === null ? 'manual' : 'face')}
           >
-            {createMood.isPending ? 'Saving…' : 'Save mood'}
+            {createMood.isPending ? t('mood.saving', 'Saving…') : t('mood.save', 'Save mood')}
           </Button>
 
           {detectionUnavailable ? null : (
@@ -188,7 +194,7 @@ export function MoodPage(): ReactElement {
               disabled={detect.isPending}
               onClick={() => cameraRef.current?.click()}
             >
-              {detect.isPending ? 'Looking…' : 'Scan my face'}
+              {detect.isPending ? t('mood.scanning', 'Looking…') : t('mood.scan', 'Scan my face')}
             </Button>
           )}
           <input
@@ -204,13 +210,17 @@ export function MoodPage(): ReactElement {
 
         {detectionUnavailable ? (
           <MessageStrip design="Information" hideCloseButton>
-            Face scanning is off — the server has no AI key configured. The picker above works
-            without it.
+            {t(
+              'mood.detection.off',
+              'Face scanning is off — the server has no AI key configured. The picker above works without it.',
+            )}
           </MessageStrip>
         ) : (
           <p className="mood-privacy">
-            The photo is analysed and immediately discarded — it is never stored, only the
-            reading is.
+            {t(
+              'mood.privacy',
+              'The photo is analysed and immediately discarded — it is never stored, only the reading is.',
+            )}
           </p>
         )}
 
@@ -221,22 +231,24 @@ export function MoodPage(): ReactElement {
         )}
         {saved ? (
           <MessageStrip design="Positive" hideCloseButton>
-            Saved. Come back whenever the weather changes.
+            {t('mood.saved', 'Saved. Come back whenever the weather changes.')}
           </MessageStrip>
         ) : null}
       </section>
 
       {/* ------------------------------------------------ the record */}
       <section className="mood-card" aria-label="Recent moods">
-        <Title level="H4">Lately</Title>
+        <Title level="H4">{t('mood.lately', 'Lately')}</Title>
         {moods.isPending ? (
           <LoadingSkeleton rows={3} />
         ) : moods.isError ? (
           <ErrorState error={moods.error} onRetry={() => void moods.refetch()} />
         ) : rows.length === 0 ? (
           <Text className="mood-empty">
-            Nothing yet. The first entry takes about two seconds; the chart of your year takes
-            three hundred of them.
+            {t(
+              'mood.empty',
+              'Nothing yet. The first entry takes about two seconds; the chart of your year takes three hundred of them.',
+            )}
           </Text>
         ) : (
           <ul className="mood-list">
@@ -250,8 +262,8 @@ export function MoodPage(): ReactElement {
                   <span className="mood-list__text">
                     {entry.note ??
                       (entry.source === 'face' && entry.detected !== null
-                        ? `Camera read: ${entry.detected}`
-                        : LEVELS[entry.level - 1]?.word ?? '')}
+                        ? t('mood.camera.read', 'Camera read: {label}', { label: entry.detected })
+                        : t(`mood.level.${entry.level}`, LEVELS[entry.level - 1]?.word ?? ''))}
                   </span>
                 </span>
                 {entry.source === 'face' ? (

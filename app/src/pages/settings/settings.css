@@ -493,3 +493,27 @@
   color: var(--sapButton_Selected_TextColor, #fff);
   font-weight: 700;
 }
+
+/* ------------------------------------------------------------------ language */
+
+.twm-lang {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.twm-lang__option {
+  flex: 1;
+  padding: 0.6rem 0.5rem;
+  border: 2px solid var(--sapList_BorderColor, rgb(0 0 0 / 0.12));
+  border-radius: 0.6rem;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.twm-lang__option--active {
+  border-color: var(--sapButton_Emphasized_Background, #0070f2);
+  background: var(--sapList_SelectionBackgroundColor, #e5f0fa);
+}

@@ -9,6 +9,7 @@
 import { useCallback, useState } from 'react'
 import { MessageStrip, Title } from '@ui5/webcomponents-react'
 import '@ui5/webcomponents-icons/dist/group.js'
+import '@ui5/webcomponents-icons/dist/world.js'
 import { usePeople } from '@/api/hooks'
 import { ErrorState } from '@/components/ErrorState'
 import { LoadingSkeleton } from '@/components/LoadingSkeleton'
@@ -17,6 +18,7 @@ import { BankImport } from './settings/BankImport'
 import { OnboardingWizard } from './settings/OnboardingWizard'
 import { AddPerson, PersonEditor } from './settings/PeopleSettings'
 import { PlannerCard } from './settings/PlannerCard'
+import { LanguageCard } from './settings/LanguageCard'
 import { SessionCard } from './settings/SessionCard'
 import { SettingsCard } from './settings/SettingsCard'
 import { SystemCard } from './settings/SystemCard'
@@ -95,6 +97,8 @@ export function SettingsPage() {
         <PlannerCard />
 
         <BankImport id={IMPORT_ANCHOR} />
+
+        <LanguageCard />
 
         <SessionCard />
 

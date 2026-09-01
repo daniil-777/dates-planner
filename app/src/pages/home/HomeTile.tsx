@@ -1,4 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react'
+import { useI18n } from '@/i18n'
 import { Icon } from '@ui5/webcomponents-react'
 import { Link } from 'react-router-dom'
 import { MoneyText } from '@/components/MoneyText'
@@ -53,8 +54,11 @@ function figureContent(figure: FigureState): ReactNode {
  * property and colours the rule, the icon and the hover border — never the text.
  */
 export function HomeTile({ spec, figure }: HomeTileProps) {
+  const { t } = useI18n()
   const caption =
-    figure.status === 'ready' && figure.figure.caption !== null ? figure.figure.caption : spec.hint
+    figure.status === 'ready' && figure.figure.caption !== null
+      ? figure.figure.caption
+      : t(`tile.${spec.id}.hint`, spec.hint)
 
   return (
     <li className="home-grid__cell">
@@ -68,7 +72,7 @@ export function HomeTile({ spec, figure }: HomeTileProps) {
         <span className="home-tile__icon" aria-hidden="true">
           <Icon name={spec.icon} className="home-tile__glyph" />
         </span>
-        <span className="home-tile__label">{spec.label}</span>
+        <span className="home-tile__label">{t(`tile.${spec.id}.label`, spec.label)}</span>
         <span className="home-tile__figure">{figureContent(figure)}</span>
         <span className="home-tile__hint">{caption}</span>
       </Link>
