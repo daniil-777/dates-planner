@@ -1,0 +1,313 @@
+{
+  "id": "e7a2c410-9b5d-4c88-a3f1-7d0e6b4a2c55",
+  "status": "DONE",
+  "fileName": "hotel-rheinblick-rechnung-RG-2026-000487.pdf",
+  "fileType": "pdf",
+  "clientId": "default",
+  "documentType": "invoice",
+  "schemaId": "c1b7d905-4e33-4a0e-8f2b-5a6c9d3e1b74",
+  "country": "DE",
+  "created": "2026-02-15T09:12:44.907Z",
+  "finished": "2026-02-15T09:12:58.331Z",
+  "processedTime": 13.424,
+  "extraction": {
+    "headerFields": [
+      {
+        "name": "senderName",
+        "category": "header",
+        "value": "Hotel Rheinblick Konstanz GmbH",
+        "type": "string",
+        "page": 1,
+        "confidence": 0.942,
+        "coordinates": { "x": 0.081, "y": 0.062, "w": 0.412, "h": 0.024 }
+      },
+      {
+        "name": "senderAddress",
+        "category": "header",
+        "value": "Seestraße 24\n78462 Konstanz\nDeutschland",
+        "type": "string",
+        "page": 1,
+        "confidence": 0.571,
+        "coordinates": { "x": 0.081, "y": 0.089, "w": 0.334, "h": 0.071 }
+      },
+      {
+        "name": "documentDate",
+        "category": "header",
+        "value": "12. Februar 2026",
+        "type": "date",
+        "page": 1,
+        "confidence": 0.786,
+        "coordinates": { "x": 0.612, "y": 0.176, "w": 0.281, "h": 0.023 }
+      },
+      {
+        "name": "documentNumber",
+        "category": "header",
+        "value": "RG-2026-000487",
+        "type": "string",
+        "page": 1,
+        "confidence": 0.951,
+        "coordinates": { "x": 0.612, "y": 0.203, "w": 0.281, "h": 0.023 }
+      },
+      {
+        "name": "currencyCode",
+        "category": "header",
+        "value": "EUR",
+        "type": "string",
+        "page": 1,
+        "confidence": 0.973,
+        "coordinates": { "x": 0.688, "y": 0.741, "w": 0.072, "h": 0.022 }
+      },
+      {
+        "name": "grossAmount",
+        "category": "header",
+        "value": "1.234,50",
+        "type": "number",
+        "page": 1,
+        "confidence": 0.968,
+        "coordinates": { "x": 0.772, "y": 0.741, "w": 0.146, "h": 0.026 }
+      },
+      {
+        "name": "netAmount",
+        "category": "header",
+        "value": "1.119,10",
+        "type": "number",
+        "page": 1,
+        "confidence": 0.917,
+        "coordinates": { "x": 0.772, "y": 0.694, "w": 0.146, "h": 0.022 }
+      },
+      {
+        "name": "taxAmount",
+        "category": "header",
+        "value": "115,40",
+        "type": "number",
+        "page": 1,
+        "confidence": 0.884,
+        "coordinates": { "x": 0.772, "y": 0.717, "w": 0.146, "h": 0.022 }
+      },
+      {
+        "name": "receiverName",
+        "category": "header",
+        "value": "Zimmer 214 · Doppelzimmer Seeblick",
+        "type": "string",
+        "page": 1,
+        "confidence": 0.698,
+        "coordinates": { "x": 0.081, "y": 0.241, "w": 0.386, "h": 0.023 }
+      },
+      {
+        "name": "paymentTerms",
+        "category": "header",
+        "value": "Zahlbar sofort ohne Abzug · EC-Karte",
+        "type": "string",
+        "page": 1,
+        "confidence": 0.735,
+        "coordinates": { "x": 0.081, "y": 0.812, "w": 0.476, "h": 0.023 }
+      }
+    ],
+    "lineItems": [
+      [
+        {
+          "name": "description",
+          "category": "details",
+          "value": "Übernachtung Doppelzimmer Seeblick (09.02.-12.02.)",
+          "type": "string",
+          "page": 1,
+          "confidence": 0.934
+        },
+        {
+          "name": "quantity",
+          "category": "details",
+          "value": "3",
+          "type": "number",
+          "page": 1,
+          "confidence": 0.961
+        },
+        {
+          "name": "unitPrice",
+          "category": "details",
+          "value": "289,00",
+          "type": "number",
+          "page": 1,
+          "confidence": 0.947
+        },
+        {
+          "name": "netAmount",
+          "category": "details",
+          "value": "867,00",
+          "type": "number",
+          "page": 1,
+          "confidence": 0.958
+        }
+      ],
+      [
+        {
+          "name": "description",
+          "category": "details",
+          "value": "Frühstücksbuffet",
+          "type": "string",
+          "page": 1,
+          "confidence": 0.926
+        },
+        {
+          "name": "quantity",
+          "category": "details",
+          "value": "6",
+          "type": "number",
+          "page": 1,
+          "confidence": 0.955
+        },
+        {
+          "name": "unitPrice",
+          "category": "details",
+          "value": "24,00",
+          "type": "number",
+          "page": 1,
+          "confidence": 0.941
+        },
+        {
+          "name": "netAmount",
+          "category": "details",
+          "value": "144,00",
+          "type": "number",
+          "page": 1,
+          "confidence": 0.949
+        }
+      ],
+      [
+        {
+          "name": "description",
+          "category": "details",
+          "value": "Restaurant Seeterrasse, Abendessen 10.02.",
+          "type": "string",
+          "page": 1,
+          "confidence": 0.888
+        },
+        {
+          "name": "quantity",
+          "category": "details",
+          "value": "1",
+          "type": "number",
+          "page": 1,
+          "confidence": 0.963
+        },
+        {
+          "name": "unitPrice",
+          "category": "details",
+          "value": "128,50",
+          "type": "number",
+          "page": 1,
+          "confidence": 0.932
+        },
+        {
+          "name": "netAmount",
+          "category": "details",
+          "value": "128,50",
+          "type": "number",
+          "page": 1,
+          "confidence": 0.944
+        }
+      ],
+      [
+        {
+          "name": "description",
+          "category": "details",
+          "value": "Minibar",
+          "type": "string",
+          "page": 1,
+          "confidence": 0.914
+        },
+        {
+          "name": "quantity",
+          "category": "details",
+          "value": "1",
+          "type": "number",
+          "page": 1,
+          "confidence": 0.958
+        },
+        {
+          "name": "unitPrice",
+          "category": "details",
+          "value": "38,60",
+          "type": "number",
+          "page": 1,
+          "confidence": 0.903
+        },
+        {
+          "name": "netAmount",
+          "category": "details",
+          "value": "38,60",
+          "type": "number",
+          "page": 1,
+          "confidence": 0.921
+        }
+      ],
+      [
+        {
+          "name": "description",
+          "category": "details",
+          "value": "Tiefgarage Stellplatz",
+          "type": "string",
+          "page": 1,
+          "confidence": 0.897
+        },
+        {
+          "name": "quantity",
+          "category": "details",
+          "value": "3",
+          "type": "number",
+          "page": 1,
+          "confidence": 0.952
+        },
+        {
+          "name": "unitPrice",
+          "category": "details",
+          "value": "15,00",
+          "type": "number",
+          "page": 1,
+          "confidence": 0.936
+        },
+        {
+          "name": "netAmount",
+          "category": "details",
+          "value": "45,00",
+          "type": "number",
+          "page": 1,
+          "confidence": 0.943
+        }
+      ],
+      [
+        {
+          "name": "description",
+          "category": "details",
+          "value": "Kurbeitrag pro Person und Nacht",
+          "type": "string",
+          "page": 1,
+          "confidence": 0.869
+        },
+        {
+          "name": "quantity",
+          "category": "details",
+          "value": "6",
+          "type": "number",
+          "page": 1,
+          "confidence": 0.948
+        },
+        {
+          "name": "unitPrice",
+          "category": "details",
+          "value": "1,90",
+          "type": "number",
+          "page": 1,
+          "confidence": 0.912
+        },
+        {
+          "name": "netAmount",
+          "category": "details",
+          "value": "11,40",
+          "type": "number",
+          "page": 1,
+          "confidence": 0.927
+        }
+      ]
+    ]
+  }
+}

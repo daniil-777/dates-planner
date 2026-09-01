@@ -1,0 +1,607 @@
+/* Ledger — mobile first. The page sits inside `.twm-main` from the shell, which already
+   owns the outer padding and the safe-area insets; colours are Horizon theme parameters so
+   the page follows sap_horizon → sap_horizon_dark without a second palette. */
+
+.ledger {
+  gap: var(--twm-space-m);
+}
+
+/* Sticky under the ShellBar, which is 2.75rem tall and sits above the safe area. */
+.ledger__bar {
+  position: sticky;
+  top: calc(var(--twm-safe-top) + 2.75rem);
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: var(--twm-space-s);
+  padding: var(--twm-space-s) 0;
+  background: var(--sapBackgroundColor, #f5f6f7);
+  border-bottom: 1px solid var(--twm-border);
+}
+
+.ledger__bar-spacer {
+  flex: 1 1 auto;
+}
+
+.ledger__month {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.ledger__month ui5-select {
+  min-width: 10.5rem;
+}
+
+.ledger-touch {
+  min-width: var(--twm-touch);
+  min-height: var(--twm-touch);
+}
+
+.ledger__section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.ledger__section-title {
+  margin: 0.75rem 0 0;
+}
+
+/* ---------- totals cards ---------- */
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.5rem;
+}
+
+@media (min-width: 700px) {
+  .kpi-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+    align-items: stretch;
+  }
+}
+
+.kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.85rem 1rem;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.kpi__label {
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--twm-muted);
+}
+
+.kpi__value {
+  font-size: 1.6rem;
+  line-height: 1.15;
+  font-weight: 700;
+}
+
+.kpi__hint {
+  font-size: 0.8125rem;
+  color: var(--twm-muted);
+}
+
+.kpi__person {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 32px;
+}
+
+.kpi__person-name {
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.9375rem;
+}
+
+/* ---------- who paid ---------- */
+
+.paid-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.paid-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.paid-row__head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 32px;
+}
+
+.paid-row__name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.9375rem;
+}
+
+.paid-row__dot {
+  flex: 0 0 auto;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  opacity: 0.5;
+}
+
+.paid-row__bar {
+  display: block;
+  height: 6px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--twm-border);
+}
+
+.paid-row__bar span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  min-width: 2px;
+}
+
+.paid-row__share {
+  font-size: 0.75rem;
+  color: var(--twm-muted);
+}
+
+/* ---------- filters ---------- */
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.filters ui5-select {
+  flex: 1 1 9.5rem;
+  min-width: 9.5rem;
+}
+
+.filters__reset {
+  margin-inline-start: auto;
+}
+
+.filters__summary {
+  font-size: 0.8125rem;
+  color: var(--twm-muted);
+  padding: 0 0.125rem;
+}
+
+/* ---------- expense list ---------- */
+
+.expense-row {
+  min-height: 56px;
+}
+
+.expense-row__inner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.5rem 0;
+  min-width: 0;
+}
+
+.expense-row__icon {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+
+.expense-row__body {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.expense-row__merchant {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.25;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.expense-row__meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  font-size: 0.8125rem;
+  color: var(--twm-muted);
+}
+
+.expense-row__trailing {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.expense-row__amount {
+  text-align: end;
+  font-weight: 600;
+}
+
+.expense-row__draft {
+  color: var(--sapCriticalTextColor, #b8541a);
+}
+
+/* ---------- charts ---------- */
+
+.charts {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.5rem;
+}
+
+@media (min-width: 900px) {
+  .charts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.chart {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.85rem 0.5rem 0.5rem;
+  margin: 0;
+}
+
+.chart__title {
+  padding: 0 0.5rem;
+  font-size: 0.9375rem;
+  font-weight: 700;
+}
+
+.chart__caption {
+  padding: 0 0.5rem 0.25rem;
+  font-size: 0.8125rem;
+  color: var(--twm-muted);
+}
+
+.chart__tooltip {
+  background: var(--sapGroup_ContentBackground, #fff);
+  color: var(--sapTextColor);
+  border: 1px solid var(--twm-border);
+  border-radius: 0.5rem;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.8125rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.16);
+}
+
+.chart__tooltip-label {
+  font-weight: 700;
+  display: block;
+  margin-bottom: 0.15rem;
+}
+
+/* ---------- clearing document ---------- */
+
+.clearing {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.clearing-doc {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--twm-border);
+  border-radius: var(--twm-radius-m);
+  background: var(--sapGroup_ContentBackground, #fff);
+  color: var(--sapTextColor);
+  padding: 1rem 1rem 1.25rem;
+  font-family: var(--sapFontFamily);
+}
+
+.clearing-doc::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 4px;
+  background: var(--sapBrandColor, #0070f2);
+}
+
+.clearing-doc__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.clearing-doc__eyebrow {
+  font-size: 0.6875rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--twm-muted);
+}
+
+.clearing-doc__number {
+  font-family: 'SAP Mono', 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.clearing-doc__status {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  white-space: nowrap;
+}
+
+.clearing-doc__status--open {
+  color: var(--sapCriticalTextColor, #b8541a);
+}
+
+.clearing-doc__status--settled {
+  color: var(--sapPositiveTextColor, #256f3a);
+}
+
+.clearing-doc__rows {
+  margin: 0.9rem 0 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.4rem 0.75rem;
+  font-size: 0.875rem;
+}
+
+.clearing-doc__rows dt {
+  color: var(--twm-muted);
+  min-width: 0;
+}
+
+.clearing-doc__rows dd {
+  margin: 0;
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+
+.clearing-doc__total {
+  margin-top: 0.9rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed var(--twm-border);
+  font-size: 1.0625rem;
+  font-weight: 700;
+  max-width: 62%;
+  line-height: 1.35;
+}
+
+.clearing-doc__stamp {
+  position: absolute;
+  right: 0.75rem;
+  bottom: 0.9rem;
+  transform: rotate(-8deg);
+  border: 2px solid currentColor;
+  border-radius: 0.35rem;
+  padding: 0.3rem 0.55rem;
+  text-align: center;
+  color: var(--sapNegativeColor, #a8354a);
+  opacity: 0.55;
+  pointer-events: none;
+  max-width: 42%;
+}
+
+.clearing-doc__stamp span {
+  display: block;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  line-height: 1.25;
+}
+
+.clearing-doc__stamp span:first-child {
+  font-size: 0.75rem;
+}
+
+.clearing-doc__stamp small {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.5625rem;
+  letter-spacing: 0.06em;
+  opacity: 0.85;
+}
+
+.clearing-doc__foot {
+  margin-top: 1rem;
+  font-size: 0.6875rem;
+  letter-spacing: 0.04em;
+  color: var(--twm-muted);
+  max-width: 60%;
+}
+
+.clearing__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/* ---------- payment run dialog ---------- */
+
+.run-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: min(88vw, 24rem);
+  padding-bottom: var(--twm-safe-bottom);
+}
+
+.run-dialog__rows {
+  margin: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.45rem 0.75rem;
+  font-size: 0.9375rem;
+}
+
+.run-dialog__rows dt {
+  color: var(--twm-muted);
+}
+
+.run-dialog__rows dd {
+  margin: 0;
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+
+.run-dialog__result {
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  background: var(--sapInfobar_NonInteractive_Background, rgba(0, 112, 242, 0.08));
+  font-weight: 700;
+}
+
+/* ---------- detail sheet ---------- */
+
+.detail {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: min(92vw, 26rem);
+  padding-bottom: var(--twm-safe-bottom);
+}
+
+.detail__receipt {
+  display: block;
+  width: 100%;
+  max-height: 46vh;
+  object-fit: contain;
+  border-radius: 0.5rem;
+  background: var(--sapList_Background, #fff);
+  border: 1px solid var(--twm-border);
+}
+
+.detail__receipt-missing {
+  display: grid;
+  place-items: center;
+  gap: 0.35rem;
+  padding: 1.5rem 1rem;
+  border: 1px dashed var(--twm-border);
+  border-radius: 0.5rem;
+  color: var(--twm-muted);
+  font-size: 0.8125rem;
+  text-align: center;
+}
+
+.detail__rows {
+  margin: 0;
+  display: grid;
+  grid-template-columns: minmax(6.5rem, auto) minmax(0, 1fr);
+  gap: 0.5rem 0.75rem;
+  font-size: 0.9375rem;
+  align-items: center;
+}
+
+.detail__rows dt {
+  color: var(--twm-muted);
+  font-size: 0.8125rem;
+}
+
+.detail__rows dd {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.detail__form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.detail__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.detail__field ui5-input,
+.detail__field ui5-select,
+.detail__field ui5-textarea {
+  width: 100%;
+}
+
+.detail__field-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.detail__field-row > * {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* ---------- closed periods ---------- */
+
+.history-row {
+  min-height: 56px;
+}
+
+.history-row__inner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.4rem 0;
+  min-width: 0;
+}
+
+.history-row__body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.history-row__doc {
+  font-family: 'SAP Mono', 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: 0.9375rem;
+  font-weight: 700;
+}
+
+.history-row__meta {
+  font-size: 0.8125rem;
+  color: var(--twm-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ledger__status {
+  padding: 0.5rem 0;
+}

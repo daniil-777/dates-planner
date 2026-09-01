@@ -1,0 +1,561 @@
+/* Scan flow — mobile-first. Every interactive target is at least 44px. */
+
+.scan-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
+  padding-bottom: calc(1.5rem + env(safe-area-inset-bottom));
+  max-width: 44rem;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+  font-family: var(--sapFontFamily);
+  color: var(--sapTextColor);
+}
+
+.scan-card {
+  width: 100%;
+}
+
+.scan-card-body {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* ---------- capture ---------- */
+
+.scan-capture {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: stretch;
+  width: 100%;
+}
+
+.scan-capture-primary::part(button) {
+  min-height: 3.5rem;
+  font-size: 1.0625rem;
+}
+
+.scan-capture-secondary::part(button) {
+  min-height: 2.75rem;
+}
+
+.scan-hidden-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.scan-hint {
+  color: var(--sapContent_LabelColor);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* ---------- thumbnail strip ---------- */
+
+.scan-strip {
+  display: flex;
+  gap: 0.625rem;
+  overflow-x: auto;
+  padding: 0.25rem 0.125rem 0.5rem;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+  list-style: none;
+  margin: 0;
+}
+
+.scan-strip-item {
+  flex: 0 0 auto;
+  width: 7.5rem;
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  padding: 0.5rem;
+  border-radius: var(--sapElement_BorderCornerRadius, 0.5rem);
+  background: var(--sapGroup_ContentBackground, #fff);
+  border: 1px solid var(--sapGroup_ContentBorderColor, #d9d9d9);
+}
+
+.scan-strip-item[data-state='error'] {
+  border-color: var(--sapNegativeColor);
+}
+
+.scan-strip-item[data-state='done'] {
+  border-color: var(--sapPositiveColor);
+}
+
+.scan-thumb {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  border-radius: 0.375rem;
+  background: var(--sapNeutralBackground, #eaecee);
+  display: block;
+}
+
+.scan-strip-name {
+  font-size: 0.6875rem;
+  color: var(--sapContent_LabelColor);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.scan-strip-actions {
+  display: flex;
+  gap: 0.25rem;
+}
+
+/* ---------- busy card ---------- */
+
+.scan-busy {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  padding: 1.25rem 1rem;
+}
+
+.scan-busy-thumb {
+  width: 4.5rem;
+  height: 6rem;
+  object-fit: cover;
+  border-radius: 0.375rem;
+  flex: 0 0 auto;
+  background: var(--sapNeutralBackground, #eaecee);
+}
+
+.scan-busy-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.scan-busy-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.scan-busy-step {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  color: var(--sapContent_LabelColor);
+}
+
+.scan-busy-step[data-active='true'] {
+  color: var(--sapTextColor);
+  font-weight: 600;
+}
+
+.scan-busy-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--sapContent_ForegroundBorderColor, #b0b6bd);
+  flex: 0 0 auto;
+}
+
+.scan-busy-step[data-active='true'] .scan-busy-dot {
+  background: var(--sapBrandColor, #0070f2);
+}
+
+.scan-busy-step[data-complete='true'] .scan-busy-dot {
+  background: var(--sapPositiveColor);
+}
+
+/* ---------- confirm card ---------- */
+
+.scan-field-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.scan-field-note {
+  font-size: 0.75rem;
+  color: var(--sapContent_LabelColor);
+  margin: 0.25rem 0 0;
+}
+
+.scan-amount-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.scan-amount-input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.scan-currency-select {
+  flex: 0 0 6.5rem;
+}
+
+.scan-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.scan-chip-slot {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+}
+
+.scan-payers {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.scan-payer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  padding: 0.25rem 0.75rem 0.25rem 0.25rem;
+  border-radius: 2rem;
+  border: 1px solid var(--sapGroup_ContentBorderColor, #d9d9d9);
+  background: var(--sapGroup_ContentBackground, #fff);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.scan-payer[aria-pressed='true'] {
+  border-color: var(--sapSelectedColor, #0070f2);
+  box-shadow: 0 0 0 1px var(--sapSelectedColor, #0070f2) inset;
+  background: var(--sapList_SelectionBackgroundColor, #ebf8ff);
+}
+
+.scan-payer:focus-visible {
+  outline: 2px solid var(--sapContent_FocusColor, #0032a5);
+  outline-offset: 2px;
+}
+
+.scan-field-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  width: 100%;
+}
+
+.scan-event {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.scan-memory {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: var(--sapElement_BorderCornerRadius, 0.5rem);
+  background: var(--sapNeutralBackground, #f5f6f7);
+}
+
+.scan-memory-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  justify-content: space-between;
+}
+
+.scan-memory-photo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.scan-memory-thumb {
+  width: 3.5rem;
+  height: 3.5rem;
+  object-fit: cover;
+  border-radius: 0.375rem;
+}
+
+/* ---------- actions ---------- */
+
+.scan-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  padding-top: 0.25rem;
+}
+
+.scan-actions ui5-button::part(button),
+.scan-actions [ui5-button]::part(button) {
+  min-height: 2.75rem;
+}
+
+.scan-actions-grow {
+  flex: 1 1 10rem;
+}
+
+/* ---------- posted / duplicates ---------- */
+
+.scan-posted {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+}
+
+.scan-dupe-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.scan-dupe {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: baseline;
+  padding: 0.5rem 0.625rem;
+  border-radius: 0.375rem;
+  background: var(--sapNeutralBackground, #f5f6f7);
+  font-size: 0.875rem;
+}
+
+.scan-dupe-meta {
+  color: var(--sapContent_LabelColor);
+  font-size: 0.75rem;
+}
+
+.scan-queue-note {
+  font-size: 0.8125rem;
+  color: var(--sapContent_LabelColor);
+}
+
+@media (min-width: 48rem) {
+  .scan-page {
+    padding: 1.5rem;
+  }
+
+  .scan-capture {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .scan-capture-primary {
+    flex: 1 1 auto;
+  }
+}
+
+/* ---------- in-app camera ---------- */
+
+/* The viewfinder owns the whole dialog body; UI5's content padding would inset
+   the video and leave grey gutters around a black frame. */
+.scan-camera-dialog::part(content) {
+  padding: 0;
+}
+
+.scan-camera-dialog::part(header) {
+  padding-top: max(0.5rem, env(safe-area-inset-top));
+}
+
+.scan-capture-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+/* `stretch` gives the dialog the viewport; without this the column only grows
+   to fit its controls and the viewfinder is a strip instead of a screen. */
+.scan-camera {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-height: min(60vh, 30rem);
+  box-sizing: border-box;
+}
+
+.scan-camera-stage {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 16rem;
+  background: #000;
+  overflow: hidden;
+}
+
+.scan-camera-video,
+.scan-camera-still {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  background: #000;
+}
+
+/* The preview fills the frame; the capture is the whole sensor frame, so what
+   the guide encloses is always inside the photo. */
+.scan-camera-video {
+  object-fit: cover;
+}
+
+/* The still is `contain`, not `cover`: this is the photo being approved, and
+   approving one whose edges are cropped out of view is how a receipt loses its
+   total. */
+.scan-camera-still {
+  object-fit: contain;
+}
+
+/* A receipt fills a tall frame; the guide says how tall without hiding the edges. */
+.scan-camera-guide {
+  position: absolute;
+  inset: 8% 7%;
+  border: 2px solid rgba(255, 255, 255, 0.72);
+  border-radius: 0.5rem;
+  box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+}
+
+.scan-camera-hint {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0.75rem;
+  margin: 0;
+  padding: 0 1rem;
+  text-align: center;
+  color: #fff;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+  pointer-events: none;
+}
+
+.scan-camera-controls {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1rem;
+  padding-bottom: calc(0.875rem + env(safe-area-inset-bottom));
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
+}
+
+.scan-camera-controls-start {
+  justify-self: start;
+}
+
+.scan-camera-controls-end {
+  justify-self: end;
+  min-width: 2.75rem;
+}
+
+.scan-camera-shutter {
+  width: 4.25rem;
+  height: 4.25rem;
+  min-width: 4.25rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--sapButton_Emphasized_Background, #0070f2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.28);
+}
+
+.scan-camera-shutter-ring {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  border: 0.1875rem solid var(--sapButton_Emphasized_TextColor, #fff);
+}
+
+.scan-camera-shutter:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.scan-camera-shutter:focus-visible {
+  outline: 2px solid var(--sapContent_FocusColor, #0032a5);
+  outline-offset: 3px;
+}
+
+.scan-camera-confirm {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.875rem 1rem;
+  padding-bottom: calc(0.875rem + env(safe-area-inset-bottom));
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
+}
+
+.scan-camera-pane {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1.25rem 1rem;
+  padding-bottom: calc(1.25rem + env(safe-area-inset-bottom));
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
+}
+
+.scan-camera-copy {
+  color: var(--sapContent_LabelColor);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.scan-camera-pane-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.scan-camera-strip {
+  margin: 0.75rem 1rem 0;
+}
+
+.scan-camera-action-grow {
+  flex: 1 1 10rem;
+}
+
+.scan-camera-action::part(button) {
+  min-height: 2.75rem;
+}

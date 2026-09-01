@@ -1,0 +1,495 @@
+/*
+ * Settings, onboarding, bank import, planner.
+ *
+ * Everything here is mobile-first: one column, 44 px targets, safe-area padding at the
+ * edges, and tables that scroll inside themselves rather than pushing the page sideways.
+ * Colours are UI5 theme parameters, so the whole page follows sap_horizon into dark mode —
+ * except the Document #1 reveal, which is its own dark room on purpose.
+ */
+
+.twm-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem max(0.75rem, env(safe-area-inset-right)) calc(2rem + env(safe-area-inset-bottom))
+    max(0.75rem, env(safe-area-inset-left));
+  max-width: 52rem;
+  margin: 0 auto;
+}
+
+.twm-settings-intro {
+  color: var(--sapContent_LabelColor, #556b82);
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+/* ---------------- cards ---------------- */
+
+.twm-card {
+  background: var(--sapTile_Background, #fff);
+  border: 1px solid var(--sapGroup_ContentBorderColor, #d9d9d9);
+  border-radius: var(--sapElement_BorderCornerRadius, 0.75rem);
+  box-shadow: var(--sapContent_Shadow0, 0 0 0.125rem rgba(34, 54, 73, 0.32));
+  overflow: hidden;
+}
+
+.twm-card-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem 1rem 0.5rem;
+}
+
+.twm-card-headtext {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.twm-card-subtitle {
+  color: var(--sapContent_LabelColor, #556b82);
+  font-size: 0.8125rem;
+}
+
+.twm-card-body {
+  padding: 0.5rem 1rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.twm-card-footnote {
+  color: var(--sapContent_LabelColor, #556b82);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+/* ---------------- forms ---------------- */
+
+.twm-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.twm-field-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.twm-field-row > .twm-field {
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+
+.twm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.twm-actions > * {
+  min-height: 2.75rem;
+}
+
+/* A native control, because the platform pickers beat anything reimplemented. */
+.twm-native-input {
+  min-height: 2.75rem;
+  padding: 0 0.625rem;
+  font: inherit;
+  font-size: 1rem;
+  color: var(--sapField_TextColor, #1d2d3e);
+  background: var(--sapField_Background, #fff);
+  border: 1px solid var(--sapField_BorderColor, #8396a8);
+  border-radius: var(--sapField_BorderCornerRadius, 0.25rem);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.twm-native-input:focus-visible {
+  outline: 2px solid var(--sapContent_FocusColor, #0032a5);
+  outline-offset: 1px;
+}
+
+/* ---------------- people ---------------- */
+
+.twm-person-row {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.twm-person-fields {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.twm-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.twm-swatch {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 999px;
+  border: 2px solid transparent;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  padding: 0;
+}
+
+.twm-swatch[aria-pressed='true'] {
+  border-color: var(--sapContent_FocusColor, #0032a5);
+  box-shadow:
+    inset 0 0 0 2px var(--sapTile_Background, #fff),
+    0 0 0 1px var(--sapContent_FocusColor, #0032a5);
+}
+
+/* ---------------- planner ---------------- */
+
+.twm-plan-verdict {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem 1rem;
+  padding: 0.75rem;
+  border-radius: var(--sapElement_BorderCornerRadius, 0.75rem);
+  background: var(--sapList_Background, #f5f6f7);
+  border-left: 4px solid var(--sapNeutralColor, #5b738b);
+}
+
+.twm-plan-verdict[data-verdict='approved'] {
+  border-left-color: var(--sapPositiveColor, #256f3a);
+}
+
+.twm-plan-verdict[data-verdict='conditional'] {
+  border-left-color: var(--sapCriticalColor, #e76500);
+}
+
+.twm-plan-verdict[data-verdict='referred'] {
+  border-left-color: var(--sapNegativeColor, #aa0808);
+}
+
+.twm-plan-headline {
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 0.8125rem;
+}
+
+.twm-plan-figures {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.twm-plan-figure {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 8rem;
+}
+
+.twm-plan-figure-label {
+  font-size: 0.75rem;
+  color: var(--sapContent_LabelColor, #556b82);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.twm-plan-shares {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.twm-plan-person {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.75rem 0.375rem 0.375rem;
+  border: 1px solid var(--sapGroup_ContentBorderColor, #d9d9d9);
+  border-radius: 999px;
+}
+
+/* ---------------- import ---------------- */
+
+.twm-import-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+  font-size: 0.875rem;
+  color: var(--sapContent_LabelColor, #556b82);
+}
+
+.twm-table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid var(--sapGroup_ContentBorderColor, #d9d9d9);
+  border-radius: var(--sapElement_BorderCornerRadius, 0.5rem);
+}
+
+.twm-table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.875rem;
+  min-width: 34rem;
+}
+
+.twm-table th,
+.twm-table td {
+  padding: 0.5rem 0.625rem;
+  text-align: left;
+  border-bottom: 1px solid var(--sapGroup_ContentBorderColor, #d9d9d9);
+  white-space: nowrap;
+}
+
+.twm-table th {
+  background: var(--sapList_HeaderBackground, #f5f6f7);
+  font-weight: 700;
+  position: sticky;
+  top: 0;
+}
+
+.twm-table td.twm-num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.twm-table tr[data-skipped='true'] td {
+  color: var(--sapContent_LabelColor, #556b82);
+  text-decoration: line-through;
+  text-decoration-color: var(--sapNegativeColor, #aa0808);
+}
+
+.twm-table .twm-issue {
+  color: var(--sapNegativeTextColor, #aa0808);
+  white-space: normal;
+  text-decoration: none;
+}
+
+.twm-file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ---------------- onboarding ---------------- */
+
+.twm-onboarding {
+  position: fixed;
+  inset: 0;
+  /* Above the shell's own chrome, below the UI5 static area where popovers live. */
+  z-index: 90;
+  overflow-y: auto;
+  background: var(--sapBackgroundColor, #f5f6f7);
+  display: flex;
+  flex-direction: column;
+}
+
+.twm-onboarding-inner {
+  flex: 1 1 auto;
+  width: 100%;
+  max-width: 34rem;
+  margin: 0 auto;
+  padding: max(1.5rem, env(safe-area-inset-top)) max(1.25rem, env(safe-area-inset-right))
+    calc(2rem + env(safe-area-inset-bottom)) max(1.25rem, env(safe-area-inset-left));
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.twm-onboarding-eyebrow {
+  font-size: 0.75rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--sapContent_LabelColor, #556b82);
+}
+
+.twm-onboarding-skip {
+  position: absolute;
+  top: max(0.5rem, env(safe-area-inset-top));
+  right: max(0.5rem, env(safe-area-inset-right));
+}
+
+.twm-onboarding-steps {
+  display: flex;
+  gap: 0.375rem;
+}
+
+.twm-onboarding-steps span {
+  height: 0.25rem;
+  flex: 1 1 0;
+  border-radius: 999px;
+  background: var(--sapGroup_ContentBorderColor, #d9d9d9);
+}
+
+.twm-onboarding-steps span[data-active='true'] {
+  background: var(--sapBrandColor, #0070f2);
+}
+
+.twm-onboarding-person {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border: 1px solid var(--sapGroup_ContentBorderColor, #d9d9d9);
+  border-radius: var(--sapElement_BorderCornerRadius, 0.75rem);
+}
+
+/* ---------------- Document #1 ---------------- */
+
+.twm-reveal {
+  /* Its own room, in both themes: this moment does not follow the theme. */
+  background: #0a1f33;
+  color: #f4f7fa;
+  border-radius: var(--sapElement_BorderCornerRadius, 0.75rem);
+  padding: 1.75rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  box-shadow: 0 1.5rem 3rem rgba(3, 15, 26, 0.45);
+  overflow: hidden;
+  position: relative;
+}
+
+.twm-reveal::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(120% 80% at 50% 0%, rgba(0, 112, 242, 0.35), transparent 60%);
+  pointer-events: none;
+}
+
+.twm-reveal-line {
+  opacity: 0;
+  transform: translateY(0.5rem);
+  transition:
+    opacity 700ms ease,
+    transform 700ms ease;
+}
+
+.twm-reveal-line[data-shown='true'] {
+  opacity: 1;
+  transform: none;
+}
+
+.twm-reveal-stamp {
+  font-size: 0.6875rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: #7fb2ea;
+}
+
+.twm-reveal-number {
+  font-size: clamp(2rem, 9vw, 3rem);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.twm-reveal-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  font-size: 0.875rem;
+  color: #b9cde2;
+}
+
+.twm-reveal-note {
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.twm-reveal-amount {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem 0.75rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+  font-variant-numeric: tabular-nums;
+}
+
+.twm-reveal-amount .twm-money {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.twm-reveal-caption {
+  font-size: 0.75rem;
+  color: #93b4d4;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .twm-reveal-line {
+    transition: none;
+  }
+}
+
+/* ---------------- system ---------------- */
+
+.twm-status-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  font-size: 0.875rem;
+}
+
+.twm-status-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem 0.75rem;
+  align-items: baseline;
+}
+
+.twm-status-label {
+  color: var(--sapContent_LabelColor, #556b82);
+  min-width: 7.5rem;
+}
+
+.twm-mono {
+  font-family: ui-monospace, 'SF Mono', 'Menlo', 'Consolas', monospace;
+  font-size: 0.8125rem;
+}
+
+.twm-segmented {
+  display: inline-flex;
+  border: 1px solid var(--sapButton_BorderColor, #8396a8);
+  border-radius: var(--sapButton_BorderCornerRadius, 0.5rem);
+  overflow: hidden;
+}
+
+.twm-segmented button {
+  min-height: 2.75rem;
+  min-width: 5rem;
+  padding: 0 0.875rem;
+  border: 0;
+  background: var(--sapButton_Background, #fff);
+  color: var(--sapButton_TextColor, #0064d9);
+  font: inherit;
+  cursor: pointer;
+}
+
+.twm-segmented button + button {
+  border-left: 1px solid var(--sapButton_BorderColor, #8396a8);
+}
+
+.twm-segmented button[aria-pressed='true'] {
+  background: var(--sapButton_Selected_Background, #0064d9);
+  color: var(--sapButton_Selected_TextColor, #fff);
+  font-weight: 700;
+}

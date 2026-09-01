@@ -1,0 +1,370 @@
+/* Home — the launcher of FRONTEND-CONTRACT §8.
+
+   The page sits inside `.twm-main`, which already owns the outer padding and the safe-area
+   insets, and inside `.twm-page`, which owns the content column. Colours are Horizon theme
+   parameters, so the whole screen follows sap_horizon → sap_horizon_dark; the one literal
+   colour on a tile is its accent, which arrives as `--home-accent` from
+   `app/src/pages/home/tiles.ts` and is never used for text. */
+
+.home {
+  gap: var(--twm-space-xl);
+}
+
+.home__head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.home__subtitle {
+  font-size: 0.8125rem;
+  color: var(--twm-muted);
+}
+
+/* ---------- the grid ---------- */
+
+.home-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  /* §8: two columns below 40rem, three above. */
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--twm-space-m);
+}
+
+@media (min-width: 40rem) {
+  .home-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--twm-space-l);
+  }
+}
+
+.home-grid__cell {
+  display: flex;
+}
+
+.home-tile {
+  position: relative;
+  isolation: isolate;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-height: 9.5rem;
+  padding: var(--twm-space-l);
+  padding-top: calc(var(--twm-space-l) + 2px);
+  border: 1px solid var(--twm-border);
+  border-radius: var(--twm-radius-l);
+  background: var(--twm-surface);
+  box-shadow: var(--sapContent_Shadow0, 0 0 0.125rem rgba(34, 54, 73, 0.32));
+  color: var(--sapTextColor, #1d2d3e);
+  text-decoration: none;
+  overflow: hidden;
+  transition:
+    transform 140ms ease,
+    box-shadow 140ms ease,
+    border-color 140ms ease;
+}
+
+/* The accent, as a rule across the top rather than a wash behind the text: it identifies
+   the tile at a glance and costs no contrast. */
+.home-tile::before {
+  content: '';
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline: 0;
+  height: 3px;
+  background: var(--home-accent, var(--sapBrandColor, #0070f2));
+}
+
+.home-tile:hover {
+  border-color: var(--home-accent, var(--sapBrandColor, #0070f2));
+  box-shadow: var(--sapContent_Shadow1, 0 0.125rem 0.5rem rgba(34, 54, 73, 0.2));
+  transform: translateY(-2px);
+}
+
+.home-tile:active {
+  transform: translateY(0);
+}
+
+.home-tile:focus-visible {
+  outline: 2px solid var(--sapContent_FocusColor, #0a2340);
+  outline-offset: 2px;
+  border-color: var(--home-accent, var(--sapBrandColor, #0070f2));
+}
+
+/* A tile lifting under a thumb is a tile the thumb is covering. */
+@media (pointer: coarse) {
+  .home-tile:hover {
+    transform: none;
+    box-shadow: var(--sapContent_Shadow0, 0 0 0.125rem rgba(34, 54, 73, 0.32));
+  }
+}
+
+.home-tile__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  margin-bottom: var(--twm-space-s);
+  border-radius: var(--twm-radius-m);
+  background: color-mix(in srgb, var(--home-accent, #0070f2) 14%, transparent);
+}
+
+.home-tile__glyph {
+  width: 1.375rem;
+  height: 1.375rem;
+  color: var(--home-accent, var(--sapBrandColor, #0070f2));
+}
+
+.home-tile__label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--twm-muted);
+}
+
+/* Fixed height so a tile whose figure failed, or is still loading, keeps its place in the
+   row instead of shrinking and shoving the grid around. */
+.home-tile__figure {
+  display: flex;
+  align-items: center;
+  min-height: 2.5rem;
+  margin-top: 0.1rem;
+}
+
+.home-tile__value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.home-tile__value--phrase {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0;
+}
+
+/* Money is set by MoneyText; a five-figure month must still fit a two-column phone. */
+.home-tile .home-tile__money {
+  font-size: clamp(1.0625rem, 4.6vw, 1.5rem);
+  line-height: 1.1;
+}
+
+.home-tile__shimmer {
+  width: 62%;
+  height: 1.5rem;
+}
+
+.home-tile__hint {
+  font-size: 0.75rem;
+  line-height: 1.3;
+  color: var(--twm-muted);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
+
+/* ---------- next up ---------- */
+
+.home-next {
+  display: flex;
+  flex-direction: column;
+  gap: var(--twm-space-s);
+}
+
+.home-next__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--twm-space-s);
+}
+
+.home-next__heading {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--twm-muted);
+}
+
+.home-next__more {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.8125rem;
+  text-decoration: none;
+}
+
+.home-next__more:hover {
+  text-decoration: underline;
+}
+
+.home-next__more-icon {
+  width: 0.875rem;
+  height: 0.875rem;
+  color: currentColor;
+}
+
+.home-next__empty {
+  margin: 0;
+  padding: var(--twm-space-l);
+  border: 1px dashed var(--twm-border);
+  border-radius: var(--twm-radius-m);
+  background: var(--twm-surface);
+  color: var(--twm-muted);
+  font-size: 0.8125rem;
+}
+
+.home-next__skeleton {
+  margin: 0;
+}
+
+.home-next__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--twm-space-s);
+}
+
+.home-next__item {
+  display: flex;
+  align-items: center;
+  gap: var(--twm-space-m);
+  min-height: var(--twm-touch);
+  padding: var(--twm-space-m) var(--twm-space-l);
+  border: 1px solid var(--twm-border);
+  border-radius: var(--twm-radius-m);
+  background: var(--twm-surface);
+  color: var(--sapTextColor, #1d2d3e);
+  text-decoration: none;
+  transition:
+    border-color 120ms ease,
+    background-color 120ms ease;
+}
+
+.home-next__item:hover {
+  border-color: var(--sapContent_Selected_BorderColor, var(--sapBrandColor, #0070f2));
+  background: var(--sapList_Hover_Background, rgba(0, 0, 0, 0.03));
+}
+
+.home-next__item:focus-visible {
+  outline: 2px solid var(--sapContent_FocusColor, #0a2340);
+  outline-offset: 2px;
+}
+
+/* The nearest thing is the one worth reading from across the room. */
+.home-next__item--lead {
+  padding: var(--twm-space-l);
+  box-shadow: var(--sapContent_Shadow0, 0 0 0.125rem rgba(34, 54, 73, 0.32));
+}
+
+.home-next__mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+}
+
+.home-next__mark-icon {
+  width: 1.125rem;
+  height: 1.125rem;
+  color: currentColor;
+}
+
+/* Three hues, all from the palette CONTRACTS §1.1 fixes: a nudge, a date, a year. */
+.home-next__mark--reminder {
+  background: color-mix(in srgb, #e76500 14%, transparent);
+  color: #e76500;
+}
+
+.home-next__mark--event {
+  background: color-mix(in srgb, #7858ff 14%, transparent);
+  color: #7858ff;
+}
+
+.home-next__mark--anniversary {
+  background: color-mix(in srgb, #f31ded 14%, transparent);
+  color: #f31ded;
+}
+
+.home-next__text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.home-next__title {
+  display: flex;
+  align-items: center;
+  gap: var(--twm-space-s);
+  font-weight: 600;
+  min-width: 0;
+}
+
+.home-next__item--lead .home-next__title {
+  font-size: 1.0625rem;
+}
+
+.home-next__only {
+  flex: 0 0 auto;
+  padding: 0.05rem 0.4rem;
+  border-radius: var(--twm-radius-pill);
+  background: var(--sapInformativeBackground, rgba(0, 112, 242, 0.1));
+  color: var(--sapInformativeElementColor, #0070f2);
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.home-next__detail {
+  font-size: 0.75rem;
+  color: var(--twm-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.home-next__when {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.1rem;
+  flex: 0 0 auto;
+  text-align: end;
+}
+
+.home-next__countdown {
+  font-weight: 600;
+  font-size: 0.8125rem;
+  white-space: nowrap;
+}
+
+.home-next__item--lead .home-next__countdown {
+  font-size: 0.9375rem;
+}
+
+.home-next__date {
+  font-size: 0.6875rem;
+  color: var(--twm-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}

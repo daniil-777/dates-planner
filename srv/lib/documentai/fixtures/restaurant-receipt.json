@@ -1,0 +1,323 @@
+{
+  "id": "b1d4f8c2-7a03-4e51-9f6d-2c8b5a1e0937",
+  "status": "DONE",
+  "fileName": "blaue-ente-2026-03-14.jpg",
+  "fileType": "jpeg",
+  "clientId": "default",
+  "documentType": "invoice",
+  "schemaName": "twowaymatch_receipt_v1",
+  "schemaId": "3f4a1f2c-1f2b-4b6f-8a5e-9d1c0b7e2a10",
+  "country": "CH",
+  "created": "2026-03-14T20:41:53.204Z",
+  "finished": "2026-03-14T20:42:01.616Z",
+  "processedTime": 8.412,
+  "extraction": {
+    "headerFields": [
+      {
+        "name": "senderName",
+        "category": "header",
+        "value": "RESTAURANT BLAUE ENTE",
+        "type": "string",
+        "page": 1,
+        "confidence": 0.978,
+        "coordinates": { "x": 0.164, "y": 0.036, "w": 0.671, "h": 0.042 }
+      },
+      {
+        "name": "senderAddress",
+        "category": "header",
+        "value": "Seefeldstrasse 223\n8008 Zürich",
+        "type": "string",
+        "page": 1,
+        "confidence": 0.916,
+        "coordinates": { "x": 0.181, "y": 0.083, "w": 0.638, "h": 0.058 }
+      },
+      {
+        "name": "documentDate",
+        "category": "header",
+        "value": "14.03.2026",
+        "type": "date",
+        "page": 1,
+        "confidence": 0.957,
+        "coordinates": { "x": 0.092, "y": 0.171, "w": 0.268, "h": 0.028 }
+      },
+      {
+        "name": "documentTime",
+        "category": "header",
+        "value": "20:15",
+        "type": "string",
+        "page": 1,
+        "confidence": 0.889,
+        "coordinates": { "x": 0.378, "y": 0.171, "w": 0.142, "h": 0.028 }
+      },
+      {
+        "name": "documentNumber",
+        "category": "header",
+        "value": "Tisch 12 / Beleg 00417",
+        "type": "string",
+        "page": 1,
+        "confidence": 0.813,
+        "coordinates": { "x": 0.092, "y": 0.204, "w": 0.492, "h": 0.027 }
+      },
+      {
+        "name": "currencyCode",
+        "category": "header",
+        "value": "CHF",
+        "type": "string",
+        "page": 1,
+        "confidence": 0.988,
+        "coordinates": { "x": 0.588, "y": 0.704, "w": 0.104, "h": 0.028 }
+      },
+      {
+        "name": "grossAmount",
+        "category": "header",
+        "value": "148.50",
+        "type": "number",
+        "page": 1,
+        "confidence": 0.974,
+        "coordinates": { "x": 0.704, "y": 0.704, "w": 0.204, "h": 0.034 }
+      },
+      {
+        "name": "netAmount",
+        "category": "header",
+        "value": "137.88",
+        "type": "number",
+        "page": 1,
+        "confidence": 0.921,
+        "coordinates": { "x": 0.704, "y": 0.779, "w": 0.204, "h": 0.027 }
+      },
+      {
+        "name": "taxAmount",
+        "category": "header",
+        "value": "10.62",
+        "type": "number",
+        "page": 1,
+        "confidence": 0.907,
+        "coordinates": { "x": 0.704, "y": 0.807, "w": 0.204, "h": 0.027 }
+      },
+      {
+        "name": "taxRate",
+        "category": "header",
+        "value": "7.7",
+        "type": "number",
+        "page": 1,
+        "confidence": 0.893,
+        "coordinates": { "x": 0.194, "y": 0.807, "w": 0.118, "h": 0.027 }
+      },
+      {
+        "name": "paymentTerms",
+        "category": "header",
+        "value": "Kreditkarte VISA ****4417",
+        "type": "string",
+        "page": 1,
+        "confidence": 0.752,
+        "coordinates": { "x": 0.092, "y": 0.871, "w": 0.541, "h": 0.027 }
+      }
+    ],
+    "lineItems": [
+      [
+        {
+          "name": "description",
+          "category": "details",
+          "value": "Blattsalat mit gerösteten Kernen",
+          "type": "string",
+          "page": 1,
+          "confidence": 0.921
+        },
+        {
+          "name": "quantity",
+          "category": "details",
+          "value": "2",
+          "type": "number",
+          "page": 1,
+          "confidence": 0.964
+        },
+        {
+          "name": "unitPrice",
+          "category": "details",
+          "value": "9.50",
+          "type": "number",
+          "page": 1,
+          "confidence": 0.938
+        },
+        {
+          "name": "netAmount",
+          "category": "details",
+          "value": "19.00",
+          "type": "number",
+          "page": 1,
+          "confidence": 0.951
+        }
+      ],
+      [
+        {
+          "name": "description",
+          "category": "details",
+          "value": "Zanderfilet, Safranrisotto",
+          "type": "string",
+          "page": 1,
+          "confidence": 0.907
+        },
+        {
+          "name": "quantity",
+          "category": "details",
+          "value": "1",
+          "type": "number",
+          "page": 1,
+          "confidence": 0.969
+        },
+        {
+          "name": "unitPrice",
+          "category": "details",
+          "value": "46.00",
+          "type": "number",
+          "page": 1,
+          "confidence": 0.942
+        },
+        {
+          "name": "netAmount",
+          "category": "details",
+          "value": "46.00",
+          "type": "number",
+          "page": 1,
+          "confidence": 0.956
+        }
+      ],
+      [
+        {
+          "name": "description",
+          "category": "details",
+          "value": "Kalbsgeschnetzeltes Zürcher Art",
+          "type": "string",
+          "page": 1,
+          "confidence": 0.898
+        },
+        {
+          "name": "quantity",
+          "category": "details",
+          "value": "1",
+          "type": "number",
+          "page": 1,
+          "confidence": 0.967
+        },
+        {
+          "name": "unitPrice",
+          "category": "details",
+          "value": "44.00",
+          "type": "number",
+          "page": 1,
+          "confidence": 0.94
+        },
+        {
+          "name": "netAmount",
+          "category": "details",
+          "value": "44.00",
+          "type": "number",
+          "page": 1,
+          "confidence": 0.953
+        }
+      ],
+      [
+        {
+          "name": "description",
+          "category": "details",
+          "value": "Räuschling Zürichsee 2dl",
+          "type": "string",
+          "page": 1,
+          "confidence": 0.874
+        },
+        {
+          "name": "quantity",
+          "category": "details",
+          "value": "2",
+          "type": "number",
+          "page": 1,
+          "confidence": 0.958
+        },
+        {
+          "name": "unitPrice",
+          "category": "details",
+          "value": "12.00",
+          "type": "number",
+          "page": 1,
+          "confidence": 0.931
+        },
+        {
+          "name": "netAmount",
+          "category": "details",
+          "value": "24.00",
+          "type": "number",
+          "page": 1,
+          "confidence": 0.948
+        }
+      ],
+      [
+        {
+          "name": "description",
+          "category": "details",
+          "value": "Mineralwasser Elmer 5dl",
+          "type": "string",
+          "page": 1,
+          "confidence": 0.912
+        },
+        {
+          "name": "quantity",
+          "category": "details",
+          "value": "1",
+          "type": "number",
+          "page": 1,
+          "confidence": 0.961
+        },
+        {
+          "name": "unitPrice",
+          "category": "details",
+          "value": "5.90",
+          "type": "number",
+          "page": 1,
+          "confidence": 0.927
+        },
+        {
+          "name": "netAmount",
+          "category": "details",
+          "value": "5.90",
+          "type": "number",
+          "page": 1,
+          "confidence": 0.944
+        }
+      ],
+      [
+        {
+          "name": "description",
+          "category": "details",
+          "value": "Espresso",
+          "type": "string",
+          "page": 1,
+          "confidence": 0.949
+        },
+        {
+          "name": "quantity",
+          "category": "details",
+          "value": "2",
+          "type": "number",
+          "page": 1,
+          "confidence": 0.972
+        },
+        {
+          "name": "unitPrice",
+          "category": "details",
+          "value": "4.80",
+          "type": "number",
+          "page": 1,
+          "confidence": 0.936
+        },
+        {
+          "name": "netAmount",
+          "category": "details",
+          "value": "9.60",
+          "type": "number",
+          "page": 1,
+          "confidence": 0.955
+        }
+      ]
+    ]
+  }
+}

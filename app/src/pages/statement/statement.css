@@ -1,0 +1,453 @@
+/*
+ * Statement of Us — report typography on screen, A4 on paper.
+ *
+ * Two things are going on here. On screen the statement is a Fiori object page: a header
+ * block with the title and the actions, then a sheet of content that reads like a printed
+ * annual report. On paper it is exactly that report — the shell chrome, the actions and
+ * every interactive affordance are gone, the ink is black, and nothing breaks across a
+ * page that a reader would rather keep together.
+ *
+ * The print rules are scoped to `body.twm-printing-statement`, a class the page adds while
+ * it is mounted, so printing any other screen in the app is unaffected by this file.
+ */
+
+.twm-statement {
+  padding-bottom: calc(2rem + env(safe-area-inset-bottom));
+}
+
+/* ---------------- object page header ---------------- */
+
+.twm-statement-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--sapObjectHeader_Background, var(--sapGroup_ContentBackground, #fff));
+  border-bottom: 1px solid var(--sapGroup_ContentBorderColor, #d9d9d9);
+  padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-left) * 0);
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.twm-statement-titleblock {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.75rem;
+}
+
+.twm-statement-subtitle {
+  color: var(--sapContent_LabelColor, #556b82);
+  font-size: 0.875rem;
+}
+
+.twm-statement-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.twm-statement-actions > * {
+  min-height: 2.75rem;
+}
+
+.twm-statement-spacer {
+  flex: 1 1 auto;
+}
+
+/* ---------------- section anchors ---------------- */
+
+.twm-statement-anchors {
+  max-width: 46rem;
+  margin: 0 auto 0.5rem;
+  display: flex;
+  gap: 0.25rem;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  padding-bottom: 0.25rem;
+}
+
+.twm-statement-anchors > * {
+  flex: 0 0 auto;
+  min-height: 2.75rem;
+  white-space: nowrap;
+}
+
+.twm-print-masthead {
+  font-size: 9pt;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-bottom: 1px solid #000;
+  padding-bottom: 4pt;
+  margin-bottom: 14pt;
+}
+
+/* ---------------- the sheet ---------------- */
+
+.twm-statement-body {
+  padding: 1rem max(0.75rem, env(safe-area-inset-right)) 0 max(0.75rem, env(safe-area-inset-left));
+}
+
+.twm-sheet {
+  max-width: 46rem;
+  margin: 0 auto;
+  background: var(--sapGroup_ContentBackground, #fff);
+  border: 1px solid var(--sapGroup_ContentBorderColor, #d9d9d9);
+  border-radius: var(--sapElement_BorderCornerRadius, 0.75rem);
+  box-shadow: var(--sapContent_Shadow0, 0 0 0.125rem rgba(0, 0, 0, 0.16));
+  padding: clamp(1.25rem, 4vw, 3rem);
+}
+
+.twm-statement-footer {
+  max-width: 46rem;
+  margin: 0.75rem auto 0;
+  padding: 0 clamp(1.25rem, 4vw, 3rem) 1rem;
+  color: var(--sapContent_LabelColor, #556b82);
+  font-size: 0.8125rem;
+  text-align: center;
+  font-style: italic;
+}
+
+.twm-statement-meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem 1rem;
+  color: var(--sapContent_LabelColor, #556b82);
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
+}
+
+/* ---------------- generation progress ---------------- */
+
+.twm-progress {
+  max-width: 46rem;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: clamp(1.25rem, 4vw, 2.5rem);
+  border: 1px dashed var(--sapField_BorderColor, #8396a8);
+  border-radius: var(--sapElement_BorderCornerRadius, 0.75rem);
+  background: var(--sapGroup_ContentBackground, #fff);
+}
+
+.twm-progress-stage {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--sapContent_LabelColor, #556b82);
+  font-size: 0.875rem;
+}
+
+.twm-progress-stage[data-done='true'] {
+  color: var(--sapPositiveTextColor, #256f3a);
+}
+
+.twm-progress-elapsed {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------------- rendered markdown ---------------- */
+
+.twm-md {
+  color: var(--sapTextColor, #1d2d3e);
+  font-family: var(--sapFontFamily, '72', system-ui, sans-serif);
+  font-size: 1rem;
+  line-height: 1.65;
+  overflow-wrap: break-word;
+}
+
+.twm-md-h {
+  font-family: var(--sapFontHeaderFamily, var(--sapFontFamily, '72'), system-ui, sans-serif);
+  color: var(--sapTitleColor, #1d2d3e);
+  line-height: 1.25;
+  margin: 1.75em 0 0.5em;
+  break-after: avoid-page;
+  page-break-after: avoid;
+}
+
+.twm-md > .twm-md-h:first-child {
+  margin-top: 0;
+}
+
+.twm-md-h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin-bottom: 0.75rem;
+}
+
+.twm-md-h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid var(--sapGroup_ContentBorderColor, #d9d9d9);
+}
+
+.twm-md-h3 {
+  font-size: 1.0625rem;
+  font-weight: 700;
+}
+
+.twm-md-h4,
+.twm-md-h5,
+.twm-md-h6 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--sapContent_LabelColor, #556b82);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.twm-md-p {
+  margin: 0 0 1em;
+}
+
+.twm-md-ul,
+.twm-md-ol {
+  margin: 0 0 1em;
+  padding-left: 1.5rem;
+}
+
+.twm-md-li {
+  margin: 0.25em 0;
+}
+
+.twm-md-li > .twm-md-ul,
+.twm-md-li > .twm-md-ol {
+  margin: 0.25em 0 0.25em;
+}
+
+.twm-md-strong {
+  font-weight: 700;
+  color: var(--sapTitleColor, #1d2d3e);
+}
+
+.twm-md-em {
+  font-style: italic;
+}
+
+.twm-md-code,
+.twm-md-pre {
+  font-family: ui-monospace, 'SF Mono', 'Menlo', 'Consolas', monospace;
+  font-size: 0.875em;
+}
+
+.twm-md-code {
+  background: var(--sapList_Background, #f5f6f7);
+  border: 1px solid var(--sapGroup_ContentBorderColor, #d9d9d9);
+  border-radius: 0.25rem;
+  padding: 0.05em 0.3em;
+}
+
+.twm-md-pre {
+  background: var(--sapList_Background, #f5f6f7);
+  border: 1px solid var(--sapGroup_ContentBorderColor, #d9d9d9);
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  overflow-x: auto;
+  margin: 0 0 1em;
+}
+
+.twm-md-quote {
+  margin: 0 0 1em;
+  padding: 0.25rem 0 0.25rem 1rem;
+  border-left: 3px solid var(--sapBrandColor, #0070f2);
+  color: var(--sapContent_LabelColor, #556b82);
+  font-style: italic;
+}
+
+.twm-md-quote .twm-md-p:last-child {
+  margin-bottom: 0;
+}
+
+.twm-md-hr {
+  border: 0;
+  border-top: 1px solid var(--sapGroup_ContentBorderColor, #d9d9d9);
+  margin: 2em 0;
+}
+
+.twm-md-link {
+  color: var(--sapLinkColor, #0070f2);
+}
+
+.twm-md-tablewrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 0 0 1.25em;
+}
+
+.twm-md-table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 20rem;
+  font-size: 0.9375rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.twm-md-table th,
+.twm-md-table td {
+  border-bottom: 1px solid var(--sapGroup_ContentBorderColor, #d9d9d9);
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.twm-md-table th {
+  background: var(--sapList_HeaderBackground, #f5f6f7);
+  color: var(--sapList_HeaderTextColor, #1d2d3e);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.twm-md-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+/* ---------------- A4 ---------------- */
+
+@page {
+  size: A4;
+  margin: 18mm 16mm;
+}
+
+@media print {
+  body.twm-printing-statement {
+    background: #fff !important;
+  }
+
+  /* The shell, the navigation, the actions, and anything that only exists to be tapped. */
+  body.twm-printing-statement ui5-shellbar,
+  body.twm-printing-statement ui5-tabcontainer,
+  body.twm-printing-statement ui5-toast,
+  body.twm-printing-statement nav,
+  body.twm-printing-statement .twm-noprint,
+  body.twm-printing-statement .twm-statement-header,
+  body.twm-printing-statement .twm-statement-actions {
+    display: none !important;
+  }
+
+  body.twm-printing-statement,
+  body.twm-printing-statement .twm-md,
+  body.twm-printing-statement .twm-statement-footer,
+  body.twm-printing-statement .twm-statement-meta {
+    color: #000 !important;
+  }
+
+  body.twm-printing-statement .twm-statement,
+  body.twm-printing-statement .twm-statement-body {
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  body.twm-printing-statement .twm-sheet {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    background: #fff !important;
+  }
+
+  body.twm-printing-statement .twm-print-only {
+    display: block !important;
+  }
+
+  .twm-md {
+    font-size: 10.5pt;
+    line-height: 1.5;
+  }
+
+  .twm-md-h1 {
+    font-size: 20pt;
+  }
+
+  .twm-md-h2 {
+    font-size: 14pt;
+    border-bottom: 1px solid #000;
+  }
+
+  .twm-md-h3 {
+    font-size: 11.5pt;
+  }
+
+  .twm-md-h,
+  .twm-md-table caption {
+    break-after: avoid-page;
+    page-break-after: avoid;
+  }
+
+  .twm-md-p,
+  .twm-md-li,
+  .twm-md-quote {
+    orphans: 3;
+    widows: 3;
+  }
+
+  /* A table must never be cut off at the right edge, and never be clipped by a scroller. */
+  .twm-md-tablewrap {
+    overflow: visible !important;
+    break-inside: avoid-page;
+    page-break-inside: avoid;
+  }
+
+  .twm-md-table {
+    min-width: 0;
+    width: 100%;
+    font-size: 9.5pt;
+    table-layout: fixed;
+  }
+
+  .twm-md-table th,
+  .twm-md-table td {
+    border-bottom: 1px solid #999;
+    padding: 3pt 5pt;
+    white-space: normal;
+    overflow-wrap: break-word;
+  }
+
+  .twm-md-table th {
+    background: #eee !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* A long table repeats its header on every page rather than losing it. */
+  .twm-md-table thead {
+    display: table-header-group;
+  }
+
+  .twm-md-pre,
+  .twm-md-quote,
+  .twm-md-li {
+    break-inside: avoid-page;
+    page-break-inside: avoid;
+  }
+
+  .twm-md-hr {
+    border-top: 1px solid #000;
+  }
+
+  .twm-md-link {
+    color: #000 !important;
+    text-decoration: underline;
+  }
+
+  .twm-statement-footer {
+    margin-top: 12pt;
+    padding: 6pt 0 0;
+    border-top: 1px solid #000;
+    break-inside: avoid-page;
+    page-break-inside: avoid;
+  }
+}
+
+.twm-print-only {
+  display: none;
+}

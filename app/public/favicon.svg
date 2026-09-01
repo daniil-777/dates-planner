@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Two-Way Match">
+  <rect width="512" height="512" rx="112" fill="#FFFFFF"/>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="54">
+    <path d="M104 268 L196 356 L376 152" stroke="#F31DED" opacity="0.55"/>
+    <path d="M136 300 L228 388 L408 184" stroke="#0070F2"/>
+  </g>
+</svg>

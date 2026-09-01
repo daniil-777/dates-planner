@@ -1,0 +1,407 @@
+/* Calendar — mobile first. The page sits inside `.twm-main` from the shell, which owns the
+   outer padding and the safe-area insets. Colours are Horizon theme parameters rather than
+   hex, so the page follows sap_horizon → sap_horizon_dark without a second palette. */
+
+.cal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--twm-space-m);
+}
+
+/* ---------- header ---------- */
+
+/* Sticky under the ShellBar, which is 2.75rem tall and sits above the safe area. */
+.cal__bar {
+  position: sticky;
+  top: calc(var(--twm-safe-top) + 2.75rem);
+  z-index: 3;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--twm-space-s);
+  padding: var(--twm-space-s) 0;
+  background: var(--sapBackgroundColor, #f5f6f7);
+  border-bottom: 1px solid var(--twm-border);
+}
+
+.cal__heading {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+  flex: 1 1 12rem;
+}
+
+.cal__sub {
+  font-size: 0.8125rem;
+  color: var(--twm-muted);
+}
+
+.cal__nav,
+.cal__tools {
+  display: flex;
+  align-items: center;
+  gap: var(--twm-space-xs);
+}
+
+/* ---------- next up ---------- */
+
+.cal-next {
+  display: flex;
+  flex-direction: column;
+  gap: var(--twm-space-s);
+  padding: var(--twm-space-m);
+  border: 1px solid var(--twm-border);
+  border-radius: var(--twm-radius-m);
+  background: var(--twm-surface);
+}
+
+.cal-next__row {
+  display: flex;
+  align-items: center;
+  gap: var(--twm-space-m);
+}
+
+.cal-next__count {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 3.25rem;
+  padding: var(--twm-space-xs) var(--twm-space-s);
+  border-radius: var(--twm-radius-m);
+  background: var(--sapInfobar_Background, #ebf8ff);
+  color: var(--sapTextColor, #1d2d3e);
+}
+
+.cal-next--overdue .cal-next__count {
+  background: var(--sapErrorBackground, #ffeaf4);
+}
+
+.cal-next__days {
+  font-size: 1.375rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.cal-next__unit {
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--twm-muted);
+}
+
+.cal-next__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.cal-next__title {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.cal-label {
+  font-size: 0.75rem;
+  color: var(--twm-muted);
+}
+
+.cal-next__foot {
+  display: flex;
+  align-items: center;
+  gap: var(--twm-space-s);
+  flex-wrap: wrap;
+  padding-top: var(--twm-space-xs);
+  border-top: 1px solid var(--twm-border);
+}
+
+.cal-next__foot .cal-label {
+  flex: 1 1 10rem;
+}
+
+/* ---------- month grid ---------- */
+
+.cal-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border: 1px solid var(--twm-border);
+  border-radius: var(--twm-radius-m);
+  padding: var(--twm-space-xs);
+  background: var(--twm-surface);
+}
+
+.cal-grid__row {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 2px;
+}
+
+.cal-grid__head {
+  font-size: 0.6875rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--twm-muted);
+  padding-bottom: var(--twm-space-xs);
+}
+
+.cal-grid__weekday {
+  text-align: center;
+  padding: 0.15rem 0;
+}
+
+.cal-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  min-height: var(--twm-touch);
+  padding: 0.3rem 0.1rem;
+  border: 1px solid transparent;
+  border-radius: var(--twm-radius-s);
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  color: var(--sapTextColor, #1d2d3e);
+}
+
+.cal-day:hover {
+  background: var(--sapList_Hover_Background, #f2f2f2);
+}
+
+.cal-day:focus-visible {
+  outline: 2px solid var(--sapContent_FocusColor, #0032a5);
+  outline-offset: -2px;
+}
+
+.cal-day--out {
+  color: var(--twm-muted);
+  opacity: 0.65;
+}
+
+.cal-day--today {
+  border-color: var(--sapContent_BadgeBackground, #0070f2);
+  font-weight: 700;
+}
+
+.cal-day--selected {
+  background: var(--sapList_SelectionBackgroundColor, #e3f0ff);
+  border-color: var(--sapContent_BadgeBackground, #0070f2);
+}
+
+.cal-day__num {
+  font-size: 0.875rem;
+  line-height: 1.2;
+}
+
+.cal-day__marks {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 0.5rem;
+}
+
+/* An event is a round dot. */
+.cal-dot {
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: 50%;
+  background: var(--sapContent_BadgeBackground, #0070f2);
+}
+
+/* A surprise only this viewer can see is the same dot, hollow. */
+.cal-dot--only {
+  background: transparent;
+  border: 1px solid var(--sapContent_BadgeBackground, #0070f2);
+}
+
+/* A reminder is deliberately not a dot: a diamond reads as a different kind of thing
+   at 6 px, where a second colour of circle just reads as another event. */
+.cal-mark {
+  width: 0.375rem;
+  height: 0.375rem;
+  transform: rotate(45deg);
+  background: var(--sapIndicationColor_6, #e76500);
+}
+
+.cal-mark--done {
+  background: transparent;
+  border: 1px solid var(--sapIndicationColor_6, #e76500);
+}
+
+.cal-day__more {
+  font-size: 0.625rem;
+  color: var(--twm-muted);
+}
+
+@media (min-width: 700px) {
+  .cal-day {
+    min-height: 4rem;
+    justify-content: flex-start;
+  }
+
+  .cal-day__num {
+    font-size: 1rem;
+  }
+}
+
+/* ---------- list view ---------- */
+
+.cal-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--twm-space-m);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.cal-list__day {
+  display: flex;
+  flex-direction: column;
+  gap: var(--twm-space-xs);
+  border: 1px solid var(--twm-border);
+  border-radius: var(--twm-radius-m);
+  background: var(--twm-surface);
+  padding: var(--twm-space-s) var(--twm-space-m);
+}
+
+.cal-list__day--today {
+  border-color: var(--sapContent_BadgeBackground, #0070f2);
+}
+
+.cal-list__head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--twm-space-s);
+}
+
+.cal-list__date {
+  font-weight: 600;
+}
+
+.cal-list__weekday {
+  font-size: 0.75rem;
+  color: var(--twm-muted);
+  flex: 1 1 auto;
+}
+
+/* ---------- one entry, shared by the list and the day sheet ---------- */
+
+.cal-entries {
+  display: flex;
+  flex-direction: column;
+  gap: var(--twm-space-xs);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.cal-entry {
+  display: flex;
+  align-items: center;
+  gap: var(--twm-space-s);
+  min-height: var(--twm-touch);
+}
+
+.cal-entry__open {
+  display: flex;
+  align-items: center;
+  gap: var(--twm-space-s);
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: var(--twm-touch);
+  padding: var(--twm-space-xs) var(--twm-space-s);
+  border: 0;
+  border-radius: var(--twm-radius-s);
+  background: transparent;
+  text-align: start;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+
+.cal-entry__open:hover {
+  background: var(--sapList_Hover_Background, #f2f2f2);
+}
+
+.cal-entry__open:disabled {
+  cursor: default;
+}
+
+.cal-entry__icon {
+  color: var(--sapContent_IconColor, #0070f2);
+  flex: 0 0 auto;
+}
+
+.cal-entry--reminder .cal-entry__icon {
+  color: var(--sapIndicationColor_6, #e76500);
+}
+
+.cal-entry--done .cal-entry__title {
+  text-decoration: line-through;
+  color: var(--twm-muted);
+}
+
+.cal-entry__text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.cal-entry__title {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.cal-entry__meta {
+  font-size: 0.75rem;
+  color: var(--twm-muted);
+  overflow-wrap: anywhere;
+}
+
+.cal-entry__actions {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  flex: 0 0 auto;
+}
+
+.cal-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.05rem 0.4rem;
+  border-radius: var(--twm-radius-pill);
+  background: var(--sapInfobar_Background, #ebf8ff);
+  color: var(--sapTextColor, #1d2d3e);
+  font-size: 0.6875rem;
+  white-space: nowrap;
+}
+
+/* ---------- dialogs ---------- */
+
+.cal-sheet__body,
+.cal-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--twm-space-m);
+  padding: var(--twm-space-s) 0;
+  min-width: min(22rem, 78vw);
+}
+
+.cal-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--twm-space-xs);
+}
+
+.cal-field__hint {
+  font-size: 0.75rem;
+  color: var(--twm-muted);
+}

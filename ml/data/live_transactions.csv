@@ -1,0 +1,20 @@
+date,time,merchant_raw,amount_chf,payer,category,moment
+2024-06-15,19:30,The place where it started,0.00,person-1,Dining,date_night
+2026-01-11,11:20,MIGROS ZÜRICH HB,87.45,person-1,Groceries,everyday
+2026-01-17,20:10,RESTAURANT BLAUE ENTE,148.50,person-2,Dining,date_night
+2026-02-05,07:45,SBB CFF FFS BILLETT,42.00,person-2,Transport,everyday
+2026-02-14,18:20,GLOBUS DELICATESSA,96.00,person-1,Gifts,gift
+2026-03-07,18:40,KINO ABATON,44.00,person-1,Entertainment,date_night
+2026-03-19,10:00,NETFLIX.COM,24.90,person-2,Subscriptions,everyday
+2026-04-10,08:30,SWISS INTERNATIONAL AIR LINES,612.00,person-2,Travel,trip
+2026-04-11,21:05,HOTEL DA BAIXA LISBOA,384.00,person-2,Travel,trip
+2026-04-13,13:10,PASTEIS DE BELEM,22.40,person-1,Cafes,trip
+2026-05-09,19:50,ZUERI WEST BAR,76.00,person-2,Dining,date_night
+2026-05-23,15:30,APOTHEKE ZUR ROSE,58.20,person-1,Health,everyday
+2026-06-06,11:45,DENNER SATELLIT,61.35,person-2,Groceries,everyday
+2026-06-15,20:45,RESTAURANT KRONENHALLE,214.00,person-1,Dining,date_night
+2026-07-04,09:15,SPOTIFY AB,19.90,person-1,Subscriptions,everyday
+2026-07-11,12:30,CAFÉ SPRÜNGLI,18.60,person-2,Cafes,everyday
+2026-08-08,10:20,COOP PRONTO,34.80,person-2,Groceries,everyday
+2026-08-15,16:25,IKEA DIETLIKON,213.70,person-1,Home,everyday
+2026-09-01,17:00,MANOR GESCHENKE,120.00,person-2,Gifts,gift

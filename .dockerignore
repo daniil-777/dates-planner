@@ -1,0 +1,68 @@
+# Build context exclusions.
+#
+# The Dockerfile COPYs explicit paths, so this file is not a security boundary on its own —
+# its job is to keep the context small (node_modules alone is ~170 MB) and to keep the
+# build cache from being invalidated by files that have nothing to do with the image.
+#
+# The three lines that matter most are .env, *.sqlite and .git: a secret, a household's entire
+# financial history, and every version of both.
+
+# --- installed and generated ------------------------------------------------
+node_modules
+app/node_modules
+app/dist
+gen
+@cds-models
+*.tsbuildinfo
+
+# --- secrets ----------------------------------------------------------------
+# Every variant, because `.env.production` and `.env.local.bak` are the same mistake.
+.env
+.env.*
+!.env.example
+
+# --- data -------------------------------------------------------------------
+# The live ledger and its WAL/shm sidecars. The image ships an empty database that the
+# entrypoint creates on the volume; it must never ship a populated one.
+*.sqlite
+*.sqlite-*
+*.sqlite-journal
+backups
+db.sqlite
+db.sqlite-wal
+db.sqlite-shm
+
+# --- machine learning -------------------------------------------------------
+# `ml/model/weights.json` is deliberately NOT ignored — the Dockerfile copies it and the
+# classifier is dead without it. Everything else in ml/ is a laptop concern: the venv
+# (hundreds of MB), the generated training CSVs, the pickled sklearn model (~7 MB, only
+# `ml/export_ts.py` reads it) and the parity fixture (a test input).
+ml/.venv
+ml/__pycache__
+ml/data
+ml/aicore
+ml/model/*.pkl
+ml/model/parity_fixture.json
+**/__pycache__
+
+# --- version control and CI -------------------------------------------------
+.git
+.gitignore
+.github
+
+# --- tests and their output -------------------------------------------------
+test
+vitest.config.mts
+app/e2e
+app/playwright.config.ts
+playwright-report
+test-results
+
+# --- editor, OS, docs -------------------------------------------------------
+.DS_Store
+*.log
+.vscode
+.idea
+docs
+*.md
+!README.md

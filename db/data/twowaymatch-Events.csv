@@ -1,0 +1,5 @@
+ID,name,startsOn,endsOn,place,note,isSurprise,createdBy_ID,revealedAt
+f0000000-0000-4000-8000-000000000001,Lisbon Weekend,2026-04-10,2026-04-13,Lisboa,"Four of us, one long weekend, an indefensible number of pastéis.",false,b0000000-0000-4000-8000-000000000002,
+f0000000-0000-4000-8000-000000000002,Kronenhalle Dinner,2026-06-15,,Zürich,"Two years since document #1. Table for three, booked under the wrong name.",false,a0000000-0000-4000-8000-000000000001,
+f0000000-0000-4000-8000-000000000003,Engadin Between the Years,2026-12-27,2026-12-30,Pontresina,"Booked in September, which is the only way it ever works.",false,b0000000-0000-4000-8000-000000000002,
+f0000000-0000-4000-8000-000000000004,Weekend in Vals,2026-10-17,2026-10-18,Vals,"Booked. Not mentioned. Two nights and the stone baths, and not a word about it until October.",true,a0000000-0000-4000-8000-000000000001,

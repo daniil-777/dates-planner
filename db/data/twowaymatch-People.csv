@@ -1,0 +1,6 @@
+ID,name,colour,email,isDefault
+a0000000-0000-4000-8000-000000000001,Partner A,#0070F2,partner-a@example.com,true
+b0000000-0000-4000-8000-000000000002,Partner B,#F31DED,partner-b@example.com,true
+c0000000-0000-4000-8000-000000000003,Noemi Berger,#049F9A,noemi.berger@example.com,false
+c0000000-0000-4000-8000-000000000004,Luca Ferrari,#7858FF,luca.ferrari@example.com,false
+c0000000-0000-4000-8000-000000000005,Ines Almeida,#C87200,ines.almeida@example.com,false

@@ -1,0 +1,11 @@
+code,name,icon,colour,sortOrder
+Groceries,Groceries,cart,#0070F2,10
+Dining,Dining,meal,#E76500,20
+Cafes,Cafés,cup,#A45D00,30
+Transport,Transport,bus-public-transport,#7858FF,40
+Travel,Travel,flight,#049F9A,50
+Gifts,Gifts,gift,#F31DED,60
+Home,Home,home,#5B738B,70
+Health,Health,heartbeat,#D20A0A,80
+Entertainment,Entertainment,video,#C87200,90
+Subscriptions,Subscriptions,subscription,#256F3A,100

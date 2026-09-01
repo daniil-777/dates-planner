@@ -1,0 +1,2406 @@
+{
+  "generatedFrom": "ml/data/transactions.csv",
+  "nBuckets": 65536,
+  "rows": [
+    {
+      "merchantRaw": "KEBAB HOUSE WALLISELLEN",
+      "amount": 12.8,
+      "whenISO": "2024-06-15T13:37",
+      "expected": {
+        "category": "Dining",
+        "categoryConfidence": 0.93737,
+        "categoryTop3": [
+          {
+            "label": "Dining",
+            "p": 0.93737
+          },
+          {
+            "label": "Home",
+            "p": 0.019688
+          },
+          {
+            "label": "Transport",
+            "p": 0.012567
+          }
+        ],
+        "moment": "everyday",
+        "momentConfidence": 0.867497,
+        "momentTop3": [
+          {
+            "label": "everyday",
+            "p": 0.867497
+          },
+          {
+            "label": "gift",
+            "p": 0.071514
+          },
+          {
+            "label": "trip",
+            "p": 0.057849
+          }
+        ],
+        "engine": "local"
+      }
+    },
+    {
+      "merchantRaw": "SBB CFF FFS",
+      "amount": 32.87,
+      "whenISO": "2024-06-28T16:03",
+      "expected": {
+        "category": "Transport",
+        "categoryConfidence": 0.997761,
+        "categoryTop3": [
+          {
+            "label": "Transport",
+            "p": 0.997761
+          },
+          {
+            "label": "Travel",
+            "p": 0.000649
+          },
+          {
+            "label": "Gifts",
+            "p": 0.000445
+          }
+        ],
+        "moment": "everyday",
+        "momentConfidence": 0.933126,
+        "momentTop3": [
+          {
+            "label": "everyday",
+            "p": 0.933126
+          },
+          {
+            "label": "trip",
+            "p": 0.034893
+          },
+          {
+            "label": "gift",
+            "p": 0.018976
+          }
+        ],
+        "engine": "local"
+      }
+    },
+    {
+      "merchantRaw": "MCDONALDS",
+      "amount": 27.02,
+      "whenISO": "2024-08-17T18:45",
+      "expected": {
+        "category": "Dining",
+        "categoryConfidence": 0.998721,
+        "categoryTop3": [
+          {
+            "label": "Dining",
+            "p": 0.998721
+          },
+          {
+            "label": "Entertainment",
+            "p": 0.000501
+          },
+          {
+            "label": "Groceries",
+            "p": 0.000317
+          }
+        ],
+        "moment": "everyday",
+        "momentConfidence": 0.86463,
+        "momentTop3": [
+          {
+            "label": "everyday",
+            "p": 0.86463
+          },
+          {
+            "label": "gift",
+            "p": 0.067245
+          },
+          {
+            "label": "trip",
+            "p": 0.064759
+          }
+        ],
+        "engine": "local"
+      }
+    },
+    {
+      "merchantRaw": "ORELL FUESSLI 1936",
+      "amount": 61.02,
+      "whenISO": "2024-08-30T17:50",
+      "expected": {
+        "category": "Gifts",
+        "categoryConfidence": 0.995644,
+        "categoryTop3": [
+          {
+            "label": "Gifts",
+            "p": 0.995644
+          },
+          {
+            "label": "Travel",
+            "p": 0.00116
+          },
+          {
+            "label": "Transport",
+            "p": 0.000872
+          }
+        ],
+        "moment": "gift",
+        "momentConfidence": 0.949376,
+        "momentTop3": [
+          {
+            "label": "gift",
+            "p": 0.949376
+          },
+          {
+            "label": "everyday",
+            "p": 0.045865
+          },
+          {
+            "label": "trip",
+            "p": 0.003288
+          }
+        ],
+        "engine": "local"
+      }
+    },
+    {
+      "merchantRaw": "TAXI ZUERICH SCHWEIZ",
+      "amount": 164.78,
+      "whenISO": "2024-09-01T16:40",
+      "expected": {
+        "category": "Transport",
+        "categoryConfidence": 0.759229,
+        "categoryTop3": [
+          {
+            "label": "Transport",
+            "p": 0.759229
+          },
+          {
+            "label": "Entertainment",
+            "p": 0.063314
+          },
+          {
+            "label": "Home",
+            "p": 0.06103
+          }
+        ],
+        "moment": "everyday",
+        "momentConfidence": 0.913617,
+        "momentTop3": [
+          {
+            "label": "everyday",
+            "p": 0.913617
+          },
+          {
+            "label": "trip",
+            "p": 0.046919
+          },
+          {
+            "label": "date_night",
+            "p": 0.035032
+          }
+        ],
+        "engine": "local"
+      }
+    },
+    {
+      "merchantRaw": "STARBUCKS 4540 27.12.26",
+      "amount": 8.58,
+      "whenISO": "2024-09-11T13:02",
+      "expected": {
+        "category": "Cafes",
+        "categoryConfidence": 0.997527,
+        "categoryTop3": [
+          {
+            "label": "Cafes",
+            "p": 0.997527
+          },
+          {
+            "label": "Transport",
+            "p": 0.000952
+          },
+          {
+            "label": "Groceries",
+            "p": 0.000502
+          }
+        ],
+        "moment": "everyday",
+        "momentConfidence": 0.915631,
+        "momentTop3": [
+          {
+            "label": "everyday",
+            "p": 0.915631
+          },
+          {
+            "label": "trip",
+            "p": 0.040135
+          },
+          {
+            "label": "date_night",
+            "p": 0.032482
+          }
+        ],
+        "engine": "local"
+      }
+    },
+    {
+      "merchantRaw": "orell fuessli BERN",
+      "amount": 64.8,
+      "whenISO": "2024-09-16T15:30",
+      "expected": {
+        "category": "Gifts",
+        "categoryConfidence": 0.993946,
+        "categoryTop3": [
+          {
+            "label": "Gifts",
+            "p": 0.993946
+          },
+          {
+            "label": "Home",
+            "p": 0.001319
+          },
+          {
+            "label": "Groceries",
+            "p": 0.001156
+          }
+        ],
+        "moment": "gift",
+        "momentConfidence": 0.910353,
+        "momentTop3": [
+          {
+            "label": "gift",
+            "p": 0.910353
+          },
+          {
+            "label": "everyday",
+            "p": 0.080205
+          },
+          {
+            "label": "trip",
+            "p": 0.008435
+          }
+        ],
+        "engine": "local"
+      }
+    },
+    {
+      "merchantRaw": "MIGROS/ST GALLEN NR.9970",
+      "amount": 18.89,
+      "whenISO": "2024-09-26T09:48",
+      "expected": {
+        "category": "Groceries",
+        "categoryConfidence": 0.996255,
+        "categoryTop3": [
+          {
+            "label": "Groceries",
+            "p": 0.996255
+          },
+          {
+            "label": "Transport",
+            "p": 0.001637
+          },
+          {
+            "label": "Dining",
+            "p": 0.000714
+          }
+        ],
+        "moment": "everyday",
+        "momentConfidence": 0.833995,
+        "momentTop3": [
+          {
+            "label": "everyday",
+            "p": 0.833995
+          },
+          {
+            "label": "trip",
+            "p": 0.090521
+          },
+          {
+            "label": "gift",
+            "p": 0.068082
+          }
+        ],
+        "engine": "local"
+      }
+    },
+    {
+      "merchantRaw": "physiotherapie seefeld //ZUERICH WIEDIKON 1581",
+      "amount": 105.59,
+      "whenISO": "2024-10-07T13:28",
+      "expected": {
+        "category": "Health",
+        "categoryConfidence": 0.966437,
+        "categoryTop3": [
+          {
+            "label": "Health",
+            "p": 0.966437
+          },
+          {
+            "label": "Gifts",
+            "p": 0.015433
+          },
+          {
+            "label": "Travel",
+            "p": 0.004582
+          }
+        ],
+        "moment": "everyday",
+        "momentConfidence": 0.939809,
+        "momentTop3": [
+          {
+            "label": "everyday",
+            "p": 0.939809
+          },
+          {
+            "label": "trip",
+            "p": 0.048926
+          },
+          {
+            "label": "gift",
+            "p": 0.006986
+          }
+        ],
+        "engine": "local"
+      }
+    },
+    {
+      "merchantRaw": "Migros //ZH STORE5478 NO. 97643442",
+      "amount": 26.66,
+      "whenISO": "2024-10-29T18:19",
+      "expected": {
+        "category": "Groceries",
+        "categoryConfidence": 0.986041,
+        "categoryTop3": [
+          {
+            "label": "Groceries",
+            "p": 0.986041
+          },
+          {
+            "label": "Dining",
+            "p": 0.006351
+          },
+          {
+            "label": "Transport",
+            "p": 0.00433
+          }
+        ],
+        "moment": "everyday",
+        "momentConfidence": 0.919332,
+        "momentTop3": [
+          {
+            "label": "everyday",
+            "p": 0.919332
+          },
+          {
+            "label": "date_night",
+            "p": 0.02976
+          },
+          {
+            "label": "trip",
+            "p": 0.027844
+          }
+        ],
+        "engine": "local"
+      }
+    },
+    {
+      "merchantRaw": "PARKHAUS HOHE PROMENADE",
+      "amount": 9.15,
+      "whenISO": "2024-12-23T20:46",
+      "expected": {
+        "category": "Transport",
+        "categoryConfidence": 0.990698,
+        "categoryTop3": [
+          {
+            "label": "Transport",
+            "p": 0.990698
+          },
+          {
+            "label": "Entertainment",
+            "p": 0.004129
+          },
+          {
+            "label": "Cafes",
+            "p": 0.002817
+          }
+        ],
+        "moment": "everyday",
+        "momentConfidence": 0.910639,
+        "momentTop3": [
+          {
+            "label": "everyday",
+            "p": 0.910639
+          },
+          {
+            "label": "trip",
+            "p": 0.046257
+          },
+          {
+            "label": "date_night",
+            "p": 0.042198
+          }
+        ],
+        "engine": "local"
+      }
+    },
+    {
+      "merchantRaw": "kaffeehaus sperl 11.02.26 REF 71538615",
+      "amount": 20.92,
+      "whenISO": "2025-01-12T09:44",
+      "expected": {
+        "category": "Cafes",
+        "categoryConfidence": 0.984887,
+        "categoryTop3": [
+          {
+            "label": "Cafes",
+            "p": 0.984887
+          },
+          {
+            "label": "Entertainment",
+            "p": 0.006261
+          },
+          {
+            "label": "Transport",
+            "p": 0.003181
+          }
+        ],
+        "moment": "trip",
+        "momentConfidence": 0.94062,
+        "momentTop3": [
+          {
+            "label": "trip",
+            "p": 0.94062
+          },
+          {
+            "label": "everyday",
+            "p": 0.053305
+          },
+          {
+            "label": "date_night",
+            "p": 0.003667
+          }
+        ],
+        "engine": "local"
+      }
+    },
+    {
+      "merchantRaw": "OPERNHAUS ZUERICH WALLISELLEN",
+      "amount": 230.79,
+      "whenISO": "2025-02-01T13:42",
+      "expected": {
+        "category": "Entertainment",
+        "categoryConfidence": 0.855484,
+        "categoryTop3": [
+          {
+            "label": "Entertainment",
+            "p": 0.855484
+          },
+          {
+            "label": "Home",
+            "p": 0.039516
+          },
+          {
+            "label": "Dining",
+            "p": 0.03777
+          }
+        ],
+        "moment": "everyday",
+        "momentConfidence": 0.604824,
+        "momentTop3": [
+          {
+            "label": "everyday",
+            "p": 0.604824
+          },
+          {
+            "label": "trip",
+            "p": 0.188199
+          },
+          {
+            "label": "date_night",
+            "p": 0.157409
+          }
+        ],
+        "engine": "local"
+      }
+    },
+    {
+      "merchantRaw": "COOP BAU HOBBY",
+      "amount": 49.46,
+      "whenISO": "2025-02-25T17:15",
+      "expected": {
+        "category": "Home",
+        "categoryConfidence": 0.992856,
+        "categoryTop3": [
+          {
+            "label": "Home",
+            "p": 0.992856
+          },
+          {
+            "label": "Groceries",
+            "p": 0.004579
+          },
+          {
+            "label": "Travel",
+            "p": 0.000653
+          }
+        ],
+        "moment": "everyday",
+        "momentConfidence": 0.935007,
+        "momentTop3": [
+          {
+            "label": "everyday",
+            "p": 0.935007
+          },
+          {
+            "label": "gift",
+            "p": 0.033381
+          },
+          {
+            "label": "trip",
+            "p": 0.029578
+          }
+        ],
+        "engine": "local"
+      }
+    },
+    {
+      "merchantRaw": "easyjet",
+      "amount": 93.87,
+      "whenISO": "2025-03-05T15:38",
+      "expected": {
+        "category": "Travel",
+        "categoryConfidence": 0.97613,
+        "categoryTop3": [
+          {
+            "label": "Travel",
+            "p": 0.97613
+          },
+          {
+            "label": "Home",
+            "p": 0.007086
+          },
+          {
+            "label": "Gifts",
+            "p": 0.004982
+          }
+        ],
+        "moment": "trip",
+        "momentConfidence": 0.970393,
+        "momentTop3": [
+          {
+            "label": "trip",
+            "p": 0.970393
+          },
+          {
+            "label": "everyday",
+            "p": 0.027836
+          },
+          {
+            "label": "gift",
+            "p": 0.001299
+          }
+        ],
+        "engine": "local"
+      }
+    },
+    {
+      "merchantRaw": "COOP KLOTEN 05.06.26",
+      "amount": 31.97,
+      "whenISO": "2025-03-06T08:36",
+      "expected": {
+        "category": "Groceries",
+        "categoryConfidence": 0.984675,
+        "categoryTop3": [
+          {
+            "label": "Groceries",
+            "p": 0.984675
+          },
+          {
+            "label": "Home",
+            "p": 0.004413
+          },
+          {
+            "label": "Transport",
+            "p": 0.003968
+          }
+        ],
+        "moment": "everyday",
+        "momentConfidence": 0.957053,
+        "momentTop3": [
+          {
+            "label": "everyday",
+            "p": 0.957053
+          },
+          {
+            "label": "trip",
+            "p": 0.027621
+          },
+          {
+            "label": "gift",
+            "p": 0.012504
+          }
+        ],
+        "engine": "local"
+      }
+    },
+    {
+      "merchantRaw": "easyjet SCHLIEREN KD.NR 80912158",
+      "amount": 208.53,
+      "whenISO": "2025-03-16T21:53",
+      "expected": {
+        "category": "Travel",
+        "categoryConfidence": 0.968133,
+        "categoryTop3": [
+          {
+            "label": "Travel",
+            "p": 0.968133
+          },
+          {
+            "label": "Dining",
+            "p": 0.013371
+          },
+          {
+            "label": "Entertainment",
+            "p": 0.011502
+          }
+        ],
+        "moment": "trip",
+        "momentConfidence": 0.663992,
+        "momentTop3": [
+          {
+            "label": "trip",
+            "p": 0.663992
+          },
+          {
+            "label": "everyday",
+            "p": 0.188477
+          },
+          {
+            "label": "date_night",
+            "p": 0.121575
+          }
+        ],
+        "engine": "local"
+      }
+    },
+    {
+      "merchantRaw": "MIGROS 24.06.26",
+      "amount": 12.26,
+      "whenISO": "2025-04-05T17:28",
+      "expected": {
+        "category": "Groceries",
+        "categoryConfidence": 0.999922,
+        "categoryTop3": [
+          {
+            "label": "Groceries",
+            "p": 0.999922
+          },
+          {
+            "label": "Transport",
+            "p": 3.9e-05
+          },
+          {
+            "label": "Cafes",
+            "p": 1.3e-05
+          }
+        ],
+        "moment": "everyday",
+        "momentConfidence": 0.896272,
+        "momentTop3": [
+          {
+            "label": "everyday",
+            "p": 0.896272
+          },
+          {
+            "label": "trip",
+            "p": 0.056147
+          },
+          {
+            "label": "gift",
+            "p": 0.025419
+          }
+        ],
+        "engine": "local"
+      }
+    },
+    {
+      "merchantRaw": "Mobility //USTER SUISSE",
+      "amount": 62.88,
+      "whenISO": "2025-04-06T17:59",
+      "expected": {
+        "category": "Transport",
+        "categoryConfidence": 0.959071,
+        "categoryTop3": [
+          {
+            "label": "Transport",
+            "p": 0.959071
+          },
+          {
+            "label": "Groceries",
+            "p": 0.011241
+          },
+          {
+            "label": "Home",
+            "p": 0.011056
+          }
+        ],
+        "moment": "everyday",
+        "momentConfidence": 0.915197,
+        "momentTop3": [
+          {
+            "label": "everyday",
+            "p": 0.915197
+          },
+          {
+            "label": "trip",
+            "p": 0.052909
+          },
+          {
+            "label": "date_night",
+            "p": 0.019609
+          }
+        ],
+        "engine": "local"
+      }
+    },
+    {
+      "merchantRaw": "SERAFE 19.01.26",
+      "amount": 111.73,
+      "whenISO": "2025-04-11T04:56",
+      "expected": {
+        "category": "Subscriptions",
+        "categoryConfidence": 0.997354,
+        "categoryTop3": [
+          {
+            "label": "Subscriptions",
+            "p": 0.997354
+          },
+          {
+            "label": "Cafes",
+            "p": 0.000815
+          },
+          {
+            "label": "Health",
+            "p": 0.000699
+          }
+        ],
+        "moment": "everyday",
+        "momentConfidence": 0.95337,
+        "momentTop3": [
+          {
+            "label": "everyday",
+            "p": 0.95337
+          },
+          {
+            "label": "date_night",
+            "p": 0.039982
+          },
+          {
+            "label": "trip",
+            "p": 0.006012
+          }
+        ],
+        "engine": "local"
+      }
+    },
+    {
+      "merchantRaw": "Restaurant Santa Lucia Wallisellen SCHWEIZ",
+      "amount": 101.26,
+      "whenISO": "2025-04-16T18:20",
+      "expected": {
+        "category": "Dining",
+        "categoryConfidence": 0.996363,
+        "categoryTop3": [
+          {
+            "label": "Dining",
+            "p": 0.996363
+          },
+          {
+            "label": "Gifts",
+            "p": 0.000821
+          },
+          {
+            "label": "Entertainment",
+            "p": 0.000666
+          }
+        ],
+        "moment": "everyday",
+        "momentConfidence": 0.564754,
+        "momentTop3": [
+          {
+            "label": "everyday",
+            "p": 0.564754
+          },
+          {
+            "label": "date_night",
+            "p": 0.352185
+          },
+          {
+            "label": "trip",
+            "p": 0.071099
+          }
+        ],
+        "engine": "local"
+      }
+    },
+    {
+      "merchantRaw": "PHYSIOTHERAPIE SEEFELD/DIETIKON FIL.4666",
+      "amount": 68.83,
+      "whenISO": "2025-04-29T08:00",
+      "expected": {
+        "category": "Health",
+        "categoryConfidence": 0.963844,
+        "categoryTop3": [
+          {
+            "label": "Health",
+            "p": 0.963844
+          },
+          {
+            "label": "Travel",
+            "p": 0.010427
+          },
+          {
+            "label": "Transport",
+            "p": 0.005314
+          }
+        ],
+        "moment": "everyday",
+        "momentConfidence": 0.91601,
+        "momentTop3": [
+          {
+            "label": "everyday",
+            "p": 0.91601
+          },
+          {
+            "label": "trip",
+            "p": 0.062699
+          },
+          {
+            "label": "gift",
+            "p": 0.016255
+          }
+        ],
+        "engine": "local"
+      }
+    },
+    {
+      "merchantRaw": "RESTAURANT SANTA LUCIA 7982",
+      "amount": 90.43,
+      "whenISO": "2025-05-03T19:07",
+      "expected": {
+        "category": "Dining",
+        "categoryConfidence": 0.999436,
+        "categoryTop3": [
+          {
+            "label": "Dining",
+            "p": 0.999436
+          },
+          {
+            "label": "Entertainment",
+            "p": 0.000131
+          },
+          {
+            "label": "Transport",
+            "p": 0.000129
+          }
+        ],
+        "moment": "date_night",
+        "momentConfidence": 0.7608,
+        "momentTop3": [
+          {
+            "label": "date_night",
+            "p": 0.7608
+          },
+          {
+            "label": "everyday",
+            "p": 0.201783
+          },
+          {
+            "label": "trip",
+            "p": 0.032092
+          }
+        ],
+        "engine": "local"
+      }
+    },
+    {
+      "merchantRaw": "Museu Nacional/LUGANO NR.7432",
+      "amount": 18.49,
+      "whenISO": "2025-05-03T22:10",
+      "expected": {
+        "category": "Entertainment",
+        "categoryConfidence": 0.994829,
+        "categoryTop3": [
+          {
+            "label": "Entertainment",
+            "p": 0.994829
+          },
+          {
+            "label": "Dining",
+            "p": 0.002722
+          },
+          {
+            "label": "Transport",
+            "p": 0.000963
+          }
+        ],
+        "moment": "trip",
+        "momentConfidence": 0.953918,
+        "momentTop3": [
+          {
+            "label": "trip",
+            "p": 0.953918
+          },
+          {
+            "label": "everyday",
+            "p": 0.043644
+          },
+          {
+            "label": "date_night",
+            "p": 0.001753
+          }
+        ],
+        "engine": "local"
+      }
+    },
+    {
+      "merchantRaw": "migros 3003",
+      "amount": 32.11,
+      "whenISO": "2025-05-24T10:31",
+      "expected": {
+        "category": "Groceries",
+        "categoryConfidence": 0.999729,
+        "categoryTop3": [
+          {
+            "label": "Groceries",
+            "p": 0.999729
+          },
+          {
+            "label": "Dining",
+            "p": 8.8e-05
+          },
+          {
+            "label": "Transport",
+            "p": 6.3e-05
+          }
+        ],
+        "moment": "everyday",
+        "momentConfidence": 0.887404,
+        "momentTop3": [
+          {
+            "label": "everyday",
+            "p": 0.887404
+          },
+          {
+            "label": "trip",
+            "p": 0.067812
+          },
+          {
+            "label": "gift",
+            "p": 0.031652
+          }
+        ],
+        "engine": "local"
+      }
+    },
+    {
+      "merchantRaw": "MIGROS ZUERICH WIEDIKON 6466 SUISSE",
+      "amount": 52.41,
+      "whenISO": "2025-05-24T11:26",
+      "expected": {
+        "category": "Groceries",
+        "categoryConfidence": 0.976819,
+        "categoryTop3": [
+          {
+            "label": "Groceries",
+            "p": 0.976819
+          },
+          {
+            "label": "Home",
+            "p": 0.006636
+          },
+          {
+            "label": "Dining",
+            "p": 0.006548
+          }
+        ],
+        "moment": "everyday",
+        "momentConfidence": 0.840944,
+        "momentTop3": [
+          {
+            "label": "everyday",
+            "p": 0.840944
+          },
+          {
+            "label": "trip",
+            "p": 0.108435
+          },
+          {
+            "label": "gift",
+            "p": 0.035759
+          }
+        ],
+        "engine": "local"
+      }
+    },
+    {
+      "merchantRaw": "BLUME 3000 //Dietikon",
+      "amount": 46.26,
+      "whenISO": "2025-06-03T14:52",
+      "expected": {
+        "category": "Gifts",
+        "categoryConfidence": 0.970389,
+        "categoryTop3": [
+          {
+            "label": "Gifts",
+            "p": 0.970389
+          },
+          {
+            "label": "Home",
+            "p": 0.009546
+          },
+          {
+            "label": "Health",
+            "p": 0.005153
+          }
+        ],
+        "moment": "gift",
+        "momentConfidence": 0.81183,
+        "momentTop3": [
+          {
+            "label": "gift",
+            "p": 0.81183
+          },
+          {
+            "label": "everyday",
+            "p": 0.141861
+          },
+          {
+            "label": "date_night",
+            "p": 0.0242
+          }
+        ],
+        "engine": "local"
+      }
+    },
+    {
+      "merchantRaw": "HOTEL SCHWEIZERHOF //ZUERICH OERLIKON 06.01.25",
+      "amount": 479.03,
+      "whenISO": "2025-06-08T06:18",
+      "expected": {
+        "category": "Travel",
+        "categoryConfidence": 0.984628,
+        "categoryTop3": [
+          {
+            "label": "Travel",
+            "p": 0.984628
+          },
+          {
+            "label": "Subscriptions",
+            "p": 0.009492
+          },
+          {
+            "label": "Home",
+            "p": 0.002616
+          }
+        ],
+        "moment": "trip",
+        "momentConfidence": 0.695552,
+        "momentTop3": [
+          {
+            "label": "trip",
+            "p": 0.695552
+          },
+          {
+            "label": "everyday",
+            "p": 0.274799
+          },
+          {
+            "label": "date_night",
+            "p": 0.017843
+          }
+        ],
+        "engine": "local"
+      }
+    },
+    {
+      "merchantRaw": "HALLENSTADION THALWIL STORE3557",
+      "amount": 218.84,
+      "whenISO": "2025-06-08T18:35",
+      "expected": {
+        "category": "Entertainment",
+        "categoryConfidence": 0.907391,
+        "categoryTop3": [
+          {
+            "label": "Entertainment",
+            "p": 0.907391
+          },
+          {
+            "label": "Dining",
+            "p": 0.050665
+          },
+          {
+            "label": "Travel",
+            "p": 0.025682
+          }
+        ],
+        "moment": "date_night",
+        "momentConfidence": 0.667687,
+        "momentTop3": [
+          {
+            "label": "date_night",
+            "p": 0.667687
+          },
+          {
+            "label": "everyday",
+            "p": 0.297409
+          },
+          {
+            "label": "trip",
+            "p": 0.032034
+          }
+        ],
+        "engine": "local"
+      }
+    },
+    {
+      "merchantRaw": "VOLG 18.06.25",
+      "amount": 32.53,
+      "whenISO": "2025-06-19T18:50",
+      "expected": {
+        "category": "Groceries",
+        "categoryConfidence": 0.992611,
+        "categoryTop3": [
+          {
+            "label": "Groceries",
+            "p": 0.992611
+          },
+          {
+            "label": "Dining",
+            "p": 0.002954
+          },
+          {
+            "label": "Entertainment",
+            "p": 0.001733
+          }
+        ],
+        "moment": "everyday",
+        "momentConfidence": 0.966569,
+        "momentTop3": [
+          {
+            "label": "everyday",
+            "p": 0.966569
+          },
+          {
+            "label": "trip",
+            "p": 0.028554
+          },
+          {
+            "label": "date_night",
+            "p": 0.003818
+          }
+        ],
+        "engine": "local"
+      }
+    },
+    {
+      "merchantRaw": "LIDL SCHWEIZ 17.12.24",
+      "amount": 19.93,
+      "whenISO": "2025-06-25T14:48",
+      "expected": {
+        "category": "Groceries",
+        "categoryConfidence": 0.988391,
+        "categoryTop3": [
+          {
+            "label": "Groceries",
+            "p": 0.988391
+          },
+          {
+            "label": "Home",
+            "p": 0.002215
+          },
+          {
+            "label": "Transport",
+            "p": 0.002188
+          }
+        ],
+        "moment": "everyday",
+        "momentConfidence": 0.963566,
+        "momentTop3": [
+          {
+            "label": "everyday",
+            "p": 0.963566
+          },
+          {
+            "label": "trip",
+            "p": 0.034993
+          },
+          {
+            "label": "gift",
+            "p": 0.000897
+          }
+        ],
+        "engine": "local"
+      }
+    },
+    {
+      "merchantRaw": "SBB CFF FFS/ZURICH",
+      "amount": 36.02,
+      "whenISO": "2025-07-23T18:32",
+      "expected": {
+        "category": "Transport",
+        "categoryConfidence": 0.98485,
+        "categoryTop3": [
+          {
+            "label": "Transport",
+            "p": 0.98485
+          },
+          {
+            "label": "Entertainment",
+            "p": 0.004977
+          },
+          {
+            "label": "Dining",
+            "p": 0.004646
+          }
+        ],
+        "moment": "everyday",
+        "momentConfidence": 0.848312,
+        "momentTop3": [
+          {
+            "label": "everyday",
+            "p": 0.848312
+          },
+          {
+            "label": "date_night",
+            "p": 0.098153
+          },
+          {
+            "label": "trip",
+            "p": 0.038192
+          }
+        ],
+        "engine": "local"
+      }
+    },
+    {
+      "merchantRaw": "Optiker Koch",
+      "amount": 137.53,
+      "whenISO": "2025-08-19T11:24",
+      "expected": {
+        "category": "Health",
+        "categoryConfidence": 0.991071,
+        "categoryTop3": [
+          {
+            "label": "Health",
+            "p": 0.991071
+          },
+          {
+            "label": "Dining",
+            "p": 0.003474
+          },
+          {
+            "label": "Gifts",
+            "p": 0.00142
+          }
+        ],
+        "moment": "everyday",
+        "momentConfidence": 0.955712,
+        "momentTop3": [
+          {
+            "label": "everyday",
+            "p": 0.955712
+          },
+          {
+            "label": "gift",
+            "p": 0.037879
+          },
+          {
+            "label": "trip",
+            "p": 0.004596
+          }
+        ],
+        "engine": "local"
+      }
+    },
+    {
+      "merchantRaw": "kronenhalle FIL.7650",
+      "amount": 146.32,
+      "whenISO": "2025-12-01T12:33",
+      "expected": {
+        "category": "Dining",
+        "categoryConfidence": 0.974753,
+        "categoryTop3": [
+          {
+            "label": "Dining",
+            "p": 0.974753
+          },
+          {
+            "label": "Gifts",
+            "p": 0.005675
+          },
+          {
+            "label": "Groceries",
+            "p": 0.005556
+          }
+        ],
+        "moment": "everyday",
+        "momentConfidence": 0.706894,
+        "momentTop3": [
+          {
+            "label": "everyday",
+            "p": 0.706894
+          },
+          {
+            "label": "gift",
+            "p": 0.133068
+          },
+          {
+            "label": "trip",
+            "p": 0.100433
+          }
+        ],
+        "engine": "local"
+      }
+    },
+    {
+      "merchantRaw": "cafe spruengli 2333",
+      "amount": 16.66,
+      "whenISO": "2026-01-02T08:52",
+      "expected": {
+        "category": "Cafes",
+        "categoryConfidence": 0.999521,
+        "categoryTop3": [
+          {
+            "label": "Cafes",
+            "p": 0.999521
+          },
+          {
+            "label": "Transport",
+            "p": 0.000217
+          },
+          {
+            "label": "Gifts",
+            "p": 6.9e-05
+          }
+        ],
+        "moment": "everyday",
+        "momentConfidence": 0.745167,
+        "momentTop3": [
+          {
+            "label": "everyday",
+            "p": 0.745167
+          },
+          {
+            "label": "date_night",
+            "p": 0.167578
+          },
+          {
+            "label": "trip",
+            "p": 0.062361
+          }
+        ],
+        "engine": "local"
+      }
+    },
+    {
+      "merchantRaw": "BP TANKSTELLE",
+      "amount": 53.0,
+      "whenISO": "2026-01-31T18:50",
+      "expected": {
+        "category": "Transport",
+        "categoryConfidence": 0.993961,
+        "categoryTop3": [
+          {
+            "label": "Transport",
+            "p": 0.993961
+          },
+          {
+            "label": "Dining",
+            "p": 0.005112
+          },
+          {
+            "label": "Entertainment",
+            "p": 0.000364
+          }
+        ],
+        "moment": "everyday",
+        "momentConfidence": 0.853523,
+        "momentTop3": [
+          {
+            "label": "everyday",
+            "p": 0.853523
+          },
+          {
+            "label": "trip",
+            "p": 0.114317
+          },
+          {
+            "label": "date_night",
+            "p": 0.028943
+          }
+        ],
+        "engine": "local"
+      }
+    },
+    {
+      "merchantRaw": "coop //SCHLIEREN",
+      "amount": 32.33,
+      "whenISO": "2026-02-05T11:28",
+      "expected": {
+        "category": "Groceries",
+        "categoryConfidence": 0.983078,
+        "categoryTop3": [
+          {
+            "label": "Groceries",
+            "p": 0.983078
+          },
+          {
+            "label": "Home",
+            "p": 0.005172
+          },
+          {
+            "label": "Gifts",
+            "p": 0.00405
+          }
+        ],
+        "moment": "everyday",
+        "momentConfidence": 0.937841,
+        "momentTop3": [
+          {
+            "label": "everyday",
+            "p": 0.937841
+          },
+          {
+            "label": "gift",
+            "p": 0.049449
+          },
+          {
+            "label": "trip",
+            "p": 0.008591
+          }
+        ],
+        "engine": "local"
+      }
+    },
+    {
+      "merchantRaw": "Micasa 9665",
+      "amount": 96.11,
+      "whenISO": "2026-02-06T09:57",
+      "expected": {
+        "category": "Home",
+        "categoryConfidence": 0.99599,
+        "categoryTop3": [
+          {
+            "label": "Home",
+            "p": 0.99599
+          },
+          {
+            "label": "Dining",
+            "p": 0.001217
+          },
+          {
+            "label": "Travel",
+            "p": 0.00101
+          }
+        ],
+        "moment": "everyday",
+        "momentConfidence": 0.997482,
+        "momentTop3": [
+          {
+            "label": "everyday",
+            "p": 0.997482
+          },
+          {
+            "label": "trip",
+            "p": 0.001408
+          },
+          {
+            "label": "date_night",
+            "p": 0.000671
+          }
+        ],
+        "engine": "local"
+      }
+    },
+    {
+      "merchantRaw": "RESTAURANT BLAUE ENTE Luzern",
+      "amount": 136.6,
+      "whenISO": "2026-02-10T19:57",
+      "expected": {
+        "category": "Dining",
+        "categoryConfidence": 0.996948,
+        "categoryTop3": [
+          {
+            "label": "Dining",
+            "p": 0.996948
+          },
+          {
+            "label": "Entertainment",
+            "p": 0.000926
+          },
+          {
+            "label": "Travel",
+            "p": 0.000844
+          }
+        ],
+        "moment": "date_night",
+        "momentConfidence": 0.653596,
+        "momentTop3": [
+          {
+            "label": "date_night",
+            "p": 0.653596
+          },
+          {
+            "label": "everyday",
+            "p": 0.330854
+          },
+          {
+            "label": "trip",
+            "p": 0.011752
+          }
+        ],
+        "engine": "local"
+      }
+    },
+    {
+      "merchantRaw": "Denner WINTERTHUR",
+      "amount": 36.07,
+      "whenISO": "2026-03-05T16:14",
+      "expected": {
+        "category": "Groceries",
+        "categoryConfidence": 0.962685,
+        "categoryTop3": [
+          {
+            "label": "Groceries",
+            "p": 0.962685
+          },
+          {
+            "label": "Gifts",
+            "p": 0.007664
+          },
+          {
+            "label": "Health",
+            "p": 0.00711
+          }
+        ],
+        "moment": "everyday",
+        "momentConfidence": 0.97325,
+        "momentTop3": [
+          {
+            "label": "everyday",
+            "p": 0.97325
+          },
+          {
+            "label": "trip",
+            "p": 0.016472
+          },
+          {
+            "label": "date_night",
+            "p": 0.008283
+          }
+        ],
+        "engine": "local"
+      }
+    },
+    {
+      "merchantRaw": "PATHE SPREITENBACH Zh",
+      "amount": 21.34,
+      "whenISO": "2026-03-07T22:01",
+      "expected": {
+        "category": "Entertainment",
+        "categoryConfidence": 0.996754,
+        "categoryTop3": [
+          {
+            "label": "Entertainment",
+            "p": 0.996754
+          },
+          {
+            "label": "Transport",
+            "p": 0.001483
+          },
+          {
+            "label": "Groceries",
+            "p": 0.000616
+          }
+        ],
+        "moment": "everyday",
+        "momentConfidence": 0.511797,
+        "momentTop3": [
+          {
+            "label": "everyday",
+            "p": 0.511797
+          },
+          {
+            "label": "date_night",
+            "p": 0.484666
+          },
+          {
+            "label": "trip",
+            "p": 0.00268
+          }
+        ],
+        "engine": "local"
+      }
+    },
+    {
+      "merchantRaw": "INTERFLORA/ZUERICH OERLIKON",
+      "amount": 89.36,
+      "whenISO": "2026-03-11T15:16",
+      "expected": {
+        "category": "Gifts",
+        "categoryConfidence": 0.951689,
+        "categoryTop3": [
+          {
+            "label": "Gifts",
+            "p": 0.951689
+          },
+          {
+            "label": "Home",
+            "p": 0.013769
+          },
+          {
+            "label": "Health",
+            "p": 0.008904
+          }
+        ],
+        "moment": "gift",
+        "momentConfidence": 0.856493,
+        "momentTop3": [
+          {
+            "label": "gift",
+            "p": 0.856493
+          },
+          {
+            "label": "everyday",
+            "p": 0.12274
+          },
+          {
+            "label": "trip",
+            "p": 0.016414
+          }
+        ],
+        "engine": "local"
+      }
+    },
+    {
+      "merchantRaw": "Socar Tankstelle CARD*6252",
+      "amount": 67.72,
+      "whenISO": "2026-03-12T16:07",
+      "expected": {
+        "category": "Transport",
+        "categoryConfidence": 0.990224,
+        "categoryTop3": [
+          {
+            "label": "Transport",
+            "p": 0.990224
+          },
+          {
+            "label": "Gifts",
+            "p": 0.00363
+          },
+          {
+            "label": "Health",
+            "p": 0.001211
+          }
+        ],
+        "moment": "everyday",
+        "momentConfidence": 0.928694,
+        "momentTop3": [
+          {
+            "label": "everyday",
+            "p": 0.928694
+          },
+          {
+            "label": "gift",
+            "p": 0.028781
+          },
+          {
+            "label": "date_night",
+            "p": 0.02484
+          }
+        ],
+        "engine": "local"
+      }
+    },
+    {
+      "merchantRaw": "BRASSERIE GEORGES //PRAG CZ",
+      "amount": 76.96,
+      "whenISO": "2026-03-24T21:14",
+      "expected": {
+        "category": "Dining",
+        "categoryConfidence": 0.992915,
+        "categoryTop3": [
+          {
+            "label": "Dining",
+            "p": 0.992915
+          },
+          {
+            "label": "Travel",
+            "p": 0.001838
+          },
+          {
+            "label": "Entertainment",
+            "p": 0.001723
+          }
+        ],
+        "moment": "trip",
+        "momentConfidence": 0.741633,
+        "momentTop3": [
+          {
+            "label": "trip",
+            "p": 0.741633
+          },
+          {
+            "label": "everyday",
+            "p": 0.239872
+          },
+          {
+            "label": "date_night",
+            "p": 0.01612
+          }
+        ],
+        "engine": "local"
+      }
+    },
+    {
+      "merchantRaw": "LE DEZALEY",
+      "amount": 116.32,
+      "whenISO": "2026-03-29T18:52",
+      "expected": {
+        "category": "Dining",
+        "categoryConfidence": 0.996461,
+        "categoryTop3": [
+          {
+            "label": "Dining",
+            "p": 0.996461
+          },
+          {
+            "label": "Travel",
+            "p": 0.000816
+          },
+          {
+            "label": "Entertainment",
+            "p": 0.000697
+          }
+        ],
+        "moment": "date_night",
+        "momentConfidence": 0.814059,
+        "momentTop3": [
+          {
+            "label": "date_night",
+            "p": 0.814059
+          },
+          {
+            "label": "everyday",
+            "p": 0.177373
+          },
+          {
+            "label": "trip",
+            "p": 0.007303
+          }
+        ],
+        "engine": "local"
+      }
+    },
+    {
+      "merchantRaw": "jumbo",
+      "amount": 193.57,
+      "whenISO": "2026-04-04T09:41",
+      "expected": {
+        "category": "Home",
+        "categoryConfidence": 0.996583,
+        "categoryTop3": [
+          {
+            "label": "Home",
+            "p": 0.996583
+          },
+          {
+            "label": "Travel",
+            "p": 0.002074
+          },
+          {
+            "label": "Dining",
+            "p": 0.000408
+          }
+        ],
+        "moment": "everyday",
+        "momentConfidence": 0.957204,
+        "momentTop3": [
+          {
+            "label": "everyday",
+            "p": 0.957204
+          },
+          {
+            "label": "trip",
+            "p": 0.040008
+          },
+          {
+            "label": "gift",
+            "p": 0.001953
+          }
+        ],
+        "engine": "local"
+      }
+    },
+    {
+      "merchantRaw": "MIGROS ZUERICH WIEDIKON",
+      "amount": 28.43,
+      "whenISO": "2026-04-13T17:07",
+      "expected": {
+        "category": "Groceries",
+        "categoryConfidence": 0.991546,
+        "categoryTop3": [
+          {
+            "label": "Groceries",
+            "p": 0.991546
+          },
+          {
+            "label": "Transport",
+            "p": 0.002913
+          },
+          {
+            "label": "Home",
+            "p": 0.001804
+          }
+        ],
+        "moment": "everyday",
+        "momentConfidence": 0.879884,
+        "momentTop3": [
+          {
+            "label": "everyday",
+            "p": 0.879884
+          },
+          {
+            "label": "trip",
+            "p": 0.066254
+          },
+          {
+            "label": "gift",
+            "p": 0.03823
+          }
+        ],
+        "engine": "local"
+      }
+    },
+    {
+      "merchantRaw": "Denner ST GALLEN NR.6092 20.03.25 REF 19985172",
+      "amount": 27.3,
+      "whenISO": "2026-04-13T19:38",
+      "expected": {
+        "category": "Groceries",
+        "categoryConfidence": 0.977823,
+        "categoryTop3": [
+          {
+            "label": "Groceries",
+            "p": 0.977823
+          },
+          {
+            "label": "Dining",
+            "p": 0.009816
+          },
+          {
+            "label": "Transport",
+            "p": 0.004384
+          }
+        ],
+        "moment": "everyday",
+        "momentConfidence": 0.900291,
+        "momentTop3": [
+          {
+            "label": "everyday",
+            "p": 0.900291
+          },
+          {
+            "label": "trip",
+            "p": 0.08217
+          },
+          {
+            "label": "date_night",
+            "p": 0.012657
+          }
+        ],
+        "engine": "local"
+      }
+    },
+    {
+      "merchantRaw": "Migros Mm Zuerich Hb",
+      "amount": 17.97,
+      "whenISO": "2026-04-17T17:17",
+      "expected": {
+        "category": "Groceries",
+        "categoryConfidence": 0.99842,
+        "categoryTop3": [
+          {
+            "label": "Groceries",
+            "p": 0.99842
+          },
+          {
+            "label": "Transport",
+            "p": 0.000808
+          },
+          {
+            "label": "Home",
+            "p": 0.000241
+          }
+        ],
+        "moment": "everyday",
+        "momentConfidence": 0.875542,
+        "momentTop3": [
+          {
+            "label": "everyday",
+            "p": 0.875542
+          },
+          {
+            "label": "trip",
+            "p": 0.061096
+          },
+          {
+            "label": "date_night",
+            "p": 0.047393
+          }
+        ],
+        "engine": "local"
+      }
+    },
+    {
+      "merchantRaw": "KEBAB HOUSE ZÜRICH 3439 TRX 15263709",
+      "amount": 27.86,
+      "whenISO": "2026-05-02T19:03",
+      "expected": {
+        "category": "Dining",
+        "categoryConfidence": 0.987481,
+        "categoryTop3": [
+          {
+            "label": "Dining",
+            "p": 0.987481
+          },
+          {
+            "label": "Entertainment",
+            "p": 0.007468
+          },
+          {
+            "label": "Transport",
+            "p": 0.001922
+          }
+        ],
+        "moment": "everyday",
+        "momentConfidence": 0.835438,
+        "momentTop3": [
+          {
+            "label": "everyday",
+            "p": 0.835438
+          },
+          {
+            "label": "date_night",
+            "p": 0.111687
+          },
+          {
+            "label": "trip",
+            "p": 0.034374
+          }
+        ],
+        "engine": "local"
+      }
+    },
+    {
+      "merchantRaw": "Ikea Dietlikon/ZUERICH WIEDIKON",
+      "amount": 134.75,
+      "whenISO": "2026-05-25T17:42",
+      "expected": {
+        "category": "Home",
+        "categoryConfidence": 0.910109,
+        "categoryTop3": [
+          {
+            "label": "Home",
+            "p": 0.910109
+          },
+          {
+            "label": "Health",
+            "p": 0.020862
+          },
+          {
+            "label": "Gifts",
+            "p": 0.018615
+          }
+        ],
+        "moment": "everyday",
+        "momentConfidence": 0.917039,
+        "momentTop3": [
+          {
+            "label": "everyday",
+            "p": 0.917039
+          },
+          {
+            "label": "trip",
+            "p": 0.043749
+          },
+          {
+            "label": "date_night",
+            "p": 0.026165
+          }
+        ],
+        "engine": "local"
+      }
+    },
+    {
+      "merchantRaw": "TIBITS",
+      "amount": 30.08,
+      "whenISO": "2026-06-28T12:00",
+      "expected": {
+        "category": "Dining",
+        "categoryConfidence": 0.996861,
+        "categoryTop3": [
+          {
+            "label": "Dining",
+            "p": 0.996861
+          },
+          {
+            "label": "Transport",
+            "p": 0.001282
+          },
+          {
+            "label": "Home",
+            "p": 0.000461
+          }
+        ],
+        "moment": "everyday",
+        "momentConfidence": 0.971426,
+        "momentTop3": [
+          {
+            "label": "everyday",
+            "p": 0.971426
+          },
+          {
+            "label": "gift",
+            "p": 0.022188
+          },
+          {
+            "label": "trip",
+            "p": 0.004521
+          }
+        ],
+        "engine": "local"
+      }
+    },
+    {
+      "merchantRaw": "AEROPORTO TAXI Wien KD.NR 37904491",
+      "amount": 112.32,
+      "whenISO": "2026-07-17T07:27",
+      "expected": {
+        "category": "Transport",
+        "categoryConfidence": 0.971254,
+        "categoryTop3": [
+          {
+            "label": "Transport",
+            "p": 0.971254
+          },
+          {
+            "label": "Health",
+            "p": 0.009104
+          },
+          {
+            "label": "Travel",
+            "p": 0.007187
+          }
+        ],
+        "moment": "trip",
+        "momentConfidence": 0.870084,
+        "momentTop3": [
+          {
+            "label": "trip",
+            "p": 0.870084
+          },
+          {
+            "label": "everyday",
+            "p": 0.122375
+          },
+          {
+            "label": "gift",
+            "p": 0.006021
+          }
+        ],
+        "engine": "local"
+      }
+    },
+    {
+      "merchantRaw": "Vicafe 2907",
+      "amount": 4.38,
+      "whenISO": "2026-07-24T09:24",
+      "expected": {
+        "category": "Cafes",
+        "categoryConfidence": 0.999854,
+        "categoryTop3": [
+          {
+            "label": "Cafes",
+            "p": 0.999854
+          },
+          {
+            "label": "Transport",
+            "p": 0.000122
+          },
+          {
+            "label": "Home",
+            "p": 7e-06
+          }
+        ],
+        "moment": "everyday",
+        "momentConfidence": 0.981713,
+        "momentTop3": [
+          {
+            "label": "everyday",
+            "p": 0.981713
+          },
+          {
+            "label": "trip",
+            "p": 0.017284
+          },
+          {
+            "label": "date_night",
+            "p": 0.000663
+          }
+        ],
+        "engine": "local"
+      }
+    },
+    {
+      "merchantRaw": "TIBITS BERN 20.10.24",
+      "amount": 11.52,
+      "whenISO": "2026-07-30T18:30",
+      "expected": {
+        "category": "Dining",
+        "categoryConfidence": 0.983763,
+        "categoryTop3": [
+          {
+            "label": "Dining",
+            "p": 0.983763
+          },
+          {
+            "label": "Transport",
+            "p": 0.008654
+          },
+          {
+            "label": "Groceries",
+            "p": 0.003425
+          }
+        ],
+        "moment": "everyday",
+        "momentConfidence": 0.945238,
+        "momentTop3": [
+          {
+            "label": "everyday",
+            "p": 0.945238
+          },
+          {
+            "label": "date_night",
+            "p": 0.025429
+          },
+          {
+            "label": "gift",
+            "p": 0.01843
+          }
+        ],
+        "engine": "local"
+      }
+    },
+    {
+      "merchantRaw": "Opernhaus Zuerich BERN",
+      "amount": 103.14,
+      "whenISO": "2026-07-30T18:33",
+      "expected": {
+        "category": "Entertainment",
+        "categoryConfidence": 0.960972,
+        "categoryTop3": [
+          {
+            "label": "Entertainment",
+            "p": 0.960972
+          },
+          {
+            "label": "Dining",
+            "p": 0.02466
+          },
+          {
+            "label": "Groceries",
+            "p": 0.004466
+          }
+        ],
+        "moment": "date_night",
+        "momentConfidence": 0.567226,
+        "momentTop3": [
+          {
+            "label": "date_night",
+            "p": 0.567226
+          },
+          {
+            "label": "everyday",
+            "p": 0.291605
+          },
+          {
+            "label": "trip",
+            "p": 0.13522
+          }
+        ],
+        "engine": "local"
+      }
+    },
+    {
+      "merchantRaw": "SUSHI ZEN KLOTEN",
+      "amount": 37.89,
+      "whenISO": "2026-08-15T20:31",
+      "expected": {
+        "category": "Dining",
+        "categoryConfidence": 0.97148,
+        "categoryTop3": [
+          {
+            "label": "Dining",
+            "p": 0.97148
+          },
+          {
+            "label": "Entertainment",
+            "p": 0.012551
+          },
+          {
+            "label": "Transport",
+            "p": 0.009388
+          }
+        ],
+        "moment": "date_night",
+        "momentConfidence": 0.791924,
+        "momentTop3": [
+          {
+            "label": "date_night",
+            "p": 0.791924
+          },
+          {
+            "label": "everyday",
+            "p": 0.194291
+          },
+          {
+            "label": "trip",
+            "p": 0.011665
+          }
+        ],
+        "engine": "local"
+      }
+    },
+    {
+      "merchantRaw": "Socar Tankstelle Zuerich Wiedikon",
+      "amount": 71.8,
+      "whenISO": "2026-08-26T06:48",
+      "expected": {
+        "category": "Transport",
+        "categoryConfidence": 0.98787,
+        "categoryTop3": [
+          {
+            "label": "Transport",
+            "p": 0.98787
+          },
+          {
+            "label": "Subscriptions",
+            "p": 0.005809
+          },
+          {
+            "label": "Dining",
+            "p": 0.001547
+          }
+        ],
+        "moment": "everyday",
+        "momentConfidence": 0.905177,
+        "momentTop3": [
+          {
+            "label": "everyday",
+            "p": 0.905177
+          },
+          {
+            "label": "gift",
+            "p": 0.03213
+          },
+          {
+            "label": "trip",
+            "p": 0.031532
+          }
+        ],
+        "engine": "local"
+      }
+    },
+    {
+      "merchantRaw": "RENFE VIAJEROS 9635 06.01.24",
+      "amount": 21.47,
+      "whenISO": "2026-08-26T07:09",
+      "expected": {
+        "category": "Transport",
+        "categoryConfidence": 0.993078,
+        "categoryTop3": [
+          {
+            "label": "Transport",
+            "p": 0.993078
+          },
+          {
+            "label": "Cafes",
+            "p": 0.002691
+          },
+          {
+            "label": "Subscriptions",
+            "p": 0.001676
+          }
+        ],
+        "moment": "trip",
+        "momentConfidence": 0.837595,
+        "momentTop3": [
+          {
+            "label": "trip",
+            "p": 0.837595
+          },
+          {
+            "label": "everyday",
+            "p": 0.088517
+          },
+          {
+            "label": "gift",
+            "p": 0.07118
+          }
+        ],
+        "engine": "local"
+      }
+    },
+    {
+      "merchantRaw": "Spar Express CARD*2643 CH",
+      "amount": 38.31,
+      "whenISO": "2026-08-29T18:09",
+      "expected": {
+        "category": "Groceries",
+        "categoryConfidence": 0.912403,
+        "categoryTop3": [
+          {
+            "label": "Groceries",
+            "p": 0.912403
+          },
+          {
+            "label": "Dining",
+            "p": 0.032189
+          },
+          {
+            "label": "Entertainment",
+            "p": 0.024167
+          }
+        ],
+        "moment": "everyday",
+        "momentConfidence": 0.863558,
+        "momentTop3": [
+          {
+            "label": "everyday",
+            "p": 0.863558
+          },
+          {
+            "label": "trip",
+            "p": 0.101465
+          },
+          {
+            "label": "date_night",
+            "p": 0.02928
+          }
+        ],
+        "engine": "local"
+      }
+    }
+  ]
+}

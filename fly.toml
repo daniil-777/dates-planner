@@ -1,0 +1,164 @@
+# Two-Way Match on Fly.io — the daily driver.
+#
+# One machine, one volume, one region. This is a two-person app; there is nothing here to
+# scale and a great deal to keep simple. Full walkthrough in docs/DEPLOY.md.
+#
+# Rename `app` before the first deploy — Fly app names are globally unique, so
+# `two-way-match` is almost certainly taken. `fly launch --no-deploy` will do it for you
+# and will not overwrite the settings below.
+#
+# TOML note: every bare key below the first `[table]` header belongs to that table. The
+# top-level scalars are therefore all up here, before anything else.
+
+app = 'two-way-match'
+primary_region = 'fra'
+
+# Shutdown is left at Fly's defaults (SIGINT, then five seconds, then SIGKILL). `tini` is
+# PID 1 in the image and forwards the signal; node exits on it, and SQLite in WAL mode is
+# crash-safe anyway, so an interrupted checkpoint costs a slower next open and nothing
+# else. `kill_signal` / `kill_timeout` would let you lengthen that window — they are real
+# flyctl keys, but the fly.toml JSON schema shipped to editors currently rejects them, and
+# a deploy that fails to parse is a worse outcome than a five-second grace period.
+
+# Node parsing a ~5 MB weights.json, sharp decoding a photo and SQLite holding a WAL page
+# cache can coincide inside 512 MB. Swap turns that coincidence into a slow second instead
+# of an OOM kill in the middle of a scan.
+swap_size_mb = 512
+
+[build]
+  dockerfile = 'Dockerfile'
+
+[env]
+  NODE_ENV = 'production'
+
+  # Must match `internal_port` below.
+  PORT = '8080'
+
+  # Where the entrypoint puts the SQLite file, on the mounted volume. Without this, CAP
+  # would honour `cds.requires.db.credentials.url` from package.json — the relative path
+  # `db.sqlite`, which inside the container is a file on the ephemeral layer and is
+  # therefore erased by every deploy. `CDS_REQUIRES_DB_CREDENTIALS_URL` is CAP's
+  # env-variable override for that setting; verified against @sap/cds 10.0.6.
+  TWM_DATA_DIR = '/data'
+  CDS_REQUIRES_DB_CREDENTIALS_URL = '/data/twm.sqlite'
+
+  # MOCK_DOCAI is deliberately NOT set. Document AI falls into mock mode on its own
+  # whenever any of DOCAI_URL / DOCAI_UAA_URL / DOCAI_CLIENT_ID / DOCAI_CLIENT_SECRET is
+  # missing (CONTRACTS.md §6), so the app works from the first deploy and upgrades itself
+  # to live extraction the moment those four secrets exist. Set MOCK_DOCAI = '1' here to
+  # force fixtures even with credentials present — useful while testing a deploy without
+  # spending BTP trial quota.
+
+# ---------------------------------------------------------------------------
+# Persistence
+# ---------------------------------------------------------------------------
+# Everything durable is in one SQLite file: expenses, memories, settlements, statements,
+# and the receipt and photo *images*, which db/schema.cds stores as LargeBinary columns
+# rather than as files. That is why there is no second mount for uploads — losing this
+# volume loses the images too, so read the backup section of docs/DEPLOY.md before you
+# decide 1 GB is plenty.
+#
+# Create it once, in the same region as the app:
+#   fly volumes create twm_data --region fra --size 3
+[[mounts]]
+  source = 'twm_data'
+  destination = '/data'
+
+  # Applies only when Fly creates the volume for you during `fly launch`.
+  initial_size = '3gb'
+
+  # Grow automatically rather than fail a write at 03:00. A receipt image is tens of KB
+  # after srv/lib/images.ts normalises it, so 3 GB is years of scanning — but SQLite also
+  # wants room for its WAL and for VACUUM.
+  auto_extend_size_threshold = 80
+  auto_extend_size_increment = '1GB'
+  auto_extend_size_limit = '10GB'
+
+# ---------------------------------------------------------------------------
+# HTTP
+# ---------------------------------------------------------------------------
+[http_service]
+  internal_port = 8080
+  force_https = true
+
+  # Never stop the machine.
+  #
+  # Two reasons, and neither is performance. First, `srv/admin-service.ts` schedules a
+  # nightly cron at 03:00; a stopped machine has no timer. Second, this app is used the way
+  # you use a camera — you open it in a restaurant, one-handed, to photograph a receipt
+  # before the waiter takes it away. A cold start you have to wait through is the
+  # difference between a tool and a chore.
+  #
+  # Older flyctl versions want `auto_stop_machines = false` here instead of the string.
+  auto_stop_machines = 'off'
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ['app']
+
+  [http_service.concurrency]
+    type = 'requests'
+    # Two humans and a service worker. These limits exist to bound a runaway client, not
+    # to schedule traffic.
+    soft_limit = 25
+    hard_limit = 50
+
+  # `http_service.checks` entries are HTTP checks by definition, and an HTTP check on this
+  # app is wrong — see the [checks] block below for why. Nothing is configured here.
+
+# ---------------------------------------------------------------------------
+# Health checks — read this before "fixing" it to point at /health
+# ---------------------------------------------------------------------------
+# In production `srv/server.ts` mounts HTTP basic auth in front of *every* route, `/health`
+# included (it says so at srv/server.ts:541, and it was verified: with NODE_ENV=production
+# and AUTH_* configured, `GET /health` answers 401 anonymously and 200 with the right
+# Authorization header). Fly's HTTP checks pass only on 2xx, and they cannot be given a
+# credential that is not already committed to this file. The container could not
+# authenticate either — it is given bcrypt *hashes*, never passwords, which is the right
+# way round.
+#
+# An HTTP check on /health would therefore fail forever and Fly would restart a perfectly
+# healthy machine every few minutes. A TCP check is the honest probe at this layer: it
+# proves the process is up and accepting connections on the port it was told to use. The
+# 401 itself is checked from outside, with credentials — docs/DEPLOY.md §7.
+#
+# The Dockerfile's HEALTHCHECK is the richer probe (it accepts 200 *or* 401, which also
+# proves the auth middleware is mounted), but Fly Machines ignore image healthchecks.
+[checks]
+  [checks.tcp_alive]
+    type = 'tcp'
+    port = 8080
+    interval = '30s'
+    timeout = '5s'
+    grace_period = '30s'
+
+  # Enable this and delete the TCP check above only if /health ever becomes public — i.e.
+  # if `srv/server.ts` grows an exemption that registers `app.get('/health', …)` above
+  # `app.use(basicAuth(…))`. Until then it is wrong, and it stays commented out.
+  #
+  # [checks.http_health]
+  #   type = 'http'
+  #   port = 8080
+  #   method = 'GET'
+  #   path = '/health'
+  #   interval = '30s'
+  #   timeout = '5s'
+  #   grace_period = '30s'
+
+# ---------------------------------------------------------------------------
+# Machine
+# ---------------------------------------------------------------------------
+[[vm]]
+  size = 'shared-cpu-1x'
+  memory = '512mb'
+  cpu_kind = 'shared'
+  cpus = 1
+
+# ---------------------------------------------------------------------------
+# Deploys
+# ---------------------------------------------------------------------------
+[deploy]
+  # A rolling deploy wants to boot the new machine before retiring the old one, and a Fly
+  # volume can only be attached to one machine at a time — so on a single-machine,
+  # single-volume app rolling either stalls or silently creates an unattached machine.
+  # `immediate` replaces in place: a few seconds of 502 for a household that is not looking.
+  strategy = 'immediate'

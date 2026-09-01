@@ -1,0 +1,583 @@
+/*
+ * Global stylesheet.
+ *
+ * Two rules govern everything here:
+ *   1. colours are UI5 theme parameters (`--sapTextColor`, `--sapTile_Background`, …), so
+ *      the whole app follows sap_horizon → sap_horizon_dark without a second palette;
+ *   2. the layout is mobile-first, and every interactive target is at least 44 px, with the
+ *      bottom navigation and page padding respecting `env(safe-area-inset-*)` because this
+ *      is installed to a home screen and used one-handed.
+ */
+
+:root {
+  --twm-space-xs: 0.25rem;
+  --twm-space-s: 0.5rem;
+  --twm-space-m: 0.75rem;
+  --twm-space-l: 1rem;
+  --twm-space-xl: 1.5rem;
+  --twm-space-xxl: 2rem;
+
+  --twm-radius-s: 0.5rem;
+  --twm-radius-m: 0.75rem;
+  --twm-radius-l: 1rem;
+  --twm-radius-pill: 999px;
+
+  --twm-touch: 44px;
+  --twm-bottomnav-height: 56px;
+  --twm-content-max: 62rem;
+
+  --twm-safe-top: env(safe-area-inset-top, 0px);
+  --twm-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --twm-safe-left: env(safe-area-inset-left, 0px);
+  --twm-safe-right: env(safe-area-inset-right, 0px);
+
+  --twm-surface: var(--sapTile_Background, #fff);
+  --twm-border: var(--sapList_BorderColor, #d9d9d9);
+  --twm-muted: var(--sapContent_LabelColor, #556b82);
+
+  color-scheme: light dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  background: var(--sapBackgroundColor, #f5f6f7);
+  color: var(--sapTextColor, #1d2d3e);
+  font-family: var(--sapFontFamily, '72', '72full', Arial, Helvetica, sans-serif);
+  font-size: var(--sapFontSize, 0.875rem);
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  /* The shell owns scrolling; the document must not bounce a second scrollbar into view. */
+  overscroll-behavior-y: none;
+}
+
+#root {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+img,
+svg,
+video {
+  max-width: 100%;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+a {
+  color: var(--sapLinkColor, #0064d9);
+}
+
+.twm-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ------------------------------------------------------------------ *
+ *  Shell
+ * ------------------------------------------------------------------ */
+
+.twm-shell {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 100dvh;
+}
+
+.twm-skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 100;
+  padding: var(--twm-space-m) var(--twm-space-l);
+  background: var(--sapButton_Emphasized_Background, #0070f2);
+  color: var(--sapButton_Emphasized_TextColor, #fff);
+  border-radius: 0 0 var(--twm-radius-s) 0;
+  text-decoration: none;
+}
+
+.twm-skip-link:focus {
+  left: 0;
+}
+
+.twm-shellbar-wrap {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  padding-top: var(--twm-safe-top);
+  background: var(--sapShellColor, var(--sapObjectHeader_Background, #fff));
+  box-shadow: var(--sapContent_HeaderShadow, 0 0 0.125rem rgba(34, 54, 73, 0.32));
+}
+
+.twm-shellbar {
+  width: 100%;
+}
+
+.twm-body {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+}
+
+
+.twm-main {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: var(--twm-space-l);
+  padding-inline-start: calc(var(--twm-space-l) + var(--twm-safe-left));
+  padding-inline-end: calc(var(--twm-space-l) + var(--twm-safe-right));
+  /* Room for the bottom bar plus the home indicator. Reset on desktop below. */
+  padding-bottom: calc(var(--twm-bottomnav-height) + var(--twm-safe-bottom) + var(--twm-space-l));
+}
+
+@media (min-width: 1024px) {
+  .twm-main {
+    padding: var(--twm-space-xl);
+    padding-bottom: var(--twm-space-xxl);
+  }
+}
+
+/** A page's own content column. Pages are welcome to use it. */
+.twm-page {
+  max-width: var(--twm-content-max);
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--twm-space-l);
+}
+
+/* ------------------------------------------------------------------ *
+ *  Bottom navigation (mobile)
+ * ------------------------------------------------------------------ */
+
+.twm-bottomnav {
+  position: fixed;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 25;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 2px;
+  padding-bottom: var(--twm-safe-bottom);
+  padding-inline: max(var(--twm-safe-left), 2px) max(var(--twm-safe-right), 2px);
+  background: var(--twm-surface);
+  border-top: 1px solid var(--twm-border);
+  box-shadow: 0 -1px 0.5rem rgba(34, 54, 73, 0.08);
+}
+
+.twm-bottomnav__item {
+  min-height: var(--twm-bottomnav-height);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 6px 2px;
+  text-decoration: none;
+  color: var(--twm-muted);
+  border-top: 2px solid transparent;
+  transition:
+    color 120ms ease,
+    border-color 120ms ease;
+}
+
+.twm-bottomnav__item:active {
+  background: var(--sapList_Hover_Background, rgba(0, 0, 0, 0.04));
+}
+
+.twm-bottomnav__item--active {
+  color: var(--sapContent_Selected_TextColor, var(--sapBrandColor, #0070f2));
+  border-top-color: var(--sapContent_Selected_TextColor, var(--sapBrandColor, #0070f2));
+}
+
+.twm-bottomnav__icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: currentColor;
+}
+
+.twm-bottomnav__label {
+  font-size: 0.6875rem;
+  line-height: 1;
+  letter-spacing: 0.01em;
+}
+
+/* ------------------------------------------------------------------ *
+ *  Person switcher popover
+ * ------------------------------------------------------------------ */
+
+.twm-switcher__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--twm-space-s);
+  padding: var(--twm-space-s);
+  min-width: 15rem;
+}
+
+.twm-switcher__hint {
+  color: var(--twm-muted);
+  font-size: 0.75rem;
+  margin-bottom: var(--twm-space-xs);
+  max-width: 18rem;
+}
+
+.twm-switcher__option {
+  display: flex;
+  align-items: center;
+  gap: var(--twm-space-m);
+  min-height: var(--twm-touch);
+  padding: var(--twm-space-s);
+  border: 1px solid transparent;
+  border-radius: var(--twm-radius-m);
+  background: transparent;
+  cursor: pointer;
+  text-align: start;
+}
+
+.twm-switcher__option:hover {
+  background: var(--sapList_Hover_Background, rgba(0, 0, 0, 0.04));
+}
+
+.twm-switcher__option--active {
+  border-color: var(--sapContent_Selected_BorderColor, var(--sapBrandColor, #0070f2));
+  background: var(--sapList_SelectionBackgroundColor, rgba(0, 112, 242, 0.08));
+}
+
+.twm-switcher__names {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.3;
+}
+
+.twm-switcher__name {
+  font-weight: 600;
+}
+
+.twm-switcher__short {
+  font-size: 0.75rem;
+  color: var(--twm-muted);
+}
+
+/* ------------------------------------------------------------------ *
+ *  MoneyText
+ * ------------------------------------------------------------------ */
+
+.twm-money {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+  white-space: nowrap;
+}
+
+.twm-money--bold {
+  font-weight: 700;
+}
+
+.twm-money--s {
+  font-size: 0.8125rem;
+}
+
+.twm-money--l {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.twm-money--positive {
+  color: var(--sapPositiveTextColor, var(--sapPositiveColor, #256f3a));
+}
+
+.twm-money--negative {
+  color: var(--sapNegativeTextColor, var(--sapNegativeColor, #aa0808));
+}
+
+.twm-money--subtle {
+  color: var(--twm-muted);
+}
+
+/* ------------------------------------------------------------------ *
+ *  PersonAvatar
+ * ------------------------------------------------------------------ */
+
+.twm-avatar {
+  flex: 0 0 auto;
+  transition: box-shadow 120ms ease;
+}
+
+.twm-avatar--selected {
+  box-shadow:
+    0 0 0 2px var(--sapBackgroundColor, #fff),
+    0 0 0 4px var(--twm-avatar-color, var(--sapBrandColor, #0070f2));
+}
+
+/* ------------------------------------------------------------------ *
+ *  CategoryChip
+ * ------------------------------------------------------------------ */
+
+.twm-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--twm-space-s);
+  padding: 0 var(--twm-space-m);
+  min-height: 36px;
+  max-width: 100%;
+  border: 1px solid var(--twm-border);
+  border-radius: var(--twm-radius-pill);
+  background: var(--twm-surface);
+  color: var(--sapTextColor, #1d2d3e);
+  line-height: 1;
+}
+
+.twm-chip--interactive {
+  min-height: var(--twm-touch);
+  cursor: pointer;
+  transition:
+    border-color 120ms ease,
+    background-color 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.twm-chip--interactive:hover {
+  border-color: var(--twm-chip-color, var(--sapBrandColor, #0070f2));
+}
+
+.twm-chip--interactive:focus-visible {
+  outline: var(--sapContent_FocusWidth, 1px) var(--sapContent_FocusStyle, dotted)
+    var(--sapContent_FocusColor, #0a2340);
+  outline-offset: 2px;
+}
+
+.twm-chip--selected {
+  border-color: var(--twm-chip-color, var(--sapBrandColor, #0070f2));
+  box-shadow: inset 0 0 0 1px var(--twm-chip-color, var(--sapBrandColor, #0070f2));
+  background: color-mix(in srgb, var(--twm-chip-color, #0070f2) 12%, var(--twm-surface));
+}
+
+.twm-chip__icon {
+  width: 1rem;
+  height: 1rem;
+  color: var(--twm-chip-color, var(--sapBrandColor, #0070f2));
+  flex: 0 0 auto;
+}
+
+.twm-chip__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.twm-chip__score {
+  font-size: 0.6875rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--twm-muted);
+  padding-inline-start: var(--twm-space-xs);
+}
+
+.twm-chip__score--low {
+  color: var(--sapCriticalTextColor, var(--sapCriticalColor, #e76500));
+  font-weight: 600;
+}
+
+/* ------------------------------------------------------------------ *
+ *  MomentBadge
+ * ------------------------------------------------------------------ */
+
+.twm-moment {
+  vertical-align: middle;
+}
+
+/* ------------------------------------------------------------------ *
+ *  Empty and error states
+ * ------------------------------------------------------------------ */
+
+.twm-empty,
+.twm-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--twm-space-m);
+  padding: var(--twm-space-xl) var(--twm-space-l);
+  text-align: center;
+}
+
+.twm-error__footnote {
+  font-size: 0.6875rem;
+  color: var(--twm-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ------------------------------------------------------------------ *
+ *  LoadingSkeleton
+ * ------------------------------------------------------------------ */
+
+.twm-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--twm-space-s);
+}
+
+.twm-skeleton__row {
+  display: flex;
+  align-items: center;
+  gap: var(--twm-space-m);
+  padding: var(--twm-space-m);
+  border-radius: var(--twm-radius-m);
+  background: var(--twm-surface);
+  border: 1px solid var(--twm-border);
+}
+
+.twm-skeleton__lines {
+  display: flex;
+  flex-direction: column;
+  gap: var(--twm-space-s);
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.twm-skeleton__block {
+  display: block;
+  border-radius: var(--twm-radius-s);
+  background: linear-gradient(
+    90deg,
+    var(--sapList_Background, #fff) 0%,
+    var(--sapList_Hover_Background, rgba(0, 0, 0, 0.06)) 50%,
+    var(--sapList_Background, #fff) 100%
+  );
+  background-size: 200% 100%;
+  animation: twm-shimmer 1.4s ease-in-out infinite;
+}
+
+.twm-skeleton__block--lead {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  flex: 0 0 auto;
+}
+
+.twm-skeleton__block--title {
+  height: 0.75rem;
+  width: 60%;
+}
+
+.twm-skeleton__block--sub {
+  height: 0.625rem;
+  width: 35%;
+}
+
+.twm-skeleton__block--trail {
+  height: 0.875rem;
+  width: 4.5rem;
+  flex: 0 0 auto;
+}
+
+.twm-skeleton--card .twm-skeleton__row {
+  height: 7rem;
+  align-items: stretch;
+}
+
+.twm-skeleton--text .twm-skeleton__row {
+  border: 0;
+  background: transparent;
+  padding: 0;
+}
+
+.twm-skeleton--text .twm-skeleton__block--lead,
+.twm-skeleton--text .twm-skeleton__block--trail {
+  display: none;
+}
+
+@keyframes twm-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ *  ConfirmDialog
+ * ------------------------------------------------------------------ */
+
+.twm-confirm {
+  max-width: min(32rem, calc(100vw - 2rem));
+}
+
+.twm-confirm__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--twm-space-m);
+  padding-block: var(--twm-space-s);
+  line-height: 1.5;
+}
+
+/* ------------------------------------------------------------------ *
+ *  Touch targets
+ * ------------------------------------------------------------------ */
+
+/*
+ * Fiori's cozy density gives a button 2.25rem (36 px), which is fine with a mouse and
+ * mean with a thumb in a supermarket queue. On a coarse pointer, raise UI5's own height
+ * token so buttons, toggles and segmented items clear 44 px without re-styling anything.
+ */
+@media (pointer: coarse) {
+  ui5-button,
+  ui5-toggle-button,
+  ui5-split-button,
+  ui5-segmented-button-item,
+  ui5-toolbar-button {
+    --_ui5_button_base_height: 2.75rem;
+    --_ui5_button_base_min_width: 2.75rem;
+  }
+
+  ui5-input,
+  ui5-select,
+  ui5-date-picker,
+  ui5-combobox,
+  ui5-step-input {
+    --_ui5_input_height: 2.75rem;
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ *  Motion and print
+ * ------------------------------------------------------------------ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+@media print {
+  .twm-shellbar-wrap,
+  .twm-bottomnav,
+  .twm-skip-link {
+    display: none !important;
+  }
+
+  .twm-main {
+    padding: 0;
+  }
+}

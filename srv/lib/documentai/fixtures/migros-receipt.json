@@ -1,0 +1,459 @@
+{
+  "id": "5c9e6b6a-2f6e-4f6b-9a12-6f0f0a2f3d41",
+  "status": "DONE",
+  "fileName": "migros-loewenstrasse-2026-03-07.jpg",
+  "fileType": "jpeg",
+  "clientId": "default",
+  "documentType": "invoice",
+  "schemaName": "twowaymatch_receipt_v1",
+  "schemaId": "3f4a1f2c-1f2b-4b6f-8a5e-9d1c0b7e2a10",
+  "country": "CH",
+  "created": "2026-03-07T18:44:11.482Z",
+  "finished": "2026-03-07T18:44:19.037Z",
+  "processedTime": 7.555,
+  "extraction": {
+    "headerFields": [
+      {
+        "name": "senderName",
+        "category": "header",
+        "value": "MIGROS Zürich Löwenstrasse",
+        "type": "string",
+        "page": 1,
+        "confidence": 0.964,
+        "coordinates": { "x": 0.211, "y": 0.041, "w": 0.573, "h": 0.038 }
+      },
+      {
+        "name": "senderAddress",
+        "category": "header",
+        "value": "Löwenstrasse 31\n8001 Zürich",
+        "type": "string",
+        "page": 1,
+        "confidence": 0.887,
+        "coordinates": { "x": 0.198, "y": 0.085, "w": 0.604, "h": 0.061 }
+      },
+      {
+        "name": "documentDate",
+        "category": "header",
+        "value": "2026-03-07",
+        "type": "date",
+        "page": 1,
+        "confidence": 0.971,
+        "coordinates": { "x": 0.087, "y": 0.163, "w": 0.244, "h": 0.027 }
+      },
+      {
+        "name": "documentTime",
+        "category": "header",
+        "value": "18:42",
+        "type": "string",
+        "page": 1,
+        "confidence": 0.913,
+        "coordinates": { "x": 0.352, "y": 0.163, "w": 0.137, "h": 0.027 }
+      },
+      {
+        "name": "documentNumber",
+        "category": "header",
+        "value": "0034-5567-2210",
+        "type": "string",
+        "page": 1,
+        "confidence": 0.842,
+        "coordinates": { "x": 0.087, "y": 0.196, "w": 0.383, "h": 0.026 }
+      },
+      {
+        "name": "currencyCode",
+        "category": "header",
+        "value": "CHF",
+        "type": "string",
+        "page": 1,
+        "confidence": 0.991,
+        "coordinates": { "x": 0.604, "y": 0.712, "w": 0.098, "h": 0.026 }
+      },
+      {
+        "name": "grossAmount",
+        "category": "header",
+        "value": "47.85",
+        "type": "number",
+        "page": 1,
+        "confidence": 0.983,
+        "coordinates": { "x": 0.716, "y": 0.712, "w": 0.187, "h": 0.031 }
+      },
+      {
+        "name": "netAmount",
+        "category": "header",
+        "value": "44.43",
+        "type": "number",
+        "page": 1,
+        "confidence": 0.934,
+        "coordinates": { "x": 0.716, "y": 0.788, "w": 0.187, "h": 0.026 }
+      },
+      {
+        "name": "taxAmount",
+        "category": "header",
+        "value": "3.42",
+        "type": "number",
+        "page": 1,
+        "confidence": 0.928,
+        "coordinates": { "x": 0.716, "y": 0.816, "w": 0.187, "h": 0.026 }
+      },
+      {
+        "name": "taxRate",
+        "category": "header",
+        "value": "7.7",
+        "type": "number",
+        "page": 1,
+        "confidence": 0.902,
+        "coordinates": { "x": 0.187, "y": 0.816, "w": 0.121, "h": 0.026 }
+      },
+      {
+        "name": "paymentTerms",
+        "category": "header",
+        "value": "TWINT Kontaktlos",
+        "type": "string",
+        "page": 1,
+        "confidence": 0.774,
+        "coordinates": { "x": 0.087, "y": 0.878, "w": 0.451, "h": 0.026 }
+      }
+    ],
+    "lineItems": [
+      [
+        {
+          "name": "description",
+          "category": "details",
+          "value": "Bio Vollmilch 1L",
+          "type": "string",
+          "page": 1,
+          "confidence": 0.951
+        },
+        {
+          "name": "quantity",
+          "category": "details",
+          "value": "2",
+          "type": "number",
+          "page": 1,
+          "confidence": 0.968
+        },
+        {
+          "name": "unitPrice",
+          "category": "details",
+          "value": "1.80",
+          "type": "number",
+          "page": 1,
+          "confidence": 0.944
+        },
+        {
+          "name": "netAmount",
+          "category": "details",
+          "value": "3.60",
+          "type": "number",
+          "page": 1,
+          "confidence": 0.962
+        }
+      ],
+      [
+        {
+          "name": "description",
+          "category": "details",
+          "value": "M-Classic Ruchbrot 500g",
+          "type": "string",
+          "page": 1,
+          "confidence": 0.937
+        },
+        {
+          "name": "quantity",
+          "category": "details",
+          "value": "1",
+          "type": "number",
+          "page": 1,
+          "confidence": 0.972
+        },
+        {
+          "name": "unitPrice",
+          "category": "details",
+          "value": "2.70",
+          "type": "number",
+          "page": 1,
+          "confidence": 0.951
+        },
+        {
+          "name": "netAmount",
+          "category": "details",
+          "value": "2.70",
+          "type": "number",
+          "page": 1,
+          "confidence": 0.959
+        }
+      ],
+      [
+        {
+          "name": "description",
+          "category": "details",
+          "value": "Rispentomaten CH kg",
+          "type": "string",
+          "page": 1,
+          "confidence": 0.902
+        },
+        {
+          "name": "quantity",
+          "category": "details",
+          "value": "0.485",
+          "type": "number",
+          "page": 1,
+          "confidence": 0.879
+        },
+        {
+          "name": "unitPrice",
+          "category": "details",
+          "value": "9.80",
+          "type": "number",
+          "page": 1,
+          "confidence": 0.921
+        },
+        {
+          "name": "netAmount",
+          "category": "details",
+          "value": "4.75",
+          "type": "number",
+          "page": 1,
+          "confidence": 0.944
+        }
+      ],
+      [
+        {
+          "name": "description",
+          "category": "details",
+          "value": "Gruyère AOP surchoix 200g",
+          "type": "string",
+          "page": 1,
+          "confidence": 0.893
+        },
+        {
+          "name": "quantity",
+          "category": "details",
+          "value": "1",
+          "type": "number",
+          "page": 1,
+          "confidence": 0.966
+        },
+        {
+          "name": "unitPrice",
+          "category": "details",
+          "value": "8.95",
+          "type": "number",
+          "page": 1,
+          "confidence": 0.938
+        },
+        {
+          "name": "netAmount",
+          "category": "details",
+          "value": "8.95",
+          "type": "number",
+          "page": 1,
+          "confidence": 0.949
+        }
+      ],
+      [
+        {
+          "name": "description",
+          "category": "details",
+          "value": "Aproz Mineral prickelnd 6x1.5L",
+          "type": "string",
+          "page": 1,
+          "confidence": 0.884
+        },
+        {
+          "name": "quantity",
+          "category": "details",
+          "value": "1",
+          "type": "number",
+          "page": 1,
+          "confidence": 0.961
+        },
+        {
+          "name": "unitPrice",
+          "category": "details",
+          "value": "7.20",
+          "type": "number",
+          "page": 1,
+          "confidence": 0.933
+        },
+        {
+          "name": "netAmount",
+          "category": "details",
+          "value": "7.20",
+          "type": "number",
+          "page": 1,
+          "confidence": 0.947
+        }
+      ],
+      [
+        {
+          "name": "description",
+          "category": "details",
+          "value": "Bio Bananen kg",
+          "type": "string",
+          "page": 1,
+          "confidence": 0.928
+        },
+        {
+          "name": "quantity",
+          "category": "details",
+          "value": "1.235",
+          "type": "number",
+          "page": 1,
+          "confidence": 0.861
+        },
+        {
+          "name": "unitPrice",
+          "category": "details",
+          "value": "3.20",
+          "type": "number",
+          "page": 1,
+          "confidence": 0.917
+        },
+        {
+          "name": "netAmount",
+          "category": "details",
+          "value": "3.95",
+          "type": "number",
+          "page": 1,
+          "confidence": 0.939
+        }
+      ],
+      [
+        {
+          "name": "description",
+          "category": "details",
+          "value": "Zewa Wisch & Weg 4 Rollen",
+          "type": "string",
+          "page": 1,
+          "confidence": 0.871
+        },
+        {
+          "name": "quantity",
+          "category": "details",
+          "value": "1",
+          "type": "number",
+          "page": 1,
+          "confidence": 0.964
+        },
+        {
+          "name": "unitPrice",
+          "category": "details",
+          "value": "5.60",
+          "type": "number",
+          "page": 1,
+          "confidence": 0.926
+        },
+        {
+          "name": "netAmount",
+          "category": "details",
+          "value": "5.60",
+          "type": "number",
+          "page": 1,
+          "confidence": 0.941
+        }
+      ],
+      [
+        {
+          "name": "description",
+          "category": "details",
+          "value": "Rivella Rot 1.5L",
+          "type": "string",
+          "page": 1,
+          "confidence": 0.944
+        },
+        {
+          "name": "quantity",
+          "category": "details",
+          "value": "2",
+          "type": "number",
+          "page": 1,
+          "confidence": 0.969
+        },
+        {
+          "name": "unitPrice",
+          "category": "details",
+          "value": "2.30",
+          "type": "number",
+          "page": 1,
+          "confidence": 0.935
+        },
+        {
+          "name": "netAmount",
+          "category": "details",
+          "value": "4.60",
+          "type": "number",
+          "page": 1,
+          "confidence": 0.952
+        }
+      ],
+      [
+        {
+          "name": "description",
+          "category": "details",
+          "value": "M-Budget Eier 10 Stk",
+          "type": "string",
+          "page": 1,
+          "confidence": 0.912
+        },
+        {
+          "name": "quantity",
+          "category": "details",
+          "value": "1",
+          "type": "number",
+          "page": 1,
+          "confidence": 0.958
+        },
+        {
+          "name": "unitPrice",
+          "category": "details",
+          "value": "4.20",
+          "type": "number",
+          "page": 1,
+          "confidence": 0.929
+        },
+        {
+          "name": "netAmount",
+          "category": "details",
+          "value": "4.20",
+          "type": "number",
+          "page": 1,
+          "confidence": 0.943
+        }
+      ],
+      [
+        {
+          "name": "description",
+          "category": "details",
+          "value": "Basilikum Topf",
+          "type": "string",
+          "page": 1,
+          "confidence": 0.898
+        },
+        {
+          "name": "quantity",
+          "category": "details",
+          "value": "1",
+          "type": "number",
+          "page": 1,
+          "confidence": 0.957
+        },
+        {
+          "name": "unitPrice",
+          "category": "details",
+          "value": "2.30",
+          "type": "number",
+          "page": 1,
+          "confidence": 0.924
+        },
+        {
+          "name": "netAmount",
+          "category": "details",
+          "value": "2.30",
+          "type": "number",
+          "page": 1,
+          "confidence": 0.936
+        }
+      ]
+    ]
+  }
+}

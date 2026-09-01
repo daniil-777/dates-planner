@@ -1,0 +1,348 @@
+/* Login — the first screen anybody sees, and the only one drawn before the app exists.
+
+   It is plain HTML rather than UI5 web components on purpose: this screen renders before
+   the shell, sometimes before the theme's stylesheet has settled, and it has to be legible
+   at that moment. So every colour here is a *theme parameter with a fallback* — the
+   parameter wins once Horizon is up, the fallback keeps the card readable before then, and
+   the dark block below only swaps the fallbacks.
+
+   The exceptions are the two brand hues, #0070F2 and #F31DED, which are the product's
+   identity and are the same in both themes (FRONTEND-CONTRACT §7 forbids hardcoding
+   *category* and *person* colours; the logo is neither). */
+
+.login {
+  --login-blue: #0070f2;
+  --login-magenta: #f31ded;
+
+  --login-bg: var(--sapBackgroundColor, #f5f6f7);
+  --login-surface: var(--twm-surface, var(--sapTile_Background, #ffffff));
+  --login-fg: var(--sapTextColor, #1d2d3e);
+  --login-muted: var(--twm-muted, var(--sapContent_LabelColor, #556b82));
+  --login-border: var(--twm-border, var(--sapList_BorderColor, #d9d9d9));
+  --login-field: var(--sapField_Background, #ffffff);
+  --login-danger: var(--sapNegativeColor, #aa0808);
+  --login-glow-blue: rgba(0, 112, 242, 0.16);
+  --login-glow-magenta: rgba(243, 29, 237, 0.12);
+
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--twm-space-l, 1rem);
+
+  padding: calc(var(--twm-space-xl, 1.5rem) + env(safe-area-inset-top, 0px))
+    calc(var(--twm-space-l, 1rem) + env(safe-area-inset-right, 0px))
+    calc(var(--twm-space-xl, 1.5rem) + env(safe-area-inset-bottom, 0px))
+    calc(var(--twm-space-l, 1rem) + env(safe-area-inset-left, 0px));
+
+  color: var(--login-fg);
+  background-color: var(--login-bg);
+  /* Full-bleed: the brand hues arrive as light, not as blocks of colour. */
+  background-image:
+    radial-gradient(58rem 32rem at 12% -8%, var(--login-glow-blue), transparent 62%),
+    radial-gradient(46rem 30rem at 96% 108%, var(--login-glow-magenta), transparent 60%);
+  background-repeat: no-repeat;
+}
+
+@media (prefers-color-scheme: dark) {
+  .login {
+    --login-bg: var(--sapBackgroundColor, #12171c);
+    --login-surface: var(--twm-surface, var(--sapTile_Background, #1c2228));
+    --login-fg: var(--sapTextColor, #eaecee);
+    --login-muted: var(--twm-muted, var(--sapContent_LabelColor, #a9b4be));
+    --login-border: var(--twm-border, var(--sapList_BorderColor, #3a434b));
+    --login-field: var(--sapField_Background, #1c2228);
+    --login-danger: var(--sapNegativeColor, #ff8888);
+    --login-glow-blue: rgba(0, 112, 242, 0.26);
+    --login-glow-magenta: rgba(243, 29, 237, 0.18);
+  }
+}
+
+/* ---------- the card ---------- */
+
+.login__card {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  max-width: 24rem;
+  display: flex;
+  flex-direction: column;
+  gap: var(--twm-space-l, 1rem);
+  padding: var(--twm-space-xl, 1.5rem);
+  border: 1px solid var(--login-border);
+  border-radius: var(--twm-radius-l, 1rem);
+  background: var(--login-surface);
+  box-shadow: var(--sapContent_Shadow2, 0 0.5rem 2rem rgba(34, 54, 73, 0.18));
+}
+
+/* The one place the two hues meet: a 3px seam across the top of the card. */
+.login__card::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--login-blue), var(--login-magenta));
+}
+
+.login__head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--twm-space-xs, 0.25rem);
+  text-align: center;
+}
+
+.login__mark {
+  width: 3.5rem;
+  height: auto;
+  margin-bottom: var(--twm-space-xs, 0.25rem);
+}
+
+.login__title {
+  margin: 0;
+  font-size: 1.375rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.login__tagline {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--login-muted);
+}
+
+/* ---------- the form ---------- */
+
+.login__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--twm-space-l, 1rem);
+}
+
+.login-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.login-field__label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--login-muted);
+}
+
+.login-field__box {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.login-field__input {
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: var(--twm-touch, 44px);
+  padding: 0 var(--twm-space-m, 0.75rem);
+  font: inherit;
+  font-size: 1rem; /* 16px: anything smaller makes iOS zoom on focus. */
+  color: var(--login-fg);
+  background: var(--login-field);
+  border: 1px solid var(--login-border);
+  border-radius: var(--twm-radius-s, 0.5rem);
+  transition: border-color 120ms ease-out, box-shadow 120ms ease-out;
+}
+
+.login-field__input--withToggle {
+  padding-right: calc(var(--twm-touch, 44px) + 0.25rem);
+}
+
+.login-field__input::placeholder {
+  color: var(--login-muted);
+  opacity: 0.7;
+}
+
+.login-field__input:hover {
+  border-color: var(--login-blue);
+}
+
+.login-field__toggle {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: var(--twm-touch, 44px);
+  min-height: var(--twm-touch, 44px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: var(--twm-radius-s, 0.5rem);
+  background: transparent;
+  color: var(--login-muted);
+  cursor: pointer;
+}
+
+.login-field__toggle:hover {
+  color: var(--login-blue);
+}
+
+/* ---------- the note, the error, the button ---------- */
+
+.login__note {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--twm-space-s, 0.5rem);
+  font-size: 0.75rem;
+  line-height: 1.35;
+  color: var(--login-muted);
+}
+
+.login__note svg {
+  flex: 0 0 auto;
+  margin-top: 0.05rem;
+  color: var(--login-blue);
+}
+
+.login__error {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--twm-space-s, 0.5rem);
+  padding: var(--twm-space-m, 0.75rem);
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  color: var(--login-danger);
+  border: 1px solid currentColor;
+  border-radius: var(--twm-radius-s, 0.5rem);
+  background: var(--sapErrorBackground, rgba(170, 8, 8, 0.06));
+}
+
+.login__error svg {
+  flex: 0 0 auto;
+  margin-top: 0.05rem;
+}
+
+.login__submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--twm-space-s, 0.5rem);
+  min-height: 2.875rem; /* 46px */
+  padding: 0 var(--twm-space-l, 1rem);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #ffffff;
+  background: var(--login-blue);
+  border: 1px solid transparent;
+  border-radius: var(--twm-radius-s, 0.5rem);
+  cursor: pointer;
+  transition: filter 120ms ease-out, transform 120ms ease-out;
+}
+
+.login__submit:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.login__submit:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.login__submit:disabled {
+  cursor: progress;
+  opacity: 0.75;
+}
+
+.login__footer {
+  font-size: 0.6875rem;
+  letter-spacing: 0.02em;
+  color: var(--login-muted);
+  text-align: center;
+}
+
+/* ---------- the spinner AuthGate shows while it decides ---------- */
+
+.login-deciding {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--twm-space-m, 0.75rem);
+  color: var(--sapContent_LabelColor, #556b82);
+  background: var(--sapBackgroundColor, #f5f6f7);
+}
+
+@media (prefers-color-scheme: dark) {
+  .login-deciding {
+    color: var(--sapContent_LabelColor, #a9b4be);
+    background: var(--sapBackgroundColor, #12171c);
+  }
+}
+
+.login-deciding__ring {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  border: 3px solid rgba(0, 112, 242, 0.22);
+  border-top-color: #0070f2;
+  border-right-color: #f31ded;
+  animation: login-spin 900ms linear infinite;
+}
+
+.login-deciding__label {
+  font-size: 0.8125rem;
+}
+
+@keyframes login-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---------- focus, and motion ---------- */
+
+/* Every control gets the same visible ring, in both themes and on every input type. */
+.login :focus-visible,
+.login-field__input:focus-visible,
+.login-field__toggle:focus-visible,
+.login__submit:focus-visible {
+  outline: 2px solid var(--login-blue);
+  outline-offset: 2px;
+}
+
+.login-field__input:focus {
+  border-color: var(--login-blue);
+  box-shadow: 0 0 0 1px var(--login-blue);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login *,
+  .login-deciding__ring {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .login__submit:active:not(:disabled) {
+    transform: none;
+  }
+
+  .login-deciding__ring {
+    border-top-color: #0070f2;
+    opacity: 0.7;
+  }
+}
+
+/* A little more room once there is room to give. */
+@media (min-width: 30rem) {
+  .login__card {
+    padding: var(--twm-space-xxl, 2rem);
+  }
+
+  .login__mark {
+    width: 4rem;
+  }
+
+  .login__title {
+    font-size: 1.5rem;
+  }
+}

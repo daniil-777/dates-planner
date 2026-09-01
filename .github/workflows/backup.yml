@@ -1,0 +1,284 @@
+name: Backup
+
+# A nightly off-site copy of the ledger.
+#
+# The volume on Fly is the only copy of everything: expenses, memories, settlements, and —
+# because db/schema.cds stores images as LargeBinary columns — every receipt and every
+# photo. Fly volumes are not replicated. One destroyed machine, one `fly volumes destroy`
+# typed into the wrong terminal, and it is gone.
+#
+# What this does, in one sentence: SSH into the running machine, take a transactionally
+# consistent snapshot with scripts/backup.ts, pull the tarball back, encrypt it with a
+# passphrase GitHub never sees in plaintext, prove it decrypts, and keep it as a workflow
+# artifact.
+#
+# ---------------------------------------------------------------------------
+# What you must set up first — this workflow does nothing until you do
+# ---------------------------------------------------------------------------
+# Repository secrets  (Settings → Secrets and variables → Actions → Secrets):
+#
+#   FLY_API_TOKEN       `fly tokens create deploy -x 8760h` — a deploy token is enough for
+#                       `ssh console` and `ssh sftp`. Scope it to this one app.
+#   BACKUP_PASSPHRASE   A long random string. Generate with `openssl rand -base64 48`.
+#                       WRITE IT DOWN SOMEWHERE THAT IS NOT THIS REPOSITORY AND NOT THIS
+#                       LAPTOP. An encrypted archive whose passphrase died with the machine
+#                       that made it is a very tidy way to lose everything.
+#
+# Repository variable  (same page → Variables), optional:
+#
+#   FLY_APP             The Fly app name. Defaults to whatever `app =` says in fly.toml.
+#
+# ---------------------------------------------------------------------------
+# Honest limits
+# ---------------------------------------------------------------------------
+#  * GitHub artifacts expire. `retention-days: 90` is the maximum on most plans and this
+#    workflow uses it, but 90 days is a rolling window, not an archive. Download one to
+#    real storage every few months — GO-LIVE.md has that as a recurring item.
+#  * The ciphertext lives on GitHub. That is fine for AES-256 with a strong passphrase, and
+#    it is still one more place your finances exist. Keep the repository private.
+#  * `fly ssh` needs the machine to be running. fly.toml sets `auto_stop_machines = 'off'`,
+#    so it is — but if you ever turn that on, this job will fail until it is woken.
+#  * UNVERIFIED. This has never executed: it needs a deployed Fly app and a FLY_API_TOKEN,
+#    neither of which existed when it was written. The half that *was* verified is the
+#    backup script itself — `npx tsx scripts/backup.ts --out <dir>` produces a
+#    manifest + db.sqlite + images tarball, and `npm run backup -- --out <dir>` does NOT
+#    (cds swallows the flag: "Invalid option: --out"), which is why the remote command
+#    below calls tsx directly. Run it once by hand from the Actions tab before you trust it.
+
+on:
+  schedule:
+    # 04:20 UTC daily. Deliberately after 03:00, when srv/admin-service.ts may be running
+    # its nightly retrain — not because a retrain would corrupt the snapshot (SQLite's
+    # online backup API is safe against a live writer) but because both want the same
+    # 512 MB machine, and a backup that had to wait is better than a retrain that got OOMed.
+    - cron: '20 4 * * *'
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Why this run (shows up in the job summary)'
+        required: false
+        default: 'manual'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    name: snapshot · encrypt · keep
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    env:
+      FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+      REMOTE_DIR: /data/backups
+      # Archives older than this are deleted from the volume after a successful upload.
+      # The volume is 3 GB and an archive of a two-person ledger is measured in megabytes,
+      # so this is generous.
+      REMOTE_KEEP_DAYS: '14'
+
+    steps:
+      - name: Refuse to run without the two secrets
+        # A backup workflow that "succeeds" while doing nothing is worse than no backup
+        # workflow, because you stop worrying about it.
+        #
+        # The secrets arrive as env vars rather than as `${{ }}` inside the script: an
+        # expression is pasted into the shell source before bash ever sees it, so a
+        # passphrase containing a quote would rewrite this step.
+        env:
+          TOKEN: ${{ secrets.FLY_API_TOKEN }}
+          PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          missing=
+          [ -n "$TOKEN" ] || missing="$missing FLY_API_TOKEN"
+          [ -n "$PASSPHRASE" ] || missing="$missing BACKUP_PASSPHRASE"
+          if [ -n "$missing" ]; then
+            echo "::error::missing repository secret(s):$missing — see the header of .github/workflows/backup.yml"
+            exit 1
+          fi
+
+      - name: Checkout
+        # Only for fly.toml, so the app name has a single source of truth.
+        uses: actions/checkout@v4
+
+      - name: Resolve the app name
+        id: app
+        run: |
+          name='${{ vars.FLY_APP }}'
+          if [ -z "$name" ]; then
+            name=$(sed -n "s/^app *= *['\"]\([^'\"]*\)['\"].*/\1/p" fly.toml | head -1)
+          fi
+          if [ -z "$name" ]; then
+            echo "::error::could not determine the Fly app name — set the FLY_APP repository variable"
+            exit 1
+          fi
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+          echo "backing up Fly app: $name"
+
+      - name: Install flyctl
+        uses: superfly/flyctl-actions/setup-flyctl@master
+
+      # -----------------------------------------------------------------------
+      # 1. Take the snapshot, on the machine
+      # -----------------------------------------------------------------------
+      - name: Run scripts/backup.ts on the machine
+        env:
+          FLY_APP: ${{ steps.app.outputs.name }}
+        run: |
+          set -euo pipefail
+          # One command, run by the container's /bin/sh:
+          #   * CDS_REQUIRES_DB_CREDENTIALS_URL is what makes scripts/backup.ts follow the
+          #     database onto the volume — it reads cds.env.requires.db.credentials.url
+          #     rather than hard-coding db.sqlite. fly.toml sets it for the app process;
+          #     it is repeated here because an ssh session is not the app process.
+          #   * tsx, not `npm run backup`: the npm script is `cds-tsx run scripts/backup.ts`
+          #     and `cds run` rejects the `--out` flag before the script ever sees it.
+          #   * `tsx` resolves from PATH, which the image sets to include
+          #     /app/node_modules/.bin.
+          flyctl ssh console --app "$FLY_APP" --command "/bin/sh -c '
+            set -e
+            mkdir -p ${REMOTE_DIR}
+            cd /app
+            CDS_REQUIRES_DB_CREDENTIALS_URL=\"\${CDS_REQUIRES_DB_CREDENTIALS_URL:-/data/twm.sqlite}\" \
+              tsx scripts/backup.ts --out ${REMOTE_DIR}
+            # backup.ts leaves the snapshot WAL/shm sidecars next to the archive.
+            rm -f ${REMOTE_DIR}/.snapshot-*.sqlite-wal ${REMOTE_DIR}/.snapshot-*.sqlite-shm
+            ls -1t ${REMOTE_DIR}/*.tar.gz | head -1 > ${REMOTE_DIR}/LATEST
+          '"
+
+      - name: Fetch the newest archive
+        id: fetch
+        env:
+          FLY_APP: ${{ steps.app.outputs.name }}
+        run: |
+          set -euo pipefail
+          remote=$(flyctl ssh console --app "$FLY_APP" --command "/bin/cat ${REMOTE_DIR}/LATEST" | tr -d '\r' | tail -1)
+          if [ -z "$remote" ]; then
+            echo "::error::the machine reported no archive path"
+            exit 1
+          fi
+          echo "remote archive: $remote"
+          flyctl ssh sftp get --app "$FLY_APP" "$remote" ./backup.tar.gz
+          echo "path=$(basename "$remote")" >> "$GITHUB_OUTPUT"
+          ls -l backup.tar.gz
+
+      # -----------------------------------------------------------------------
+      # 2. Prove it is a backup before treating it as one
+      # -----------------------------------------------------------------------
+      - name: Open the archive
+        run: |
+          set -euo pipefail
+          # `tar tzf` is the cheapest possible restore rehearsal: gzip has to decompress and
+          # the tar headers have to parse. It catches a truncated sftp transfer, which is
+          # the realistic failure here.
+          tar tzf backup.tar.gz > listing.txt
+          echo "$(wc -l < listing.txt) entries"
+          sed -n '1,20p' listing.txt
+          grep -qx 'manifest.json' listing.txt || { echo "::error::no manifest.json in the archive"; exit 1; }
+          grep -qx 'db.sqlite' listing.txt     || { echo "::error::no db.sqlite in the archive"; exit 1; }
+
+          # The manifest carries row counts. An archive of an empty database is a valid
+          # archive and a silent disaster, so say the numbers out loud in the job summary.
+          tar xzOf backup.tar.gz manifest.json > manifest.json
+          # Quoted heredoc: the script below reaches node exactly as written, with no shell
+          # expansion of $, ` or \ along the way.
+          node - <<'JS'
+          const { readFileSync, appendFileSync } = require('node:fs')
+          const m = JSON.parse(readFileSync('manifest.json', 'utf8'))
+
+          const rows = Object.entries(m.counts).map(([table, n]) => `| ${table} | ${n} |`)
+          appendFileSync(
+            process.env.GITHUB_STEP_SUMMARY,
+            [
+              `### Backup ${m.createdAt}`,
+              '',
+              `App version ${m.appVersion}, archive format ${m.formatVersion}, from ${m.database.source}`,
+              `Database ${(m.database.bytes / 1024 / 1024).toFixed(2)} MB · ${m.images.length} image file(s)`,
+              '',
+              '| table | rows |',
+              '| --- | --- |',
+              ...rows,
+              '',
+            ].join('\n'),
+          )
+
+          // An archive of an empty database is a perfectly valid archive and a silent
+          // disaster, so it gets an annotation rather than a line in a log nobody reads.
+          if (!m.counts.Expenses) {
+            console.log('::warning::the snapshot contains zero expenses — is this the right database?')
+          }
+          JS
+
+      # -----------------------------------------------------------------------
+      # 3. Encrypt, and prove the encryption is reversible
+      # -----------------------------------------------------------------------
+      - name: Encrypt
+        env:
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          # --passphrase-fd 0 rather than --passphrase: a command line is visible in `ps` to
+          # anything else on the runner. gpg is preinstalled on ubuntu-latest.
+          printf '%s' "$BACKUP_PASSPHRASE" | gpg --batch --yes --quiet \
+            --passphrase-fd 0 --pinentry-mode loopback \
+            --symmetric --cipher-algo AES256 \
+            --s2k-mode 3 --s2k-digest-algo SHA512 --s2k-count 65011712 \
+            --output backup.tar.gz.gpg backup.tar.gz
+
+          # Decrypt it back and compare byte for byte. Without this step the artifact is a
+          # promise; with it, it is a fact.
+          printf '%s' "$BACKUP_PASSPHRASE" | gpg --batch --yes --quiet \
+            --passphrase-fd 0 --pinentry-mode loopback \
+            --decrypt --output roundtrip.tar.gz backup.tar.gz.gpg
+          cmp backup.tar.gz roundtrip.tar.gz
+          echo "round-trip ok — $(stat -c %s backup.tar.gz.gpg) bytes of ciphertext"
+
+          # Nothing unencrypted leaves this step.
+          shred -u backup.tar.gz roundtrip.tar.gz 2>/dev/null || rm -f backup.tar.gz roundtrip.tar.gz
+
+      - name: Name the artifact
+        id: name
+        run: echo "stamp=$(date -u +%Y-%m-%d)" >> "$GITHUB_OUTPUT"
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: twm-backup-${{ steps.name.outputs.stamp }}
+          path: backup.tar.gz.gpg
+          # The maximum most plans allow. See "Honest limits" at the top: this is a rolling
+          # window, not an archive.
+          retention-days: 90
+          if-no-files-found: error
+          compression-level: 0 # already gzipped, then encrypted — recompressing is waste
+
+      # -----------------------------------------------------------------------
+      # 4. Housekeeping
+      # -----------------------------------------------------------------------
+      - name: Prune old archives on the volume
+        if: success()
+        env:
+          FLY_APP: ${{ steps.app.outputs.name }}
+        run: |
+          set -euo pipefail
+          flyctl ssh console --app "$FLY_APP" --command "/bin/sh -c '
+            find ${REMOTE_DIR} -name \"*.tar.gz\" -type f -mtime +${REMOTE_KEEP_DAYS} -print -delete || true
+            df -h /data
+          '"
+
+      - name: Say what happened
+        if: always()
+        run: |
+          {
+            echo ""
+            echo "Source archive: \`${{ steps.fetch.outputs.path }}\`"
+            echo "Trigger: ${{ github.event_name }} ${{ inputs.reason }}"
+            echo ""
+            echo "Restore: download the artifact, then"
+            echo '```'
+            echo "gpg --decrypt --output twm.tar.gz twm-backup-*.gpg"
+            echo "npx tsx scripts/restore.ts twm.tar.gz"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

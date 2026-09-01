@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "target": "es2022",
+    "module": "node16",
+    "moduleResolution": "node16",
+    "lib": ["es2023"],
+    "types": ["node"],
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "outDir": "gen",
+    "rootDir": ".",
+    "baseUrl": ".",
+    "paths": { "#cds-models/*": ["./@cds-models/*/index.ts"] }
+  },
+  "include": ["srv/**/*.ts", "test/**/*.ts", "scripts/**/*.ts", "@cds-models/**/*.ts"],
+  "exclude": ["node_modules", "app", "gen", "dist", "ml"]
+}

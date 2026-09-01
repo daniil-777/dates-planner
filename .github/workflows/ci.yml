@@ -1,0 +1,256 @@
+name: CI
+
+# Everything that has to be true before a deploy is allowed to be considered.
+#
+# Deliberately absent: the Python trainer. `npm run ml:train` builds a 65 536-bucket
+# hashing model over thousands of rows and pulls in scikit-learn, numpy and scipy — minutes
+# of runner time to reproduce an artefact that is already committed. What CI does instead is
+# assert that the committed artefact is real and internally consistent (see the
+# "classifier weights" step), and then run `test/classifier-parity.test.ts` as part of the
+# backend suite, which replays `ml/model/parity_fixture.json` through the TypeScript port
+# and fails at 1e-4. That is the property that actually matters: Python and TypeScript
+# agree. Retraining is a laptop operation — `npm run ml:retrain`, commit the new
+# weights.json, push.
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+  workflow_dispatch:
+
+# A second push to the same branch makes the first one irrelevant.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: typecheck · test · build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    env:
+      # No .env is checked out, so nothing here needs unsetting: with no DOCAI_* variables
+      # the Document AI client selects mock mode on its own (CONTRACTS.md §6), and with no
+      # ANTHROPIC_API_KEY / LLM_BASE_URL / AICORE_SERVICE_KEY the LLM provider falls back to
+      # the deterministic template (§7). Both are exactly what a hermetic test run wants,
+      # and neither is forced with an env var here — which means CI also proves the app's
+      # credential-free defaults work, rather than papering over them.
+      CI: 'true'
+      # cds-typer and cds build print a lot; this keeps the log readable.
+      FORCE_COLOR: '1'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          # package.json declares engines.node >= 22, and the code uses node:sqlite
+          # (scripts/backup.ts) and global fetch, both of which need it.
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            app/package-lock.json
+
+      # -----------------------------------------------------------------------
+      # Fail fast on the one artefact CI cannot rebuild
+      # -----------------------------------------------------------------------
+      - name: Classifier weights are present and parse
+        run: |
+          node - <<'JS'
+          const { readFileSync, statSync } = require('node:fs')
+
+          const path = 'ml/model/weights.json'
+          const bytes = statSync(path).size
+          const model = JSON.parse(readFileSync(path, 'utf8'))
+
+          const fail = message => {
+            console.error(`weights.json: ${message}`)
+            process.exitCode = 1
+          }
+
+          // Shape per docs/CONTRACTS.md §3. This is not a schema for its own sake: every
+          // field below is read by srv/lib/classifier at runtime, and a truncated or
+          // half-written weights.json is the failure mode that a Git LFS mishap, a
+          // half-finished `npm run ml:export` or a merge conflict actually produces.
+          if (model.version !== 1) fail(`version is ${String(model.version)}, expected 1`)
+          if (model.nBuckets !== 65536) fail(`nBuckets is ${String(model.nBuckets)}, expected 65536`)
+
+          const expectedNumeric = [
+            'log_amount', 'is_weekend', 'is_evening',
+            'hour_sin', 'hour_cos', 'dow_sin', 'dow_cos',
+          ]
+          if (JSON.stringify(model.numericFeatures) !== JSON.stringify(expectedNumeric)) {
+            fail(`numericFeatures is not the CONTRACTS.md §2.4 order: ${JSON.stringify(model.numericFeatures)}`)
+          }
+          for (const field of ['mean', 'scale']) {
+            const values = model.scaler?.[field]
+            if (!Array.isArray(values) || values.length !== 7) {
+              fail(`scaler.${field} must be 7 numbers, got ${JSON.stringify(values)?.slice(0, 60)}`)
+            } else if (values.some(v => typeof v !== 'number' || !Number.isFinite(v))) {
+              fail(`scaler.${field} contains a non-finite value`)
+            }
+          }
+          if (typeof model.trainedAt !== 'string') fail('trainedAt is missing')
+
+          for (const head of ['category', 'moment']) {
+            const h = model.heads?.[head]
+            if (!h) { fail(`heads.${head} is missing`); continue }
+
+            const [rows, cols] = h.shape ?? []
+            if (!Array.isArray(h.labels) || h.labels.length !== rows) {
+              fail(`heads.${head}: ${String(h.labels?.length)} labels for ${String(rows)} rows`)
+            } else if (JSON.stringify([...h.labels].sort()) !== JSON.stringify(h.labels)) {
+              // §3: "sorted ascending, index == row index". Unsorted labels do not throw —
+              // they silently attach every probability to the wrong category.
+              fail(`heads.${head}: labels are not sorted ascending — row index and label would disagree`)
+            }
+            if (!Array.isArray(h.intercept) || h.intercept.length !== rows) {
+              fail(`heads.${head}: ${h.intercept?.length} intercepts for ${rows} rows`)
+            }
+            if (cols !== model.nBuckets + 7) {
+              fail(`heads.${head}: shape[1] is ${cols}, expected nBuckets + 7 = ${model.nBuckets + 7}`)
+            }
+
+            // The expensive one, and the reason this step exists: coefB64 must decode to
+            // exactly rows × cols float32 values. A truncated base64 blob parses as valid
+            // JSON and only explodes at the first prediction, in production.
+            const coefficients = Buffer.from(h.coefB64 ?? '', 'base64')
+            const expectedBytes = rows * cols * 4
+            if (coefficients.length !== expectedBytes) {
+              fail(`heads.${head}: coefB64 decodes to ${coefficients.length} bytes, expected ${expectedBytes}`)
+            }
+          }
+
+          if (process.exitCode) {
+            console.error('\nRegenerate with: npm run ml:export  (or npm run ml:retrain)')
+          } else {
+            console.log(
+              `weights.json ok — ${(bytes / 1024 / 1024).toFixed(1)} MB, trained ${model.trainedAt}, ` +
+              `category ${model.heads.category.labels.length} labels, ` +
+              `moment ${model.heads.moment.labels.length} labels`,
+            )
+          }
+          JS
+
+      - name: Parity fixture is present and parses
+        run: |
+          node - <<'JS'
+          const { readFileSync } = require('node:fs')
+          const fixture = JSON.parse(readFileSync('ml/model/parity_fixture.json', 'utf8'))
+          if (!Array.isArray(fixture.rows) || fixture.rows.length === 0) {
+            console.error('parity_fixture.json has no rows — test/classifier-parity.test.ts would pass vacuously')
+            process.exit(1)
+          }
+          console.log(`parity fixture ok — ${fixture.rows.length} rows at nBuckets ${fixture.nBuckets}`)
+          JS
+
+      # -----------------------------------------------------------------------
+      # Install
+      # -----------------------------------------------------------------------
+      - name: Install backend dependencies
+        run: npm ci
+
+      - name: Install frontend dependencies
+        run: npm --prefix app ci
+
+      # `@cds-models/` is git-ignored and generated, but it is imported for *values*
+      # (srv/server.ts) and for types (srv/ledger-service.ts, srv/lib/statement.ts). Without
+      # this step `tsc --noEmit` cannot resolve `#cds-models/twowaymatch` and the whole
+      # typecheck collapses into hundreds of confusing errors.
+      - name: Generate CDS types
+        run: npx cds-typer "*" --outputDirectory @cds-models
+
+      # -----------------------------------------------------------------------
+      # Verify
+      # -----------------------------------------------------------------------
+      - name: Typecheck (backend + app)
+        run: npm run typecheck
+
+      - name: Backend tests
+        # vitest, in-process against CAP. Includes test/classifier-parity.test.ts, which is
+        # the Python↔TypeScript agreement check that the skipped training step would
+        # otherwise be the only guard for.
+        run: npm test
+
+      - name: Frontend tests
+        # --passWithNoTests: the page suites live next to the pages
+        # (app/src/pages/*.test.tsx) and a branch that only touches the backend can
+        # legitimately have none staged. The backend step above is deliberately strict.
+        run: npm --prefix app test -- --passWithNoTests
+
+      - name: Build (SPA + cds --production)
+        run: npm run build
+
+      - name: Upload the built SPA
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-dist
+          path: app/dist
+          retention-days: 7
+          if-no-files-found: error
+
+  # ---------------------------------------------------------------------------
+  # End-to-end — on request only
+  # ---------------------------------------------------------------------------
+  # Not on push. Playwright downloads a browser (~1–2 minutes) and drives a real CAP server
+  # plus a real Vite dev server, and app/e2e/journey.spec.ts asserts against rendered UI
+  # text, which moves whenever a page is redesigned. Run it deliberately — from the Actions
+  # tab, or locally with `npm --prefix app run e2e` — rather than letting a copy change turn
+  # every branch red. app/e2e/api-journey.spec.ts is the stable half and is safe to promote
+  # to `on: push` once the UI has settled.
+  e2e:
+    name: end-to-end (manual)
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            app/package-lock.json
+
+      - name: Install backend dependencies
+        run: npm ci
+
+      - name: Install frontend dependencies
+        run: npm --prefix app ci
+
+      - name: Generate CDS types
+        run: npx cds-typer "*" --outputDirectory @cds-models
+
+      - name: Install Chromium
+        working-directory: app
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Playwright
+        # playwright.config.ts starts both servers itself: CAP on 4004 with --in-memory and
+        # MOCK_DOCAI=1, and Vite on 5173, which proxies /ledger to it.
+        working-directory: app
+        run: npx playwright test
+
+      - name: Upload the Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            app/playwright-report
+            app/test-results
+          retention-days: 7
+          if-no-files-found: ignore

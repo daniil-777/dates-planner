@@ -1,0 +1,178 @@
+/* ------------------------------------------------------------------ *
+ *  PersonPicker
+ *
+ *  A roster, not a pair: the list wraps, every toggle clears the 44 px
+ *  touch target of FRONTEND-CONTRACT §7, and nothing here assumes a
+ *  particular number of people.
+ * ------------------------------------------------------------------ */
+
+.twm-people {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.twm-people__search {
+  max-width: 18rem;
+}
+
+.twm-people__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.twm-person {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  padding: 0.25rem 0.75rem 0.25rem 0.25rem;
+  border: 1px solid var(--sapGroup_ContentBorderColor, #d9d9d9);
+  border-radius: 2rem;
+  background: var(--sapGroup_ContentBackground, #fff);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.twm-person:hover {
+  background: var(--sapList_Hover_Background, rgba(0, 0, 0, 0.04));
+}
+
+.twm-person--chosen {
+  border-color: var(--sapSelectedColor, #0070f2);
+  background: var(--sapList_SelectionBackgroundColor, #ebf8ff);
+}
+
+.twm-person:focus-visible {
+  outline: 2px solid var(--sapContent_FocusColor, #0032a5);
+  outline-offset: 2px;
+}
+
+.twm-person__name {
+  white-space: nowrap;
+  max-width: 12rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.twm-people__count,
+.twm-people__empty {
+  font-size: 0.75rem;
+  color: var(--sapContent_LabelColor, #556b82);
+}
+
+/* ------------------------------------------------------------------ *
+ *  EventChip
+ * ------------------------------------------------------------------ */
+
+.twm-event-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  max-width: 100%;
+  padding: 0.25rem 0.5rem 0.25rem 0.625rem;
+  border: 1px solid var(--sapGroup_ContentBorderColor, #d9d9d9);
+  border-radius: 0.75rem;
+  background: var(--sapGroup_ContentBackground, #fff);
+}
+
+.twm-event-chip__icon {
+  color: var(--sapContent_LabelColor, #556b82);
+  flex: 0 0 auto;
+}
+
+.twm-event-chip__text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+  min-width: 0;
+}
+
+.twm-event-chip__name {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.twm-event-chip__meta {
+  font-size: 0.75rem;
+  color: var(--sapContent_LabelColor, #556b82);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.twm-event-chip__clear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  flex: 0 0 auto;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--sapContent_LabelColor, #556b82);
+  cursor: pointer;
+}
+
+.twm-event-chip__clear:hover {
+  background: var(--sapList_Hover_Background, rgba(0, 0, 0, 0.06));
+}
+
+.twm-event-chip__clear:focus-visible {
+  outline: 2px solid var(--sapContent_FocusColor, #0032a5);
+  outline-offset: 1px;
+}
+
+/* ------------------------------------------------------------------ *
+ *  AppShell — the "More" destinations that do not fit the bottom bar
+ * ------------------------------------------------------------------ */
+
+.twm-more__body {
+  display: flex;
+  flex-direction: column;
+  padding: 0.5rem;
+  min-width: 12rem;
+}
+
+.twm-more__option {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 44px;
+  padding: 0.5rem 0.75rem;
+  border: none;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.twm-more__option:hover {
+  background: var(--sapList_Hover_Background, rgba(0, 0, 0, 0.04));
+}
+
+.twm-more__option--active {
+  color: var(--sapSelectedColor, #0070f2);
+  font-weight: 600;
+}
+
+/*
+ * The fifth slot of the bottom bar is a button among links. It borrows the link's class
+ * for its layout, so the user-agent button chrome has to go — everything else (the active
+ * colour, the top rule, the label size) stays with `.twm-bottomnav__item` in index.css.
+ */
+button.twm-bottomnav__item {
+  border-inline: none;
+  border-bottom: none;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}

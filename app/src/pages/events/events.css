@@ -1,0 +1,810 @@
+/* Events — mobile first. The page sits inside `.twm-main` from the shell, which already owns
+   the outer padding and the safe-area insets. Colours are Horizon theme parameters rather
+   than hex, so the page follows sap_horizon → sap_horizon_dark without a second palette; the
+   only literal colours on screen come from `Person.colour` and `Category.colour`, applied as
+   inline styles by the components that own them. */
+
+.ev {
+  display: flex;
+  flex-direction: column;
+  gap: var(--twm-space-m);
+}
+
+/* Sticky under the ShellBar, which is 2.75rem tall and sits above the safe area. */
+.ev__bar {
+  position: sticky;
+  top: calc(var(--twm-safe-top) + 2.75rem);
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: var(--twm-space-s);
+  padding: var(--twm-space-s) 0;
+  background: var(--sapBackgroundColor, #f5f6f7);
+  border-bottom: 1px solid var(--twm-border);
+}
+
+.ev__heading {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.ev__count {
+  font-size: 0.8125rem;
+  color: var(--twm-muted);
+}
+
+.ev__section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--twm-space-s);
+}
+
+.ev__section-title {
+  margin: var(--twm-space-s) 0 0;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--twm-muted);
+}
+
+/* ---------- the list ---------- */
+
+.ev-cards {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--twm-space-s);
+}
+
+@media (min-width: 700px) {
+  .ev-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.ev-card {
+  display: flex;
+}
+
+.ev-card__link {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--twm-space-s);
+  min-height: var(--twm-touch);
+  padding: var(--twm-space-l);
+  border: 1px solid var(--twm-border);
+  border-radius: var(--twm-radius-m);
+  background: var(--twm-surface);
+  box-shadow: var(--sapContent_Shadow0, 0 0 0.125rem rgba(34, 54, 73, 0.32));
+  color: inherit;
+  text-decoration: none;
+}
+
+.ev-card__link:hover {
+  border-color: var(--sapBrandColor, #0070f2);
+}
+
+.ev-card__link:focus-visible {
+  outline: 2px solid var(--sapContent_FocusColor, #0032a5);
+  outline-offset: 2px;
+}
+
+.ev-card__name {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.ev-card__when {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8125rem;
+  color: var(--twm-muted);
+}
+
+.ev-card__foot {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--twm-space-s);
+  margin-top: auto;
+}
+
+.ev-card__figures {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.1rem;
+}
+
+.ev-card__postings {
+  font-size: 0.75rem;
+  color: var(--twm-muted);
+}
+
+/* ---------- avatar rows ---------- */
+
+.ev-avatars {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+}
+
+.ev-avatars__more {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.75rem;
+  height: 1.75rem;
+  padding: 0 0.4rem;
+  border-radius: var(--twm-radius-pill);
+  background: var(--sapButton_Lite_Hover_Background, rgba(85, 107, 130, 0.14));
+  color: var(--twm-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* ---------- detail ---------- */
+
+.ev-detail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--twm-space-m);
+}
+
+.ev-detail__bar {
+  display: flex;
+  align-items: center;
+  gap: var(--twm-space-s);
+  flex-wrap: wrap;
+}
+
+.ev-detail__bar-spacer {
+  flex: 1 1 auto;
+}
+
+.ev-detail__title {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.ev-detail__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.875rem;
+  color: var(--twm-muted);
+}
+
+.ev-people {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--twm-space-s) var(--twm-space-m);
+}
+
+.ev-people__person {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.ev-people__name {
+  font-size: 0.875rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ev-detail__note {
+  margin: 0;
+  padding: var(--twm-space-m) var(--twm-space-l);
+  border-inline-start: 3px solid var(--sapBrandColor, #0070f2);
+  border-radius: 0 var(--twm-radius-s) var(--twm-radius-s) 0;
+  background: var(--twm-surface);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.ev-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--twm-space-m);
+  padding: var(--twm-space-l);
+  border: 1px solid var(--twm-border);
+  border-radius: var(--twm-radius-m);
+  background: var(--twm-surface);
+}
+
+.ev-panel__title {
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--twm-muted);
+}
+
+/* ---------- the one number the page is about ---------- */
+
+.ev-total {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--twm-space-s) var(--twm-space-l);
+}
+
+.ev-total__value {
+  font-size: 2rem;
+  line-height: 1.1;
+  font-weight: 700;
+}
+
+.ev-total__count {
+  font-size: 0.875rem;
+  color: var(--twm-muted);
+}
+
+/* `perHead` is context, so it is drawn as an aside: quieter than the total, never beside a
+   name, and always with the sentence that says what it is not. */
+.ev-perhead {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--twm-space-s);
+  padding: var(--twm-space-m);
+  border-radius: var(--twm-radius-s);
+  background: var(--sapInformationBackground, rgba(0, 112, 242, 0.06));
+}
+
+.ev-perhead__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.ev-perhead__value {
+  font-weight: 700;
+}
+
+.ev-perhead__hint {
+  font-size: 0.8125rem;
+  color: var(--twm-muted);
+}
+
+/* ---------- who paid what ---------- */
+
+.ev-breakdown {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--twm-space-m);
+}
+
+.ev-breakdown__row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    'avatar name amount'
+    'avatar bar  bar';
+  align-items: center;
+  column-gap: var(--twm-space-s);
+  row-gap: 0.3rem;
+}
+
+.ev-breakdown__avatar {
+  grid-area: avatar;
+}
+
+.ev-breakdown__name {
+  grid-area: name;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.9375rem;
+}
+
+.ev-breakdown__amount {
+  grid-area: amount;
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+
+.ev-breakdown__share {
+  font-size: 0.75rem;
+  color: var(--twm-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.ev-breakdown__track {
+  grid-area: bar;
+  height: 6px;
+  border-radius: var(--twm-radius-pill);
+  background: var(--twm-border);
+  overflow: hidden;
+}
+
+.ev-breakdown__fill {
+  display: block;
+  height: 100%;
+  border-radius: var(--twm-radius-pill);
+}
+
+.ev-breakdown__nothing {
+  grid-area: bar;
+  font-size: 0.75rem;
+  color: var(--twm-muted);
+}
+
+/* ---------- postings on the event ---------- */
+
+.ev-posting {
+  display: flex;
+  align-items: center;
+  gap: var(--twm-space-s);
+  width: 100%;
+  min-height: var(--twm-touch);
+  padding: 0.35rem 0;
+}
+
+.ev-posting__body {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.ev-posting__merchant {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.9375rem;
+}
+
+.ev-posting__meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  color: var(--twm-muted);
+}
+
+.ev-posting__trailing {
+  display: flex;
+  align-items: center;
+  gap: var(--twm-space-s);
+  flex: 0 0 auto;
+}
+
+/* ---------- editor ---------- */
+
+.ev-editor {
+  width: min(34rem, 92vw);
+}
+
+.ev-editor__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--twm-space-m);
+  padding: var(--twm-space-s) 0;
+}
+
+.ev-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.ev-field > [ui5-input],
+.ev-field > [ui5-text-area],
+.ev-field > [ui5-date-picker] {
+  width: 100%;
+}
+
+.ev-field__row {
+  display: flex;
+  gap: var(--twm-space-m);
+  flex-wrap: wrap;
+}
+
+.ev-field__row > * {
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+
+.ev-editor__hint {
+  font-size: 0.8125rem;
+  color: var(--twm-muted);
+}
+
+/* ---------- surprises (CONTRACTS.md §11.3) ---------- */
+
+/* Discreet by design: a quiet marker beside the name, never a banner. The person reading it
+   is the one keeping the secret, so it only has to answer "why is this missing on the other
+   phone?" — and it has to do that without shouting the event's name across the room. */
+.ev-onlyyou {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  flex: 0 0 auto;
+  padding: 0.1rem 0.5rem;
+  border: 1px solid var(--sapInformativeBorderColor, #0070f2);
+  border-radius: var(--twm-radius-pill);
+  background: var(--sapInformationBackground, rgba(0, 112, 242, 0.06));
+  color: var(--sapInformativeTextColor, #0064d9);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.ev-onlyyou [ui5-icon] {
+  width: 0.75rem;
+  height: 0.75rem;
+  color: currentcolor;
+}
+
+.ev-card__head {
+  display: flex;
+  align-items: center;
+  gap: var(--twm-space-s);
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.ev-detail__name {
+  display: flex;
+  align-items: center;
+  gap: var(--twm-space-s);
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.ev-secret {
+  margin: 0;
+  padding: var(--twm-space-m) var(--twm-space-l);
+  border-inline-start: 3px solid var(--sapInformativeBorderColor, #0070f2);
+  border-radius: 0 var(--twm-radius-s) var(--twm-radius-s) 0;
+  background: var(--sapInformationBackground, rgba(0, 112, 242, 0.06));
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+/* ---------- photographs (CONTRACTS.md §11.1) ---------- */
+
+.ev-panel__head {
+  display: flex;
+  align-items: center;
+  gap: var(--twm-space-s);
+  flex-wrap: wrap;
+}
+
+.ev-photos__count {
+  font-size: 0.75rem;
+  color: var(--twm-muted);
+}
+
+/* The invitation a finished event with no pictures gets instead of an empty state. Warmer
+   than the panels around it on purpose — this is the one place on the page that asks for
+   something rather than reporting something. */
+.ev-invite {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--twm-space-l);
+  padding: var(--twm-space-l);
+  border: 1px dashed var(--sapBrandColor, #0070f2);
+  border-radius: var(--twm-radius-m);
+  background: var(--sapInformationBackground, rgba(0, 112, 242, 0.06));
+}
+
+.ev-invite__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: var(--twm-radius-pill);
+  background: var(--twm-surface);
+  color: var(--sapBrandColor, #0070f2);
+}
+
+.ev-invite__icon [ui5-icon] {
+  width: 1.375rem;
+  height: 1.375rem;
+  color: currentcolor;
+}
+
+.ev-invite__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--twm-space-s);
+  min-width: 0;
+}
+
+.ev-invite__title {
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.ev-invite__line {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--twm-muted);
+}
+
+.ev-invite__action {
+  margin-top: 0.15rem;
+}
+
+.ev-photos__waiting {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--twm-space-s);
+  font-size: 0.875rem;
+  color: var(--twm-muted);
+}
+
+.ev-photos__progress {
+  font-size: 0.8125rem;
+  color: var(--twm-muted);
+}
+
+.ev-photos {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(6.5rem, 1fr));
+  gap: var(--twm-space-s);
+}
+
+@media (min-width: 700px) {
+  .ev-photos {
+    grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+  }
+}
+
+.ev-photos__cell {
+  display: flex;
+  min-width: 0;
+}
+
+.ev-photos__tile {
+  position: relative;
+  flex: 1 1 auto;
+  display: block;
+  aspect-ratio: 1 / 1;
+  padding: 0;
+  border: 1px solid var(--twm-border);
+  border-radius: var(--twm-radius-s);
+  background: var(--twm-surface);
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.ev-photos__tile:hover {
+  border-color: var(--sapBrandColor, #0070f2);
+}
+
+.ev-photos__tile:focus-visible {
+  outline: 2px solid var(--sapContent_FocusColor, #0032a5);
+  outline-offset: 2px;
+}
+
+.ev-photos__tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.ev-photos__caption {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  padding: 0.9rem 0.4rem 0.3rem;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.72), rgba(0, 0, 0, 0));
+  color: #fff;
+  font-size: 0.6875rem;
+  text-align: start;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- the lightbox ---------- */
+
+/* Below UI5's own overlay layer, so the delete confirmation opens *over* the picture rather
+   than behind it. */
+.ev-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  gap: var(--twm-space-s);
+  padding: calc(var(--twm-safe-top) + var(--twm-space-s)) var(--twm-space-s)
+    calc(var(--twm-safe-bottom) + var(--twm-space-s));
+  background: rgba(0, 0, 0, 0.9);
+}
+
+.ev-lightbox:focus {
+  outline: none;
+}
+
+.ev-lightbox__bar {
+  display: flex;
+  align-items: center;
+  gap: var(--twm-space-s);
+  flex-wrap: wrap;
+  color: #fff;
+}
+
+.ev-lightbox__bar-spacer {
+  flex: 1 1 auto;
+}
+
+.ev-lightbox__counter {
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.85;
+}
+
+.ev-lightbox__action,
+.ev-lightbox__icon,
+.ev-lightbox__nav {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: var(--twm-touch);
+  min-width: var(--twm-touch);
+  padding: 0 0.7rem;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: var(--twm-radius-s);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font: inherit;
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+
+.ev-lightbox__action:hover,
+.ev-lightbox__icon:hover,
+.ev-lightbox__nav:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.ev-lightbox__action:focus-visible,
+.ev-lightbox__icon:focus-visible,
+.ev-lightbox__nav:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+.ev-lightbox__action--danger {
+  border-color: rgba(255, 138, 128, 0.55);
+  color: #ff8a80;
+}
+
+.ev-lightbox__icon,
+.ev-lightbox__nav {
+  padding: 0;
+}
+
+.ev-lightbox__nav {
+  flex: 0 0 auto;
+  border-radius: var(--twm-radius-pill);
+}
+
+.ev-lightbox__nav:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.ev-lightbox__stage {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--twm-space-s);
+  min-height: 0;
+}
+
+.ev-lightbox__image {
+  flex: 0 1 auto;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: var(--twm-radius-s);
+}
+
+.ev-lightbox__broken {
+  max-width: 22rem;
+  margin: 0;
+  color: #fff;
+  text-align: center;
+  font-size: 0.875rem;
+}
+
+.ev-lightbox__foot {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: var(--twm-space-m);
+  border-radius: var(--twm-radius-s);
+  background: var(--twm-surface);
+  color: inherit;
+}
+
+.ev-lightbox__caption {
+  margin: 0;
+  font-size: 0.9375rem;
+  overflow-wrap: anywhere;
+}
+
+.ev-lightbox__date {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--twm-muted);
+}
+
+.ev-lightbox__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--twm-space-s);
+}
+
+.ev-lightbox__form > [ui5-input] {
+  width: 100%;
+}
+
+.ev-lightbox__form-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--twm-space-s);
+}
+
+.ev-lightbox__hint {
+  font-size: 0.75rem;
+  color: var(--twm-muted);
+}
+
+/* ---------- the surprise switch in the editor ---------- */
+
+.ev-field--switch {
+  gap: 0.35rem;
+}
+
+.ev-field__switch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--twm-space-m);
+  min-height: var(--twm-touch);
+}

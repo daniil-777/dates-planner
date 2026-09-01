@@ -1,0 +1,67 @@
+{
+  "name": "twoway-match",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Two-Way Match — household spend management",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "concurrently -n cap,web -c blue,magenta \"npm:dev:cap\" \"npm:dev:web\"",
+    "dev:cap": "cds-tsx watch",
+    "dev:web": "npm --prefix app run dev",
+    "start": "cds-serve",
+    "build": "npm run build:web && cds build --production",
+    "build:web": "npm --prefix app run build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit && npm --prefix app run typecheck",
+    "lint": "eslint . --ext .ts,.tsx",
+    "format": "prettier --write .",
+    "ml:setup": "python3 -m venv ml/.venv && ml/.venv/bin/pip install -q -r ml/requirements.txt",
+    "ml:gen": "ml/.venv/bin/python ml/generate_data.py",
+    "ml:train": "ml/.venv/bin/python ml/train.py --n-buckets 65536",
+    "ml:export": "ml/.venv/bin/python ml/export_ts.py",
+    "ml:export-data": "cds-tsx run scripts/export-training-data.ts",
+    "ml:retrain": "npm run ml:export-data && ml/.venv/bin/python ml/train.py --csv ml/data/live_transactions.csv --n-buckets 65536 && npm run ml:export && vitest run test/classifier-parity.test.ts",
+    "backup": "cds-tsx run scripts/backup.ts",
+    "hash": "cds-tsx run scripts/hash-password.ts"
+  },
+  "dependencies": {
+    "@cap-js/sqlite": "^3.0.2",
+    "@sap/cds": "^10.0.6",
+    "@anthropic-ai/sdk": "^0.122.0",
+    "bcryptjs": "^3.0.3",
+    "express": "^4.21.2",
+    "express-rate-limit": "^8.7.0",
+    "helmet": "^8.3.0",
+    "node-cron": "^4.6.0",
+    "sharp": "^0.35.4"
+  },
+  "devDependencies": {
+    "@cap-js/cds-typer": "^0.41.0",
+    "@sap/cds-dk": "^10.0.7",
+    "@types/node": "^24.0.0",
+    "concurrently": "^10.0.5",
+    "prettier": "^3.9.6",
+    "tsx": "^4.23.13",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.11"
+  },
+  "cds": {
+    "requires": {
+      "db": {
+        "kind": "sqlite",
+        "credentials": {
+          "url": "db.sqlite"
+        }
+      },
+      "auth": {
+        "kind": "mocked"
+      }
+    },
+    "log": {
+      "service": true
+    }
+  }
+}
