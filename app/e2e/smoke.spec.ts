@@ -36,23 +36,18 @@ const SWISS_MONEY = /^-?[A-Z]{3} \d{1,3}(?:'\d{3})*\.\d{2}$/
 const COMMA_GROUPED = /\d,\d{3}/
 
 /**
- * Open a route the way the app can actually be opened today.
+ * Open a route.
  *
- * `/ledger` is special, and not in a good way: it is both a client route
- * (FRONTEND-CONTRACT §6) and the OData service path (CONTRACTS.md §1.4). A hard navigation
- * to it never reaches React — the Vite dev proxy and, in production, `srv/server.ts`'s
- * API_PREFIXES list both hand `/ledger` to CAP, so the browser gets the service document
- * as JSON. Client-side navigation is unaffected, which is why the app works in daily use:
- * `/` redirects to `/ledger` inside the router and the URL is only ever written by
- * history.pushState.
- *
- * So the smoke suite enters through `/`, exactly as the installed PWA does (its
- * `start_url` is `/`). The defect itself is recorded by the failing test at the bottom of
- * this file and in GO-LIVE.md; this helper is how the rest of the suite gets on with its
- * job in the meantime.
+ * This used to be a workaround. `/ledger` was both a client route (FRONTEND-CONTRACT §6)
+ * and the OData service path, so a hard navigation to it never reached React and the
+ * browser got the service document as JSON; the suite had to enter through `/` instead.
+ * The services now live under `/api` (`/api/ledger`, `/api/admin`), which is the first of
+ * the three fixes GO-LIVE.md offered, so every route is directly navigable and this is a
+ * plain `goto` again. It is kept as a seam rather than inlined because the whole suite
+ * calls it, and the test below guards the fix.
  */
 async function open(page: Page, path: string): Promise<void> {
-  await page.goto(path === '/ledger' ? '/' : path)
+  await page.goto(path)
 }
 
 /**
@@ -325,7 +320,7 @@ test.describe('installable', () => {
   })
 })
 
-test.describe('known defects', () => {
+test.describe('fixed defects · guarded', () => {
   /**
    * A deep link to /ledger returns JSON, not the app.
    *
@@ -337,16 +332,16 @@ test.describe('known defects', () => {
    *     history fallback;
    *   * offline, the workbox `navigateFallbackDenylist` excludes it as well.
    *
-   * So the browser gets `{"@odata.context":"$metadata", …}`. Daily use is unaffected —
-   * the PWA starts at `/`, the router redirects, and every later URL is written by
-   * pushState — but a reload on the ledger, a bookmark, and a shared link all break.
+   * Fixed by moving the services under `/api`: `srv/ledger-service.cds` is now
+   * `@(path: '/api/ledger')`, `API_PREFIXES` in `srv/server.ts` no longer claims
+   * `/ledger`, the Vite proxy forwards `/api` instead, and the workbox
+   * `navigateFallbackDenylist` matches `/^\/api/`. So `/ledger` is the client route and
+   * nothing else, and a reload, a bookmark and a shared link all reach React.
    *
-   * Marked `fixme` rather than deleted, so it shows up in every report until it is fixed.
-   * The fix is one of: move the service to `/api/ledger`, move the page to `/postings`, or
-   * make the fallback content-negotiate on `Accept: text/html`. All three are outside this
-   * file's ownership — GO-LIVE.md carries it as a release blocker.
+   * This guards that. If anyone re-registers a service at a bare `/ledger`, it fails here
+   * rather than in somebody's browser.
    */
-  test.fixme('a hard navigation to /ledger loads the app, not the OData service document', async ({
+  test('a hard navigation to /ledger loads the app, not the OData service document', async ({
     page,
   }) => {
     await page.goto('/ledger')
@@ -355,46 +350,51 @@ test.describe('known defects', () => {
   })
 })
 
-test.describe('known defects · production only', () => {
+test.describe('fixed defects · production only', () => {
   /**
-   * The Fiori font never loads in production.
+   * The Fiori font used never to load in production.
    *
-   * `@ui5/webcomponents` fetches its `72` family at runtime from
-   * `https://cdn.jsdelivr.net/npm/@sap-theming/theming-base-content@…/…/fonts/*.woff2`,
-   * and helmet's CSP in `srv/server.ts` sets `font-src 'self' data:`. Every face is
-   * blocked — 38 console violations on a single page load — and the app renders in the
-   * browser's fallback font. It still works. It stops looking like SAP, which for this
-   * particular product is most of the joke.
+   * `@ui5/webcomponents` bakes its `72` family into the theme CSS at build time with
+   * absolute `https://cdn.jsdelivr.net/...` URLs, and helmet's CSP in `srv/server.ts` sets
+   * `font-src 'self' data:`. Every face was blocked — 38 console violations on a single
+   * page load — and the app rendered in the browser's fallback font. It still worked; it
+   * stopped looking like SAP, which for this particular product is most of the joke.
    *
-   * It does not show up in `npm run dev`, because there the SPA comes from Vite and only
-   * the API calls pass through helmet. It shows up the moment CAP serves `app/dist` — that
-   * is, in the container, which is the only place it matters. Reproduce it locally with
-   * `E2E_SAME_ORIGIN=1 npx playwright test smoke`.
+   * It never showed up in `npm run dev`, because there the SPA comes from Vite and only
+   * the API calls pass through helmet. It showed up the moment CAP served `app/dist` —
+   * that is, in the container, which is the only place it mattered.
    *
-   * Three ways out, in the order I would try them:
+   * Fixed by bundling rather than by widening the CSP: the 24 `72-*.woff2` faces are
+   * vendored into `app/public/fonts`, and the `twm-bundle-ui5-fonts` plugin in
+   * `app/vite.config.ts` rewrites the baked CDN URLs to `/fonts/` at build time. That
+   * keeps `font-src 'self'`, takes a third party out of the critical path of a private
+   * app, and — unlike widening the CSP — lets the service worker precache the faces, so an
+   * installed PWA renders in the right font offline.
    *
-   *   1. Bundle the fonts. `@sap-theming/theming-base-content` is already an npm
-   *      dependency of the UI5 packages; pointing UI5's asset registry at a local copy
-   *      keeps `font-src 'self'` intact and removes a CDN from the critical path of a
-   *      private app. Best answer, most work.
-   *   2. Add `https://cdn.jsdelivr.net` to `font-src`. One line, and it hands a third
-   *      party a request every time anybody opens the app.
-   *   3. Accept the fallback font and stop loading the theme fonts at all.
-   *
-   * The CSP lives in `srv/server.ts` and the UI5 bootstrap in `app/src/main.tsx`, neither
-   * of which belongs to this file. Recorded as a release blocker in GO-LIVE.md.
+   * Asserted against the header rather than against a blocked request, so it means the
+   * same thing in both topologies: helmet is mounted unconditionally in `srv/server.ts`,
+   * and the Vite dev proxy passes response headers through.
    */
-  test.fixme('the production CSP allows the UI5 theme fonts', async ({ request }) => {
-    // Asserted against the header rather than against a blocked request, so it means the
-    // same thing in both topologies: helmet is mounted unconditionally in srv/server.ts,
-    // and the Vite dev proxy passes response headers through.
+  test('the UI5 theme fonts are served same-origin, with font-src left tight', async ({
+    request,
+  }) => {
     const response = await request.get('/health')
     const csp = response.headers()['content-security-policy'] ?? ''
 
     expect(csp, 'no CSP header at all — has securityHeaders() been removed?').not.toBe('')
-    expect(csp).toMatch(/font-src[^;]*(cdn\.jsdelivr\.net|'self')/)
-    expect(csp, 'font-src must allow wherever the UI5 72 font actually comes from').toMatch(
-      /font-src[^;]*cdn\.jsdelivr\.net/,
+
+    const fontSrc = /font-src([^;]*)/.exec(csp)?.[1] ?? ''
+    expect(fontSrc, 'no font-src directive in the CSP').not.toBe('')
+    expect(fontSrc).toContain("'self'")
+
+    // The whole point of bundling: if this starts failing, someone widened the CSP instead
+    // of fixing the URLs, and the app is phoning a CDN on every load again.
+    expect(fontSrc, 'the 72 faces are bundled, so no CDN belongs in font-src').not.toContain(
+      'jsdelivr',
     )
+
+    // And the faces the rewritten @font-face rules point at must actually be served.
+    const font = await request.get('/fonts/72-Regular.woff2')
+    expect(font.status(), '/fonts/72-Regular.woff2 must be served same-origin').toBe(200)
   })
 })

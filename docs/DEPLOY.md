@@ -144,6 +144,22 @@ fly secrets set \
 eaten by your shell before flyctl ever sees it. The app validates the shape and will tell
 you if this happened, but it will tell you by refusing to boot.
 
+### Strongly wanted — set it on the first deploy
+
+| Name | What it is |
+|---|---|
+| `SESSION_SECRET` | the key that signs the session cookie (`srv/lib/auth.ts`) |
+
+Not required: with it unset, `sessionSecret()` falls back to 32 random bytes chosen once per
+boot. That is a *stronger* key than any passphrase, so it is never a weakening — it simply
+does not survive a restart, which means **everybody is signed out on every deploy**, and the
+`immediate` strategy in `fly.toml` means every deploy is a restart. On a phone that is a
+login screen instead of the app, in a restaurant, holding a receipt.
+
+```bash
+fly secrets set SESSION_SECRET="$(openssl rand -base64 36)"
+```
+
 ### Optional — each one buys one more real service
 
 Set none of these and the app is complete: Document AI runs on bundled fixtures, the
@@ -449,8 +465,8 @@ is the difference between a tool and a chore.
 | Every prediction is `Groceries` at low confidence | same as above, from the other end | `/health` |
 | The data was there yesterday and is gone today | the database is on the container layer, not the volume | `fly ssh console -C "ls -la /data"`; check `CDS_REQUIRES_DB_CREDENTIALS_URL` in `fly.toml` |
 | Machine restarts every few minutes | someone replaced the TCP check with an HTTP check on `/health`, which is 401 for an anonymous prober | put the TCP check back; the reasoning is in `fly.toml` |
-| The app renders in Times New Roman | the CSP blocks UI5's fonts from `cdn.jsdelivr.net` | known release blocker; `GO-LIVE.md` §1 |
-| Reloading the page on `/ledger` shows JSON | the client route and the service path are the same string | known release blocker; `GO-LIVE.md` §1 |
+| The app renders in Times New Roman | the `72` faces are not being served — either `app/public/fonts` did not reach the image, or someone removed the `twm-bundle-ui5-fonts` plugin from `app/vite.config.ts` and the baked CDN URLs came back | `curl -I https://…/fonts/72-Regular.woff2` should be 200 `font/woff2`; `GO-LIVE.md` §1.1 |
+| Everybody is signed out after every deploy | `SESSION_SECRET` is unset, so the cookie key is regenerated on each boot | set it; §4 |
 | `npm ci` fails on alpine building a native module | no musl prebuild for something | add `RUN apk add --no-cache python3 make g++` to the failing stage |
 | `fly ssh console` hangs | the machine is stopped | `fly status`; `auto_stop_machines` should be `'off'` |
 

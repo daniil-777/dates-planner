@@ -10,13 +10,13 @@ Times are honest estimates for one evening.
 
 ---
 
-## 1. Blockers — fix these first
+## 1. Blockers — all four fixed
 
-Four things are known to be wrong. Two of them are visible the moment anyone reloads a
-page, one of them is visible the moment the app loads at all, and one of them will bite the
-next person who runs a build.
+All four are done. They are kept here, struck through rather than deleted, because each one
+has a test guarding it now and the next person to touch that area should know what the test
+is for. `npm test` and `npm run typecheck` are clean.
 
-### 1.1 The Fiori font never loads in production · ~30 min
+### 1.1 ~~The Fiori font never loads in production~~ · FIXED
 
 `@ui5/webcomponents` fetches its `72` font family at runtime from
 `https://cdn.jsdelivr.net/npm/@sap-theming/theming-base-content@…/fonts/*.woff2`, and
@@ -33,20 +33,24 @@ deployment. Reproduce it:
 cd app && E2E_SAME_ORIGIN=1 npx playwright test smoke
 ```
 
-Three ways out, best first:
+**Fixed by option 1, bundling.** The 24 `72-*.woff2` faces (992 KB) are vendored into
+`app/public/fonts`, and a `twm-bundle-ui5-fonts` plugin in `app/vite.config.ts` rewrites the
+baked-in CDN URLs to `/fonts/` at build time. `font-src` stays `'self' data:`.
 
-1. Bundle the fonts. `@sap-theming/theming-base-content` is already in the dependency tree;
-   pointing UI5's asset registry at a local copy keeps `font-src 'self'` and takes a CDN
-   out of the critical path of a private app.
-2. Add `https://cdn.jsdelivr.net` to `font-src` in `srv/server.ts`. One line, and it hands a
-   third party a request every time anybody opens the app.
-3. Decide the fallback font is fine and stop loading the theme fonts.
+Bundling rather than widening the CSP buys one thing widening would not: the service worker
+precaches the faces, so an installed PWA renders in the right font offline. Precache went
+from 371 entries to 400, 17.0 MB to 18.1 MB.
 
-- [ ] Fixed, and `E2E_SAME_ORIGIN=1 npx playwright test smoke` is clean
-- [ ] `test.fixme` removed from *the production CSP allows the UI5 theme fonts* in
-      `app/e2e/smoke.spec.ts`, so it guards the fix from now on
+Note the fonts are in `baseTheme/fonts/`, not `sap_horizon/fonts/` as this file used to
+imply — the `72` family is theme-independent.
 
-### 1.2 Reloading the page on `/ledger` returns JSON · ~30 min
+- [x] Fixed — the built bundle contains zero `cdn.jsdelivr.net` font URLs and 24 `/fonts/`
+      references; `font-src 'self' data:` and `GET /fonts/72-Regular.woff2` → 200
+      `font/woff2` both verified against a running server
+- [x] `test.fixme` removed from the font test in `app/e2e/smoke.spec.ts`, and its assertion
+      inverted: it now fails if anyone puts a CDN back into `font-src`
+
+### 1.2 ~~Reloading the page on `/ledger` returns JSON~~ · FIXED
 
 `/ledger` is both the client route (FRONTEND-CONTRACT §6) and the OData service path
 (CONTRACTS.md §1.4). On a hard navigation the server wins: the Vite proxy in dev,
@@ -58,20 +62,17 @@ Daily use hides it — the PWA starts at `/`, the router redirects, and every la
 written by `pushState` — so it will be a reload, a bookmark or a shared link that finds it.
 Probably hers.
 
-Pick one:
+**Fixed by the first option, moving the services under `/api`.** All five touchpoints
+agree: `srv/ledger-service.cds` is `@(path: '/api/ledger')`, `srv/admin-service.cds` is
+`/api/admin`, `API_PREFIXES` in `srv/server.ts` no longer claims `/ledger`, the Vite proxy
+forwards `/api`, the workbox `navigateFallbackDenylist` matches `/^\/api/`, and
+`app/src/api/client.ts` has `BASE = '/api/ledger'`.
 
-* move the service to `/api/ledger` (touches `srv/ledger-service.cds`, the Vite proxy,
-  `API_PREFIXES`, the workbox denylist and `app/src/api/client.ts`);
-* move the page to `/postings` (touches `App.tsx` and `AppShell.tsx` only — smallest
-  change, and "Postings" is arguably the better SAP word anyway);
-* content-negotiate the SPA fallback on `Accept: text/html`.
+- [x] Fixed
+- [x] `test.fixme` removed from *a hard navigation to /ledger loads the app…*
+- [x] `open()` simplified back to a plain `page.goto`
 
-- [ ] Fixed
-- [ ] `test.fixme` removed from *a hard navigation to /ledger loads the app…* in
-      `app/e2e/smoke.spec.ts`
-- [ ] `open()` in that same file simplified back to a plain `page.goto`
-
-### 1.3 `npm run build` writes 95 stray `.js` files into the source tree · ~5 min
+### 1.3 ~~`npm run build` writes 95 stray `.js` files into the source tree~~ · FIXED
 
 `app/package.json` builds with `tsc -b --noEmit false`, and with no `outDir` that emits a
 `.js` next to every `.ts`/`.tsx` under `app/src` and `app/e2e` — **and `vite.config.js` next
@@ -86,18 +87,18 @@ The fix is one flag in `app/package.json`:
 "build": "tsc -b --noEmit && vite build"        // typecheck, emit nothing
 ```
 
-- [ ] Fixed
-- [ ] `git status` is clean after `npm run build` — no `.js` beside a `.ts`, no
-      `vite.config.js`, no `tsconfig.tsbuildinfo`
+- [x] Fixed — `app/package.json` builds with `tsc --noEmit && vite build`
+- [x] `.gitignore` also grew belt-and-braces rules for `app/src/**/*.js`,
+      `app/vite.config.js` and `app/tsconfig.tsbuildinfo`
 
-### 1.4 `package.json` still says `0.1.0` · ~1 min
+### 1.4 ~~`package.json` still says `0.1.0`~~ · FIXED
 
 `/health` reports `version` straight from `package.json`, and `CHANGELOG.md` describes a
 1.0.0 that does not exist yet.
 
-- [ ] `version` bumped to `1.0.0` in the root `package.json`
-- [ ] Same in `app/package.json`
-- [ ] `curl -u … /health` reports `"version": "1.0.0"` after the deploy
+- [x] `version` bumped to `1.0.0` in the root `package.json`
+- [x] Same in `app/package.json`
+- [ ] `curl -u … /health` reports `"version": "1.0.0"` after the deploy — needs the deploy
 
 ---
 
