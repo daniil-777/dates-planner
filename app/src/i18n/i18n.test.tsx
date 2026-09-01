@@ -47,6 +47,17 @@ describe('i18n', () => {
     expect(screen.getByTestId('slot').textContent).toBe('Камера увидела: content')
   })
 
+  it('stamps a stored choice on the document at first render, before anyone clicks', () => {
+    window.localStorage.setItem(LANG_KEY, 'de')
+    document.documentElement.lang = 'en'
+    render(
+      <I18nProvider>
+        <Probe />
+      </I18nProvider>,
+    )
+    expect(document.documentElement.lang).toBe('de')
+  })
+
   it('persists the choice and stamps the document language', () => {
     window.localStorage.setItem(LANG_KEY, 'en')
     render(

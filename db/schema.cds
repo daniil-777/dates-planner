@@ -312,10 +312,6 @@ entity Receipts : cuid, managed {
 }
 
 /**
- * The romantic layer: a story attached to (optionally) an expense. Kept
- * separate from Expenses so a memory can outlive or precede any posting.
- */
-/**
  * One reading of how somebody felt.
  *
  * `level` is the whole scale: 1 (rough) to 5 (great). Small on purpose — a mood is a
@@ -331,16 +327,27 @@ entity Moods : cuid, managed {
   /** Timestamp rather than DateTime: the client sends `new Date().toISOString()`, and a
       type that rejects the milliseconds in that string would 400 every save. */
   at         : Timestamp;
+  /** The whole scale is 1..5, and the service refuses anything else: `clampReading` guards
+      the camera path, this guards the POST — a level of 0 or 9 must not reach a chart. */
+  @mandatory @assert.range: [1, 5]
   level      : Integer;
   note       : String(280);
   /** 'manual' when tapped in, 'face' when detected from the camera. */
-  source     : String(10) default 'manual';
+  @assert.range
+  source     : String(10) enum {
+    manual;
+    face;
+  } default 'manual';
   /** The model's word for what it saw, e.g. "content" — only when source = 'face'. */
   detected   : String(60);
   /** The model's own 0..1 estimate — only when source = 'face'. Never invented. */
   confidence : Decimal(3, 2);
 }
 
+/**
+ * The romantic layer: a story attached to (optionally) an expense. Kept
+ * separate from Expenses so a memory can outlive or precede any posting.
+ */
 entity Memories : cuid, managed {
   expense    : Association to Expenses null;
   title      : String(200);

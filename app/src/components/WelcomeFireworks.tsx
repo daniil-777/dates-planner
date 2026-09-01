@@ -16,7 +16,7 @@
  * Only a *fresh* sign-in gets this. Reloading the page finds an existing session and goes
  * straight to the app; a firework on every reload would be a nuisance within a day.
  */
-import { useEffect, useMemo, type CSSProperties, type ReactElement } from 'react'
+import { useEffect, useMemo, useRef, type CSSProperties, type ReactElement } from 'react'
 import './welcomeFireworks.css'
 
 /** Total run time. Matches the longest CSS animation; see `welcomeFireworks.css`. */
@@ -122,10 +122,15 @@ export function WelcomeFireworks({ onDone }: WelcomeFireworksProps): ReactElemen
     [reduced],
   )
 
+  // The parent passes an inline arrow, so `onDone` has a new identity on every one of its
+  // renders. Read it through a ref: the timer is armed once per mount and a re-render
+  // underneath cannot push the three seconds out — rule 2 above depends on that.
+  const done = useRef(onDone)
+  done.current = onDone
   useEffect(() => {
-    const timer = window.setTimeout(onDone, DURATION_MS)
+    const timer = window.setTimeout(() => done.current(), DURATION_MS)
     return () => window.clearTimeout(timer)
-  }, [onDone])
+  }, [])
 
   return (
     <div className="twm-fw" role="status" aria-live="polite">

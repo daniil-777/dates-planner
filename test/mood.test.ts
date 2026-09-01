@@ -16,10 +16,18 @@
  */
 import cds from '@sap/cds'
 import type { Service } from '@sap/cds'
-import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import sharp from 'sharp'
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import LedgerServiceImpl from '../srv/ledger-service'
-import { clampReading, moodDetectionConfigured } from '../srv/lib/mood'
+import { clampReading, detectMood, moodDetectionConfigured } from '../srv/lib/mood'
+
+// Only the model call is replaced; the configuration check and the clamp stay real. The
+// tests below are about what the *handler* does with an answer, not about the model.
+vi.mock('../srv/lib/mood', async importOriginal => ({
+  ...(await importOriginal<typeof import('../srv/lib/mood')>()),
+  detectMood: vi.fn(),
+}))
 
 const { SELECT } = cds.ql
 
@@ -102,6 +110,28 @@ describe('clampReading', () => {
 })
 
 describe('the Moods entity', () => {
+  it('refuses a level off the 1..5 scale, and a source it has no word for', async () => {
+    const base = { at: new Date().toISOString(), note: null }
+    await expect(ledger.create(MOODS).entries({ ...base, level: 0 })).rejects.toMatchObject({
+      code: 'ASSERT_RANGE',
+      status: 400,
+    })
+    await expect(ledger.create(MOODS).entries({ ...base, level: 9 })).rejects.toMatchObject({
+      code: 'ASSERT_RANGE',
+      status: 400,
+    })
+    await expect(ledger.create(MOODS).entries({ ...base })).rejects.toMatchObject({
+      code: 'ASSERT_MANDATORY',
+      status: 400,
+    })
+    await expect(
+      ledger.create(MOODS).entries({ ...base, level: 3, source: 'guess' }),
+    ).rejects.toMatchObject({ code: 'ASSERT_ENUM', status: 400 })
+
+    const rows = (await ledger.run(SELECT.from(MOODS))) as unknown[]
+    expect(rows).toHaveLength(0)
+  })
+
   it('round-trips a tapped-in reading', async () => {
     await ledger.create(MOODS).entries({
       at: new Date().toISOString(),
@@ -148,5 +178,70 @@ describe('detectMood without a key', () => {
 
     const rows = (await ledger.run(SELECT.from(MOODS))) as unknown[]
     expect(rows).toHaveLength(0)
+  })
+})
+
+describe('detectMood with a key', () => {
+  const saved = process.env.ANTHROPIC_API_KEY
+
+  beforeEach(() => {
+    process.env.ANTHROPIC_API_KEY = 'sk-ant-not-a-real-key'
+    vi.mocked(detectMood).mockReset()
+  })
+
+  afterEach(() => {
+    if (saved === undefined) delete process.env.ANTHROPIC_API_KEY
+    else process.env.ANTHROPIC_API_KEY = saved
+  })
+
+  /** A small, real JPEG — the handler decodes and re-encodes before the model sees it. */
+  async function selfie(): Promise<string> {
+    const bytes = await sharp({
+      create: { width: 320, height: 400, channels: 3, background: { r: 230, g: 200, b: 180 } },
+    })
+      .jpeg({ quality: 80 })
+      .toBuffer()
+    return bytes.toString('base64')
+  }
+
+  it('answers "no face" as a 422, not as a 502 about the model', async () => {
+    vi.mocked(detectMood).mockResolvedValueOnce({
+      faceFound: false,
+      level: 3,
+      label: '',
+      confidence: 0,
+      observation: '',
+    })
+
+    await expect(
+      ledger.send('detectMood', { image: await selfie(), mediaType: 'image/jpeg' }),
+    ).rejects.toMatchObject({ code: 422, message: expect.stringMatching(/No face/) })
+  })
+
+  it('hands a reading through unchanged, and still stores nothing', async () => {
+    vi.mocked(detectMood).mockResolvedValueOnce({
+      faceFound: true,
+      level: 4,
+      label: 'content',
+      confidence: 0.8,
+      observation: 'A calm, easy look.',
+    })
+
+    const reading = (await ledger.send('detectMood', {
+      image: await selfie(),
+      mediaType: 'image/jpeg',
+    })) as Record<string, unknown>
+    expect(reading).toMatchObject({ level: 4, label: 'content', confidence: 0.8 })
+
+    const rows = (await ledger.run(SELECT.from(MOODS))) as unknown[]
+    expect(rows).toHaveLength(0)
+  })
+
+  it('turns a model failure into a 502 with the reason', async () => {
+    vi.mocked(detectMood).mockRejectedValueOnce(new Error('rate limited'))
+
+    await expect(
+      ledger.send('detectMood', { image: await selfie(), mediaType: 'image/jpeg' }),
+    ).rejects.toMatchObject({ code: 502, message: expect.stringMatching(/rate limited/) })
   })
 })

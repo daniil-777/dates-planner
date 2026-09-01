@@ -16,7 +16,15 @@
  * settlement sentence, error messages from CAP) and the SAP joke vocabulary where it *is*
  * the joke. Those are decisions per string, not a gap in the mechanism.
  */
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react'
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react'
 
 export type Lang = 'en' | 'de' | 'ru'
 
@@ -248,9 +256,15 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     } catch {
       /* the choice simply does not survive a restart */
     }
-    // Screen readers and the browser's own translation prompt both read this.
-    document.documentElement.lang = next
   }, [])
+
+  // Screen readers and the browser's own translation prompt both read `<html lang>`. An
+  // effect rather than a line in `setLang`, so a *stored* choice is stamped on the first
+  // render too — otherwise a Russian-speaking device reloads into `lang="en"` and Chrome
+  // offers to translate a page that is already in Russian.
+  useEffect(() => {
+    document.documentElement.lang = lang
+  }, [lang])
 
   const t = useCallback(
     (key: string, fallback: string, values?: Record<string, string>): string => {

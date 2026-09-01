@@ -1275,7 +1275,8 @@ export default class LedgerService extends cds.ApplicationService {
       // be a comforting lie: it would never be readable by anybody. A failed scan
       // leaves the ledger untouched and tells the caller why — the photo is still
       // on the phone that took it, and the upload can simply be repeated.
-      return req.reject(502, `Document AI could not read this receipt: ${describeError(error)}`)
+      const engine = client.mode === 'llm' ? 'Claude' : 'Document AI'
+      return req.reject(502, `${engine} could not read this receipt: ${describeError(error)}`)
     }
 
     const extracted: ExtractedReceipt = mapJobResult(job)
@@ -1378,19 +1379,22 @@ export default class LedgerService extends cds.ApplicationService {
       return req.reject(400, `the uploaded image could not be read: ${describeError(error)}`)
     }
 
+    // `req.reject` throws, so the "no face" answer has to be decided *outside* the try
+    // below — inside it, the 422 would be caught and re-issued as a 502 about the model.
+    let reading
     try {
-      const reading = await detectMood(processed.buffer, 'image/jpeg')
-      if (!reading.faceFound) {
-        return req.reject(422, 'No face was discernible in that photograph — try better light.')
-      }
-      return {
-        level: reading.level,
-        label: reading.label,
-        confidence: reading.confidence,
-        observation: reading.observation,
-      }
+      reading = await detectMood(processed.buffer, 'image/jpeg')
     } catch (error) {
       return req.reject(502, `Could not read a mood from that photograph: ${describeError(error)}`)
+    }
+    if (!reading.faceFound) {
+      return req.reject(422, 'No face was discernible in that photograph — try better light.')
+    }
+    return {
+      level: reading.level,
+      label: reading.label,
+      confidence: reading.confidence,
+      observation: reading.observation,
     }
   }
 

@@ -18,7 +18,7 @@
  * Without an LLM key the server answers 501 and this page simply keeps the manual picker —
  * the feature degrades to its honest half rather than to a canned "reading".
  */
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactElement } from 'react'
 import { Button, MessageStrip, Text, Title } from '@ui5/webcomponents-react'
 import { useCreateMood, useDetectMood, useMoods } from '@/api/hooks'
@@ -77,6 +77,14 @@ export function MoodPage(): ReactElement {
 
   const rows: Mood[] = useMemo(() => moods.data ?? [], [moods.data])
 
+  // The "saved" banner shows for a moment and goes; the timer is owned by an effect so
+  // that leaving the page mid-moment clears it instead of firing into an unmounted tree.
+  useEffect(() => {
+    if (!saved) return
+    const timer = window.setTimeout(() => setSaved(false), 2500)
+    return () => window.clearTimeout(timer)
+  }, [saved])
+
   const save = useCallback(
     (chosen: number, source: 'manual' | 'face') => {
       const fromScan = source === 'face' && suggestion !== null
@@ -95,7 +103,6 @@ export function MoodPage(): ReactElement {
             setNote('')
             setSuggestion(null)
             setSaved(true)
-            window.setTimeout(() => setSaved(false), 2500)
           },
         },
       )

@@ -48,6 +48,21 @@ describe('WelcomeFireworks', () => {
     expect(onDone).toHaveBeenCalledTimes(1)
   })
 
+  it('is not restarted by a parent re-render handing it a fresh onDone', () => {
+    // AuthGate passes an inline arrow, so every render of it is a new function. The three
+    // seconds must be counted from mount, not from the last render.
+    const first = vi.fn()
+    const second = vi.fn()
+    const { rerender } = render(<WelcomeFireworks onDone={first} />)
+
+    vi.advanceTimersByTime(2000)
+    rerender(<WelcomeFireworks onDone={second} />)
+    vi.advanceTimersByTime(1000)
+
+    expect(first).not.toHaveBeenCalled()
+    expect(second).toHaveBeenCalledTimes(1)
+  })
+
   it('does not call onDone after it has been unmounted', () => {
     const onDone = vi.fn()
     const { unmount } = render(<WelcomeFireworks onDone={onDone} />)
