@@ -12,16 +12,17 @@
  * lets `AuthGate` ask the server from scratch. It is the honest way to end a session, and
  * on this app it costs one cached page load.
  */
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Button, MessageStrip } from '@ui5/webcomponents-react'
 import '@ui5/webcomponents-icons/dist/log.js'
-import { AuthError, logout, me, type AuthUser } from '@/api/auth'
+import { me, type AuthUser } from '@/api/auth'
+import { useSignOut } from '@/components/useSignOut'
 import { SettingsCard } from './SettingsCard'
 
 export function SessionCard() {
   const [user, setUser] = useState<AuthUser | null>(null)
-  const [busy, setBusy] = useState(false)
-  const [problem, setProblem] = useState<string | null>(null)
+  // Shared with the ShellBar's profile menu — see components/useSignOut.ts.
+  const { signOut, busy, problem } = useSignOut()
 
   useEffect(() => {
     let live = true
@@ -37,24 +38,6 @@ export function SessionCard() {
     return () => {
       live = false
     }
-  }, [])
-
-  const signOut = useCallback((): void => {
-    setBusy(true)
-    setProblem(null)
-    void logout()
-      .then(() => {
-        // Full navigation, not a router push: see the note at the top of this file.
-        window.location.assign('/')
-      })
-      .catch((cause: unknown) => {
-        setBusy(false)
-        setProblem(
-          cause instanceof AuthError
-            ? cause.message
-            : 'Could not reach the server to sign out. Check your connection and try again.',
-        )
-      })
   }, [])
 
   const name = user?.displayName ?? user?.username ?? null

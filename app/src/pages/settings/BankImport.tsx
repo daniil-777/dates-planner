@@ -311,7 +311,7 @@ export function BankImport({ id }: BankImportProps) {
 
           <p className="twm-card-footnote">
             Imported rows are drafts with no category of their own — the classifier fills in the
-            category and the moment as each one is created, and the Ledger asks you to confirm them.
+            category and the moment as each one is created, and Expenses asks you to confirm them.
           </p>
         </>
       ) : null}

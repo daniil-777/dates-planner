@@ -89,10 +89,10 @@ export function PostedCard({ posted, duplicates, onScanAnother, onOpenLedger }: 
           <Button
             design="Transparent"
             icon="journey-arrive"
-            accessibleName="Open the ledger"
+            accessibleName="Open expenses"
             onClick={onOpenLedger}
           >
-            Open ledger
+            Open expenses
           </Button>
         </div>
       </div>

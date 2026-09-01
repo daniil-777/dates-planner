@@ -1,4 +1,5 @@
 import '@ui5/webcomponents-icons/dist/home.js'
+import '@ui5/webcomponents-icons/dist/log.js'
 import '@ui5/webcomponents-icons/dist/camera.js'
 import '@ui5/webcomponents-icons/dist/money-bills.js'
 import '@ui5/webcomponents-icons/dist/calendar.js'
@@ -16,6 +17,7 @@ import type { Person } from '../api/types'
 import { usePeople } from '../api/hooks'
 import { tokens } from '../theme'
 import { PersonAvatar } from './PersonAvatar'
+import { useSignOut } from './useSignOut'
 import './components.css'
 
 /**
@@ -25,7 +27,7 @@ import './components.css'
  */
 export const NAV_ITEMS = [
   { to: '/scan', label: 'Scan', icon: 'camera', hint: 'Photograph a receipt' },
-  { to: '/ledger', label: 'Ledger', icon: 'money-bills', hint: 'Postings and payment runs' },
+  { to: '/ledger', label: 'Expenses', icon: 'money-bills', hint: 'Postings and payment runs' },
   { to: '/events', label: 'Events', icon: 'calendar', hint: 'Trips, dinners, parties' },
   { to: '/memories', label: 'Memories', icon: 'heart', hint: 'The timeline' },
   { to: '/calendar', label: 'Calendar', icon: 'appointment-2', hint: 'The month, day by day' },
@@ -150,6 +152,8 @@ export function AppShell({ children }: AppShellProps) {
   const { data: people } = usePeople()
   const [activeId, setActiveId] = useState<string | null>(() => readStoredPerson())
   const [switcherOpen, setSwitcherOpen] = useState(false)
+  // One implementation, shared with the Session card in Settings — see useSignOut.ts.
+  const signingOut = useSignOut()
   const [switcherOpener, setSwitcherOpener] = useState<HTMLElement | undefined>(undefined)
   const [moreOpen, setMoreOpen] = useState(false)
 
@@ -321,6 +325,36 @@ export function AppShell({ children }: AppShellProps) {
                 </span>
               </button>
             ))}
+
+            {/*
+              The way out, where people look for it.
+
+              It also lives in Settings (the Session card), but that is the fourth card down
+              a long page — below the roster, the planner and the bank importer — and a
+              sign-out nobody can find is a sign-out nobody uses. This is the profile menu
+              every other app puts it in, one tap from any screen.
+
+              Separated from the person switcher above it because the two do very different
+              things: switching decides who a posting is attributed to, signing out ends the
+              session. Landing on the wrong one would be a bad surprise in both directions.
+            */}
+            <div className="twm-switcher__footer">
+              <button
+                type="button"
+                className="twm-switcher__signout"
+                disabled={signingOut.busy}
+                onClick={() => {
+                  setSwitcherOpen(false)
+                  signingOut.signOut()
+                }}
+              >
+                <Icon name="log" aria-hidden="true" />
+                <span>{signingOut.busy ? 'Signing out…' : 'Sign out'}</span>
+              </button>
+              {signingOut.problem === null ? null : (
+                <span className="twm-switcher__signout-error">{signingOut.problem}</span>
+              )}
+            </div>
           </div>
         </Popover>
       </div>

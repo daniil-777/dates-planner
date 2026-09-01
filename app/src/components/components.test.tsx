@@ -264,7 +264,7 @@ describe('AppShell', () => {
 
     // jsdom's matchMedia shim reports no match, so the shell is in its mobile layout:
     // four destinations across the bottom, the last two behind "More".
-    for (const label of ['Scan', 'Ledger', 'Events', 'Memories', 'More']) {
+    for (const label of ['Scan', 'Expenses', 'Events', 'Memories', 'More']) {
       expect(screen.getByText(label)).toBeInTheDocument()
     }
     expect(screen.getByText('page body')).toBeInTheDocument()

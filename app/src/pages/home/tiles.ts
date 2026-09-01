@@ -59,7 +59,7 @@ export const HOME_TILES: readonly HomeTileSpec[] = [
   {
     id: 'ledger',
     to: '/ledger',
-    label: 'Ledger',
+    label: 'Expenses',
     icon: 'money-bills',
     accent: '#0070F2',
     hint: 'Postings and payment runs',
