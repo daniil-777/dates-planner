@@ -1,0 +1,155 @@
+/* Mood — the picker, the suggestion, and the record. */
+
+.mood-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+  max-width: 40rem;
+  margin: 0 auto;
+}
+
+.mood-hint {
+  color: var(--sapNeutralTextColor, #556b82);
+}
+
+.mood-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding: 1rem;
+  border-radius: 0.75rem;
+  background: var(--sapTile_Background, #fff);
+  box-shadow: var(--sapContent_Shadow0, 0 0 0 1px rgb(0 0 0 / 0.08));
+}
+
+/* ------------------------------------------------------------------ scale */
+
+.mood-scale {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.25rem;
+}
+
+.mood-scale__face {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  flex: 1;
+  padding: 0.55rem 0.2rem;
+  border: 2px solid transparent;
+  border-radius: 0.75rem;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+  transition: transform 120ms ease, border-color 120ms ease, background 120ms ease;
+}
+
+.mood-scale__face:hover {
+  background: var(--sapList_Hover_Background, rgb(0 0 0 / 0.04));
+}
+
+.mood-scale__face--active {
+  border-color: var(--sapButton_Emphasized_Background, #0070f2);
+  background: var(--sapList_SelectionBackgroundColor, #e5f0fa);
+  transform: scale(1.06);
+}
+
+.mood-scale__emoji {
+  font-size: 1.9rem;
+  line-height: 1;
+}
+
+.mood-scale__word {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--sapNeutralTextColor, #556b82);
+}
+
+/* ------------------------------------------------------------------ entry */
+
+.mood-note {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--sapField_BorderColor, #89919a);
+  border-radius: 0.5rem;
+  background: var(--sapField_Background, #fff);
+  color: inherit;
+  font: inherit;
+  resize: vertical;
+}
+
+.mood-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.mood-privacy {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: var(--sapNeutralTextColor, #556b82);
+}
+
+/* ------------------------------------------------------------------ record */
+
+.mood-empty {
+  color: var(--sapNeutralTextColor, #556b82);
+}
+
+.mood-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.mood-list__row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.55rem 0.15rem;
+  border-bottom: 1px solid var(--sapList_BorderColor, rgb(0 0 0 / 0.08));
+}
+
+.mood-list__row:last-child {
+  border-bottom: none;
+}
+
+.mood-list__emoji {
+  font-size: 1.4rem;
+}
+
+.mood-list__body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.mood-list__when {
+  font-size: 0.74rem;
+  color: var(--sapNeutralTextColor, #556b82);
+}
+
+.mood-list__text {
+  font-size: 0.92rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mood-list__badge {
+  margin-left: auto;
+  padding: 0.1rem 0.45rem;
+  border-radius: 0.5rem;
+  background: var(--sapInformationBackground, #e5f0fa);
+  color: var(--sapInformativeTextColor, #0070f2);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}

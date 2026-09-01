@@ -37,6 +37,8 @@ import type {
   ScanResult,
   Settlement,
   Statement,
+  Mood,
+  MoodSuggestion,
 } from './types'
 
 /** First element of every query key. Exported so a page can invalidate deliberately. */
@@ -51,6 +53,7 @@ export const queryKeys = {
   event: (id: string) => ['events', 'detail', id] as const,
   eventTotals: (id: string) => ['eventTotals', id] as const,
   memories: ['memories'] as const,
+  moods: ['moods'] as const,
   settlements: ['settlements'] as const,
   statements: ['statements'] as const,
   reminders: ['reminders'] as const,
@@ -164,6 +167,32 @@ export function useReminders() {
   return useQuery<Reminder[]>({
     queryKey: queryKeys.reminders,
     queryFn: () => api.listReminders(),
+  })
+}
+
+export function useMoods() {
+  return useQuery<Mood[]>({
+    queryKey: queryKeys.moods,
+    queryFn: () => api.listMoods(),
+  })
+}
+
+export function useCreateMood() {
+  const client = useQueryClient()
+  return useMutation<Mood, unknown, Parameters<typeof api.createMood>[0]>({
+    mutationFn: body => api.createMood(body),
+    onSuccess: () => invalidate(client, ['moods']),
+  })
+}
+
+/**
+ * The camera-to-suggestion round trip. Deliberately NOT a create: the answer is a
+ * suggestion the person confirms (or overrules) before `useCreateMood` writes anything,
+ * and the photograph itself never reaches the database.
+ */
+export function useDetectMood() {
+  return useMutation<MoodSuggestion, unknown, Blob>({
+    mutationFn: file => api.detectMood(file),
   })
 }
 

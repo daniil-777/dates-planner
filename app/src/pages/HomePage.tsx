@@ -107,6 +107,12 @@ export function HomePage() {
 
   const figures: Record<HomeTileId, FigureState> = {
     scan: figureFrom<Expense[]>(expensesQuery, draftsFigure),
+    // Static on purpose: fetching the whole mood table to decorate a tile would cost more
+    // than the tile is worth, and the page itself opens in one tap.
+    mood: {
+      status: 'ready',
+      figure: { kind: 'text', value: 'Check in', emphasis: 'number', caption: 'two seconds' },
+    },
     ledger: figureFrom<PeriodTotals>(periodQuery, monthFigure),
     events: figureFrom<Event[]>(eventsQuery, events => eventsFigure(events, today)),
     calendar: figureFrom<CalendarEntry[]>(upcomingQuery, () => calendarFigure(scheduled)),

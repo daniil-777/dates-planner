@@ -27,7 +27,7 @@
  */
 
 export type HomeTileId =
-  | 'scan' | 'ledger' | 'events' | 'calendar' | 'memories' | 'statement' | 'settings'
+  | 'scan' | 'mood' | 'ledger' | 'events' | 'calendar' | 'memories' | 'statement' | 'settings'
   | 'howItWorks'
 
 export interface HomeTileSpec {
@@ -55,6 +55,14 @@ export const HOME_TILES: readonly HomeTileSpec[] = [
     icon: 'camera',
     accent: '#E76500',
     hint: 'Photograph a receipt',
+  },
+  {
+    id: 'mood',
+    to: '/mood',
+    label: 'Mood',
+    icon: 'da',
+    accent: '#C87200',
+    hint: 'How are you doing today?',
   },
   {
     id: 'ledger',

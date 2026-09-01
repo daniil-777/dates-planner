@@ -210,6 +210,26 @@ export interface Photo {
   caption: string | null
 }
 
+/** One mood reading. `detected`/`confidence` are set only when the camera did the reading. */
+export interface Mood {
+  ID: string
+  personId: string | null
+  at: string
+  level: number
+  note: string | null
+  source: 'manual' | 'face'
+  detected: string | null
+  confidence: number | null
+}
+
+/** What `detectMood` answers — a suggestion for the person to confirm, never a saved row. */
+export interface MoodSuggestion {
+  level: number
+  label: string
+  confidence: number
+  observation: string
+}
+
 export interface Memory {
   ID: string
   expense_ID: string | null

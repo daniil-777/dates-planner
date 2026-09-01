@@ -19,13 +19,15 @@
  *    model normalised. `parseAmount` is tested against two dozen real-world formats and the
  *    model is not; asking the model to also be a number parser would move a solved problem
  *    into the part of the system that cannot be unit-tested.
- *  - **Nothing here trusts the model.** The tool call is forced, but the arguments that come
- *    back are still validated field by field before they are turned into a job result. A
- *    hallucinated shape degrades to a missing field, which the mapper already flags for
- *    review, rather than to a crash or a silently wrong posting.
+ *  - **Nothing here trusts the model.** The answer arrives through structured outputs, so
+ *    the SDK has already validated it against the zod schema; `tidy()` then handles content
+ *    hygiene (blank strings, empty line items). A mis-shapen answer degrades to a failed or
+ *    partial read the flow already handles, never to a crash or a silently wrong posting.
  */
 import Anthropic from '@anthropic-ai/sdk'
+import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod'
 import { randomUUID } from 'node:crypto'
+import { z } from 'zod'
 import type { DocAiClient, DocAiJobResult } from './types'
 
 /** Exact, and carries no date suffix — the same rule CONTRACTS.md §7 states for the LLM. */
@@ -46,8 +48,6 @@ type Effort = (typeof EFFORTS)[number]
 /** Enough for a long supermarket receipt's line items and nothing like enough to run away. */
 const MAX_TOKENS = 4096
 
-const TOOL_NAME = 'record_receipt'
-
 const SYSTEM = [
   'You read photographs of receipts and invoices and report exactly what is printed on them.',
   '',
@@ -65,43 +65,26 @@ const SYSTEM = [
   '  flagged for a human; a guessed one is a wrong ledger entry that nobody notices.',
 ].join('\n')
 
-/** The schema the model fills in. Mirrors the header fields the mapper already looks for. */
-const TOOL_SCHEMA = {
-  type: 'object' as const,
-  properties: {
-    merchant: { type: 'string', description: 'The business that was paid, as printed.' },
-    documentDate: { type: 'string', description: 'Date on the receipt, as YYYY-MM-DD.' },
-    total: {
-      type: 'string',
-      description: 'The final amount charged, copied exactly as printed (e.g. "47.85", "3.-").',
-    },
-    currency: { type: 'string', description: 'ISO 4217 code, e.g. CHF or EUR.' },
-    lineItems: {
-      type: 'array',
-      description: 'Individual purchased lines, if the receipt itemises them.',
-      items: {
-        type: 'object',
-        properties: {
-          description: { type: 'string' },
-          amount: { type: 'string', description: 'Line amount, exactly as printed.' },
-        },
-        required: ['description'],
-        additionalProperties: false,
-      },
-    },
-  },
-  required: ['total'],
-  additionalProperties: false,
-}
+const SCHEMA = z.object({
+  merchant: z.string().optional().describe('The business that was paid, as printed.'),
+  documentDate: z.string().optional().describe('Date on the receipt, as YYYY-MM-DD.'),
+  total: z
+    .string()
+    .describe('The final amount charged, copied exactly as printed (e.g. "47.85", "3.-").'),
+  currency: z.string().optional().describe('ISO 4217 code, e.g. CHF or EUR.'),
+  lineItems: z
+    .array(
+      z.object({
+        description: z.string().optional(),
+        amount: z.string().optional().describe('Line amount, exactly as printed.'),
+      }),
+    )
+    .optional()
+    .describe('Individual purchased lines, if the receipt itemises them.'),
+})
 
-/** What the model is asked to return, before any of it has been believed. */
-interface ExtractedReceipt {
-  merchant?: string
-  documentDate?: string
-  total?: string
-  currency?: string
-  lineItems?: { description?: string; amount?: string }[]
-}
+/** What the model returned, after zod has already thrown out anything mis-shapen. */
+type ExtractedReceipt = z.infer<typeof SCHEMA>
 
 /** True when an `ANTHROPIC_API_KEY` is available to read receipts with. */
 export function llmExtractionConfigured(): boolean {
@@ -113,34 +96,26 @@ function chosenEffort(): Effort {
   return (EFFORTS as readonly string[]).includes(raw) ? (raw as Effort) : DEFAULT_EFFORT
 }
 
-/** A trimmed non-empty string, or undefined. Anything else the model sent is discarded. */
-function text(value: unknown): string | undefined {
-  if (typeof value !== 'string') return undefined
-  const trimmed = value.trim()
-  return trimmed === '' ? undefined : trimmed
+/** A trimmed non-empty string, or undefined. Blank strings degrade to "not reported". */
+function text(value: string | undefined): string | undefined {
+  const trimmed = value?.trim()
+  return trimmed === undefined || trimmed === '' ? undefined : trimmed
 }
 
 /**
- * The model's arguments, validated into the narrow shape the rest of this file uses.
- *
- * Field by field rather than with a cast: a forced tool call constrains the *name* of what
- * comes back, not its contents, and this is the boundary where an unverified value stops
- * being unverified.
+ * The parsed output, tidied. zod already enforced the *shape*; what is left is content
+ * hygiene — blank strings become omissions, and a line item carrying neither a description
+ * nor an amount is dropped rather than rendered as an empty row someone has to delete.
  */
-function validate(input: unknown): ExtractedReceipt {
-  if (typeof input !== 'object' || input === null) return {}
-  const raw = input as Record<string, unknown>
-
-  const items = Array.isArray(raw.lineItems) ? raw.lineItems : []
-  const lineItems = items
-    .filter((item): item is Record<string, unknown> => typeof item === 'object' && item !== null)
+function tidy(raw: ExtractedReceipt): ExtractedReceipt {
+  const lineItems = (raw.lineItems ?? [])
     .map(item => ({ description: text(item.description), amount: text(item.amount) }))
     .filter(item => item.description !== undefined || item.amount !== undefined)
 
   return {
     merchant: text(raw.merchant),
     documentDate: text(raw.documentDate),
-    total: text(raw.total),
+    total: text(raw.total) ?? '',
     currency: text(raw.currency),
     lineItems: lineItems.length > 0 ? lineItems : undefined,
   }
@@ -187,27 +162,21 @@ interface PendingJob {
 /**
  * Ask Claude to read one receipt.
  *
- * The tool call is forced, so the model answers in the schema or not at all — there is no
- * prose to parse and no JSON to fish out of a code fence. Thinking is left adaptive, which
- * is the only supported form on this model; `effort` is what actually decides how long it
- * spends, and it is low by default. See {@link DEFAULT_EFFORT}.
+ * Structured outputs (`messages.parse` with a zod schema) rather than a forced tool call:
+ * it is the documented recommended way to get a typed answer, the SDK validates the JSON
+ * against {@link SCHEMA} before this function ever sees it, and it composes with the
+ * adaptive thinking this model runs by default instead of raising questions about forced
+ * tool choice. `effort` is what decides how long the model spends — low by default, see
+ * {@link DEFAULT_EFFORT}.
  */
 async function extract(image: Buffer, mimeType: string, model: string): Promise<ExtractedReceipt> {
   const client = new Anthropic()
 
-  const response = await client.messages.create({
+  const response = await client.messages.parse({
     model,
     max_tokens: MAX_TOKENS,
     system: SYSTEM,
-    output_config: { effort: chosenEffort() },
-    tools: [
-      {
-        name: TOOL_NAME,
-        description: 'Record the fields printed on this receipt.',
-        input_schema: TOOL_SCHEMA,
-      },
-    ],
-    tool_choice: { type: 'tool', name: TOOL_NAME },
+    output_config: { effort: chosenEffort(), format: zodOutputFormat(SCHEMA) },
     messages: [
       {
         role: 'user',
@@ -228,14 +197,16 @@ async function extract(image: Buffer, mimeType: string, model: string): Promise<
     ],
   })
 
-  const call = response.content.find(block => block.type === 'tool_use' && block.name === TOOL_NAME)
-  if (call === undefined || call.type !== 'tool_use') {
+  // Null when the model's answer did not validate against the schema. Treated as a failed
+  // read rather than an empty one: the scan handler tells the caller and rolls back, and
+  // the photo is still on the phone that took it.
+  if (response.parsed_output === null || response.parsed_output === undefined) {
     throw new Error(
-      `Claude returned no ${TOOL_NAME} call (stop_reason=${response.stop_reason ?? 'unknown'})`,
+      `Claude returned no parsable receipt (stop_reason=${response.stop_reason ?? 'unknown'})`,
     )
   }
 
-  return validate(call.input)
+  return tidy(response.parsed_output)
 }
 
 /**

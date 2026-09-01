@@ -236,6 +236,7 @@ describe('the home grid', () => {
 
     expect(HOME_TILES.map(spec => spec.to)).toEqual([
       '/scan',
+      '/mood',
       '/ledger',
       '/events',
       '/calendar',
@@ -347,12 +348,14 @@ describe('the home grid', () => {
 
     renderHome()
 
-    // Every tile whose figure is still in flight shimmers. The write-up tile is the one
-    // exception by design: its figure is a constant (the article is a static asset), so it
-    // has nothing to wait for and shimmering would be a lie.
-    const awaited = HOME_TILES.filter(spec => spec.id !== 'howItWorks')
+    // Every tile whose figure is still in flight shimmers. Two exceptions by design, both
+    // constants with nothing to wait for: the write-up tile (the article is a static
+    // asset) and the mood tile (its figure is an invitation, not a number) — shimmering
+    // on either would be a lie.
+    const awaited = HOME_TILES.filter(spec => spec.id !== 'howItWorks' && spec.id !== 'mood')
     expect(screen.getAllByTestId('home-tile-shimmer')).toHaveLength(awaited.length)
     expect(tile('howItWorks')).not.toHaveAttribute('aria-busy', 'true')
+    expect(tile('mood')).not.toHaveAttribute('aria-busy', 'true')
     // The destinations are reachable while their numbers are still in the post.
     expect(tile('ledger')).toHaveAttribute('href', '/ledger')
     expect(tile('ledger')).toHaveAttribute('aria-busy', 'true')

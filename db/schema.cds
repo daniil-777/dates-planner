@@ -315,6 +315,32 @@ entity Receipts : cuid, managed {
  * The romantic layer: a story attached to (optionally) an expense. Kept
  * separate from Expenses so a memory can outlive or precede any posting.
  */
+/**
+ * One reading of how somebody felt.
+ *
+ * `level` is the whole scale: 1 (rough) to 5 (great). Small on purpose — a mood is a
+ * glance, not a survey, and five faces fit under a thumb.
+ *
+ * When the reading came from the camera (`source = 'face'`), `detected` is the label the
+ * model gave and `confidence` its own estimate of it. The photograph itself is **never
+ * stored** — it is looked at, answered about, and discarded (srv/lib/mood.ts). A ledger
+ * of receipts is one thing; an archive of face photos is not something this app keeps.
+ */
+entity Moods : cuid, managed {
+  person     : Association to People;
+  /** Timestamp rather than DateTime: the client sends `new Date().toISOString()`, and a
+      type that rejects the milliseconds in that string would 400 every save. */
+  at         : Timestamp;
+  level      : Integer;
+  note       : String(280);
+  /** 'manual' when tapped in, 'face' when detected from the camera. */
+  source     : String(10) default 'manual';
+  /** The model's word for what it saw, e.g. "content" — only when source = 'face'. */
+  detected   : String(60);
+  /** The model's own 0..1 estimate — only when source = 'face'. Never invented. */
+  confidence : Decimal(3, 2);
+}
+
 entity Memories : cuid, managed {
   expense    : Association to Expenses null;
   title      : String(200);

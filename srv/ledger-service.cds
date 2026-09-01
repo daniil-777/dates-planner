@@ -75,6 +75,9 @@ service LedgerService @(path: '/api/ledger') {
 
   entity Corrections       as projection on twm.Corrections;
 
+  /** Mood readings — manual taps and camera detections alike. The photo is never stored. */
+  entity Moods             as projection on twm.Moods;
+
   /* ------------------------------------------------------------- posting */
 
   /**
@@ -160,6 +163,18 @@ service LedgerService @(path: '/api/ledger') {
    * it with Document AI, classify it, and return the draft expense it produced.
    */
   action   scanReceipt(image : LargeBinary, mediaType : String, fileName : String)         returns Expenses;
+
+  /**
+   * Look at a face and estimate the mood. Needs an LLM key (CONTRACTS.md §7); without one
+   * it answers 501 and the UI keeps the manual picker. The image is analysed and discarded
+   * — nothing is written by this action, saving the reading is the caller's separate POST.
+   */
+  action   detectMood(image : LargeBinary, mediaType : String)                             returns {
+    level      : Integer;
+    label      : String;
+    confidence : Decimal;
+    observation : String;
+  };
 
   /** Writes (or rewrites) the yearly "Statement of Us". */
   action   generateStatement(year : Integer)                                               returns Statements;

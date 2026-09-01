@@ -37,6 +37,7 @@ const LedgerPage = lazyPage(() => import('./pages/LedgerPage'), 'LedgerPage')
 const EventsPage = lazyPage(() => import('./pages/EventsPage'), 'EventsPage')
 const CalendarPage = lazyPage(() => import('./pages/CalendarPage'), 'CalendarPage')
 const MemoriesPage = lazyPage(() => import('./pages/MemoriesPage'), 'MemoriesPage')
+const MoodPage = lazyPage(() => import('./pages/MoodPage'), 'MoodPage')
 const StatementPage = lazyPage(() => import('./pages/StatementPage'), 'StatementPage')
 const SettingsPage = lazyPage(() => import('./pages/SettingsPage'), 'SettingsPage')
 // The engineering write-up. Lazy because it is a 60 KB iframe host nobody loads on a
@@ -91,6 +92,7 @@ export function App() {
             <Route path="/events/:id" element={<EventsPage />} />
             <Route path="/calendar/*" element={<CalendarPage />} />
             <Route path="/memories/*" element={<MemoriesPage />} />
+            <Route path="/mood" element={<MoodPage />} />
             <Route path="/statement/*" element={<StatementPage />} />
             <Route path="/settings/*" element={<SettingsPage />} />
             <Route path="/how-it-works" element={<HowItWorksPage />} />

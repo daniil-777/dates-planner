@@ -50,6 +50,8 @@ import type {
   ScoredLabel,
   Settlement,
   Statement,
+  Mood,
+  MoodSuggestion,
 } from './types'
 
 /** OData service root. Vite proxies this to the CAP server on :4004 in dev. */
@@ -769,6 +771,73 @@ async function deleteEvent(id: string): Promise<void> {
   await request<void>(`${BASE}/Events${keySegment(id)}`, { method: 'DELETE' })
 }
 
+function toMood(payload: unknown): Mood {
+  const row = (payload ?? {}) as Row
+  return {
+    ID: String(row.ID ?? ''),
+    personId: strOrNull(row.person_ID),
+    at: String(row.at ?? ''),
+    level: Number(row.level ?? 3),
+    note: strOrNull(row.note),
+    source: row.source === 'face' ? 'face' : 'manual',
+    detected: strOrNull(row.detected),
+    confidence: row.confidence === null || row.confidence === undefined ? null : Number(row.confidence),
+  }
+}
+
+async function listMoods(): Promise<Mood[]> {
+  const params: Array<[string, string]> = [
+    ['$orderby', 'at desc'],
+    ['$top', '90'],
+  ]
+  return unwrap(await request<unknown>(withQuery(`${BASE}/Moods`, params))).map(toMood)
+}
+
+async function createMood(body: {
+  personId: string | null
+  level: number
+  note: string | null
+  source: 'manual' | 'face'
+  detected: string | null
+  confidence: number | null
+}): Promise<Mood> {
+  return toMood(
+    await request<unknown>(`${BASE}/Moods`, {
+      method: 'POST',
+      body: serialise(
+        {
+          person_ID: body.personId,
+          at: new Date().toISOString(),
+          level: body.level,
+          note: body.note,
+          source: body.source,
+          detected: body.detected,
+          confidence: body.confidence,
+        },
+        { confidence: 2 },
+      ),
+    }),
+  )
+}
+
+/**
+ * Ask the server to look at a face. The photograph goes up, a suggestion comes back, and
+ * nothing is stored by this call — saving is `createMood`, which carries no image.
+ */
+async function detectMood(file: Blob): Promise<MoodSuggestion> {
+  const image = await toBase64(file)
+  const raw = (await request<unknown>(`${BASE}/detectMood`, {
+    method: 'POST',
+    body: JSON.stringify({ image, mediaType: file.type || 'image/jpeg' }),
+  })) as Row
+  return {
+    level: Number(raw.level ?? 3),
+    label: String(raw.label ?? ''),
+    confidence: Number(raw.confidence ?? 0),
+    observation: String(raw.observation ?? ''),
+  }
+}
+
 async function listMemories(): Promise<Memory[]> {
   const params: Array<[string, string]> = [
     ['$expand', 'photos($select=ID,mediaType,caption)'],
@@ -1006,6 +1075,9 @@ export const api = {
   createEvent,
   updateEvent,
   deleteEvent,
+  listMoods,
+  createMood,
+  detectMood,
   listMemories,
   createMemory,
   updateMemory,

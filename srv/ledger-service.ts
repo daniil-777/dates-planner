@@ -60,6 +60,7 @@ import { addDays, daysBetween, periodOf, todayISO } from './lib/dates'
 import { getDocAiClient, mapJobResult } from './lib/documentai'
 import type { ExtractedReceipt } from './lib/documentai'
 import { ImageError, processReceiptImage } from './lib/images'
+import { detectMood, moodDetectionConfigured } from './lib/mood'
 import { MoneyError, sumMoney, toAmount, toCents } from './lib/money'
 import { summariseEvent, summarisePeriod } from './lib/settlement'
 import type { EventTotals, PeriodTotals, TotalsInput } from './lib/settlement'
@@ -482,6 +483,7 @@ export default class LedgerService extends cds.ApplicationService {
     this.on('duplicates', req => this.onDuplicates(req))
     this.on('classify', req => this.onClassify(req))
     this.on('scanReceipt', req => this.onScanReceipt(req))
+    this.on('detectMood', req => this.onDetectMood(req))
     this.on('generateStatement', req => this.onGenerateStatement(req))
     this.on('addEventPhoto', req => this.onAddEventPhoto(req))
     this.on('deleteEventPhoto', req => this.onDeleteEventPhoto(req))
@@ -1330,6 +1332,68 @@ export default class LedgerService extends cds.ApplicationService {
    * deterministic template renderer so the feature works with no credentials at
    * all. Regenerating a year overwrites it in place rather than piling up rows.
    */
+  /**
+   * Look at a face, estimate the mood, store nothing.
+   *
+   * The deliberate asymmetry with every other image action in this file: `addEventPhoto`
+   * and `scanReceipt` both end in an INSERT, and this one must not. The photograph is
+   * normalised, sent to the model (`srv/lib/mood.ts`), and released — saving the *reading*
+   * is the caller's separate POST to `Moods`, which carries four small fields and no image.
+   * Grep this handler for `INSERT` before believing anyone who says otherwise.
+   *
+   * Without an LLM key this is a 501 with a sentence, not a stub answer: a made-up mood
+   * "reading" would be the same silent fabrication the receipt scanner was just cured of.
+   */
+  private async onDetectMood(req: Request): Promise<{
+    level: number
+    label: string
+    confidence: number
+    observation: string
+  }> {
+    if (!moodDetectionConfigured()) {
+      return req.reject(
+        501,
+        'Mood detection needs an LLM key (set ANTHROPIC_API_KEY). The manual picker works without one.',
+      )
+    }
+
+    const data = req.data as Record<string, unknown>
+    const mediaType = typeof data.mediaType === 'string' ? data.mediaType.trim() : ''
+    const uploaded = this.requireImageBytes(
+      req,
+      data.image,
+      'detectMood needs the photograph in the "image" parameter.',
+    )
+    if (mediaType === '') {
+      req.reject(400, 'detectMood needs the media type of the image in the "mediaType" parameter.')
+    }
+
+    // The same normalisation the receipts get: EXIF-rotated, bounded to 2000px, JPEG. A
+    // phone selfie arrives at 10 MB and the model needs none of that.
+    let processed
+    try {
+      processed = await processReceiptImage(uploaded, mediaType)
+    } catch (error) {
+      if (error instanceof ImageError) req.reject(400, error.message)
+      return req.reject(400, `the uploaded image could not be read: ${describeError(error)}`)
+    }
+
+    try {
+      const reading = await detectMood(processed.buffer, 'image/jpeg')
+      if (!reading.faceFound) {
+        return req.reject(422, 'No face was discernible in that photograph — try better light.')
+      }
+      return {
+        level: reading.level,
+        label: reading.label,
+        confidence: reading.confidence,
+        observation: reading.observation,
+      }
+    } catch (error) {
+      return req.reject(502, `Could not read a mood from that photograph: ${describeError(error)}`)
+    }
+  }
+
   private async onGenerateStatement(req: Request): Promise<Statement> {
     const raw = (req.data as Record<string, unknown>).year
     const year = Number(raw)
