@@ -10,7 +10,7 @@
 # TOML note: every bare key below the first `[table]` header belongs to that table. The
 # top-level scalars are therefore all up here, before anything else.
 
-app = 'two-way-match'
+app = 'twm-dates-planner'
 primary_region = 'fra'
 
 # Shutdown is left at Fly's defaults (SIGINT, then five seconds, then SIGKILL). `tini` is
