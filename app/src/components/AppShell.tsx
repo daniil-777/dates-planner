@@ -19,6 +19,7 @@ import { tokens } from '../theme'
 import { PersonAvatar } from './PersonAvatar'
 import { useSignOut } from './useSignOut'
 import { useI18n } from '@/i18n'
+import { UpdateBanner } from '@/update/UpdateBanner'
 import './components.css'
 
 /**
@@ -227,6 +228,8 @@ export function AppShell({ children }: AppShellProps) {
             {children}
           </main>
         </div>
+
+        <UpdateBanner />
 
         {isDesktop ? null : (
           <nav className="twm-bottomnav" aria-label="Main navigation">

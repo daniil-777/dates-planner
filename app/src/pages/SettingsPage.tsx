@@ -22,6 +22,7 @@ import { LanguageCard } from './settings/LanguageCard'
 import { SessionCard } from './settings/SessionCard'
 import { SettingsCard } from './settings/SettingsCard'
 import { SystemCard } from './settings/SystemCard'
+import { VersionCard } from './settings/VersionCard'
 import { clearOnboarded, isOnboarded, markOnboarded, onboardedAt } from './settings/onboarding'
 import './settings/settings.css'
 
@@ -101,6 +102,8 @@ export function SettingsPage() {
         <LanguageCard />
 
         <SessionCard />
+
+        <VersionCard />
 
         <SystemCard onReplayOnboarding={replayOnboarding} />
 

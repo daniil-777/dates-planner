@@ -3,6 +3,7 @@ import type { Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 import { fileURLToPath, URL } from 'node:url'
+import { buildStamp } from './vite/buildStamp.ts'
 
 const CAP = 'http://localhost:4004'
 
@@ -45,8 +46,15 @@ export default defineConfig({
   plugins: [
     react(),
     bundleUi5Fonts(),
+    buildStamp({
+      packageJsonPath: fileURLToPath(new URL('../package.json', import.meta.url)),
+      cwd: fileURLToPath(new URL('.', import.meta.url)),
+    }),
     VitePWA({
-      registerType: 'autoUpdate',
+      // `prompt`, not `autoUpdate`: a new build waits until somebody taps Reload
+      // (`src/update/`), instead of reloading the page underneath a half-typed posting or a
+      // receipt that is mid-scan. What the phone is running is always visible in Settings.
+      registerType: 'prompt',
       includeAssets: ['favicon.svg', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png'],
       manifest: {
         name: 'Two-Way Match',
@@ -69,6 +77,15 @@ export default defineConfig({
         ],
       },
       workbox: {
+        // `prompt` mode leaves both of these off. `skipWaiting` must stay off — that is what
+        // makes the new worker wait for the tap. `clientsClaim` must be on: without it the
+        // worker that just took over after SKIP_WAITING controls nothing until the next
+        // navigation, workbox-window never sees `controlling`, and the plugin never reloads
+        // the page — only the store's fallback timer would.
+        clientsClaim: true,
+        skipWaiting: false,
+        // No `.json`: `build.json` is the one file that must be read fresh from the server,
+        // because it is the server's answer to "which build are you serving".
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
         maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
         navigateFallback: 'index.html',

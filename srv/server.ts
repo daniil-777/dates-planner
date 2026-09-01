@@ -78,6 +78,7 @@ import {
   verifySessionToken,
 } from './lib/auth'
 import { describeProvider } from './lib/llm'
+import { readBuildStamp, type BuildStamp } from './lib/build-stamp'
 import { getDocAiClient } from './lib/documentai'
 // Relative rather than '#cds-models/twowaymatch': package.json carries no "imports"
 // mapping for that subpath, so the alias resolves at neither compile nor run time.
@@ -154,6 +155,8 @@ const STATEMENT_LIMIT_PER_HOUR = 10
 const WEIGHTS_PATH = join(cds.root, 'ml', 'model', 'weights.json')
 const DIST_DIR = join(cds.root, 'app', 'dist')
 const DIST_INDEX = join(DIST_DIR, 'index.html')
+/** Written by the frontend build next to the bundle it stamps — see `app/vite/buildStamp.ts`. */
+const BUILD_STAMP_PATH = join(DIST_DIR, 'build.json')
 
 /**
  * A file Vite content-hashed into `app/dist/assets/`, which therefore never goes stale.
@@ -497,6 +500,11 @@ interface HealthPayload {
   model: string | null
   docai: 'live' | 'mock' | 'llm'
   llm: string
+  /**
+   * The frontend build being served — `app/dist/build.json`, or null before the first
+   * build. The Version card compares it with the stamp inside the bundle a device loaded.
+   */
+  build: BuildStamp | null
 }
 
 /**
@@ -516,6 +524,7 @@ function health(_req: Request, res: Response): void {
     model: modelTrainedAt(),
     docai: getDocAiClient().mode,
     llm: describeProvider(),
+    build: readBuildStamp(BUILD_STAMP_PATH),
   }
   // A cached health check is a lie about the present.
   res.setHeader('Cache-Control', 'no-store')

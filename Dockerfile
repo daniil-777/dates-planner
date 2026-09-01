@@ -74,7 +74,10 @@ WORKDIR /src/app
 COPY app/package.json app/package-lock.json ./
 RUN npm ci
 
+# The root package.json is where the version number lives; the stamp plugin reads it.
+COPY package.json /src/package.json
 COPY app/tsconfig.json app/vite.config.ts app/index.html ./
+COPY app/vite/ ./vite/
 COPY app/public/ ./public/
 COPY app/src/ ./src/
 
@@ -91,6 +94,16 @@ COPY app/src/ ./src/
 # §1.3 has the one-flag fix for the npm script; once that lands this line can go back to
 # `npm run build`.
 #
+# The commit this image is built from, stamped into the bundle and into `dist/build.json`
+# by `app/vite/buildStamp.ts`. The build context has no `.git` (see .dockerignore), so the
+# plugin cannot ask git itself; `npm run deploy` passes it in. A plain `fly deploy` without
+# the arg still works — the stamp then says `unknown` where the SHA would be. It is a short
+# SHA, not a secret, so a build arg is the right place for it (contrast §4 of DEPLOY.md).
+# Declared here, after `npm ci`, and not at the top of the stage: an ARG invalidates every
+# layer after it, and the SHA changes on every deploy.
+ARG GIT_SHA=
+ENV GIT_SHA=$GIT_SHA
+
 # Output lands in /src/app/dist and is copied into the runtime stage below.
 RUN npx vite build
 

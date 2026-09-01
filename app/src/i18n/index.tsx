@@ -114,11 +114,38 @@ const de: Dictionary = {
   // Settings
   'settings.title': 'Einstellungen',
   'settings.language.title': 'Sprache',
-  'settings.language.subtitle': 'Gilt für dieses Gerät. Drei zur Auswahl; Zahlen bleiben Schweizer Art.',
+  'settings.language.subtitle':
+    'Gilt für dieses Gerät. Drei zur Auswahl; Zahlen bleiben Schweizer Art.',
   'settings.session.title': 'Sitzung',
   'settings.session.subtitle': 'Wer hier angemeldet ist — und wie man das beendet.',
-  'settings.session.signedInAs': 'Angemeldet als {name}. Sitzungen gelten eine Woche, nur in diesem Browser.',
+  'settings.session.signedInAs':
+    'Angemeldet als {name}. Sitzungen gelten eine Woche, nur in diesem Browser.',
   'settings.session.anonymous': 'Dieser Browser hat eine Sitzung im Hauptbuch.',
+
+  // Version & updates
+  'update.ready': 'Eine neue Version ist bereit.',
+  'update.reload': 'Neu laden',
+  'update.reloading': 'Lädt neu…',
+  'update.later': 'Später',
+  'version.title': 'Version',
+  'version.subtitle': 'Welcher Build auf diesem Gerät läuft — und ob der Server einen neueren hat.',
+  'version.device': 'Dieses Gerät',
+  'version.server': 'Server',
+  'version.status': 'Status',
+  'version.reading': 'lese /health…',
+  'version.serverUnknown': 'nicht gemeldet',
+  'version.serverOffline': 'antwortet nicht',
+  'version.check': 'Nach Updates suchen',
+  'version.checking': 'Suche…',
+  'version.downloading': 'neue Version wird geladen…',
+  'version.ready': 'eine neue Version ist bereit — neu laden, um sie zu nutzen',
+  'version.behind': 'der Server hat einen neueren Build als dieses Gerät',
+  'version.offline': 'Server antwortet nicht — kein Vergleich möglich',
+  'version.upToDate': 'aktuell',
+  'version.checked': 'geprüft {time}',
+  'version.unsupported':
+    'Kein Service Worker hier — ein normales Neuladen holt immer den neuesten Build.',
+  'version.reload': 'Jetzt neu laden',
 }
 
 const ru: Dictionary = {
@@ -198,8 +225,34 @@ const ru: Dictionary = {
   'settings.language.subtitle': 'Для этого устройства. Три на выбор; числа остаются швейцарскими.',
   'settings.session.title': 'Сессия',
   'settings.session.subtitle': 'Кто здесь вошёл — и как выйти.',
-  'settings.session.signedInAs': 'Вы вошли как {name}. Сессия живёт неделю, только в этом браузере.',
+  'settings.session.signedInAs':
+    'Вы вошли как {name}. Сессия живёт неделю, только в этом браузере.',
   'settings.session.anonymous': 'В этом браузере есть сессия.',
+
+  // Version & updates
+  'update.ready': 'Готова новая версия.',
+  'update.reload': 'Обновить',
+  'update.reloading': 'Перезагрузка…',
+  'update.later': 'Позже',
+  'version.title': 'Версия',
+  'version.subtitle': 'Какая сборка стоит на этом устройстве — и есть ли на сервере новее.',
+  'version.device': 'Это устройство',
+  'version.server': 'Сервер',
+  'version.status': 'Статус',
+  'version.reading': 'читаем /health…',
+  'version.serverUnknown': 'не сообщается',
+  'version.serverOffline': 'не отвечает',
+  'version.check': 'Проверить обновления',
+  'version.checking': 'Проверяем…',
+  'version.downloading': 'загружаем новую версию…',
+  'version.ready': 'новая версия готова — обновите, чтобы перейти на неё',
+  'version.behind': 'на сервере сборка новее, чем на этом устройстве',
+  'version.offline': 'сервер не отвечает — сравнить не с чем',
+  'version.upToDate': 'актуально',
+  'version.checked': 'проверено {time}',
+  'version.unsupported':
+    'Здесь нет сервис-воркера — обычная перезагрузка всегда берёт свежую сборку.',
+  'version.reload': 'Обновить сейчас',
 }
 
 const DICTIONARIES: Record<Lang, Dictionary> = { en: {}, de, ru }

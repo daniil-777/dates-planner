@@ -26,7 +26,15 @@ import express from 'express'
 import sharp from 'sharp'
 import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process'
 import { createServer, request as httpRequest, type Server } from 'node:http'
-import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { DatabaseSync } from 'node:sqlite'
@@ -205,9 +213,41 @@ describe('/health', () => {
       llm: expect.any(String),
     })
 
-    const { docai, model } = payload as { docai: unknown; model: unknown }
+    const { docai, model, build } = payload as { docai: unknown; model: unknown; build: unknown }
     expect(['live', 'mock']).toContain(docai)
     expect(model === null || typeof model === 'string').toBe(true)
+    // The frontend build stamp, when `app/dist` has been built; null in a bare checkout.
+    if (build !== null) {
+      expect(build).toMatchObject({
+        version: expect.any(String),
+        commit: expect.any(String),
+        builtAt: expect.any(String),
+      })
+    }
+  })
+
+  it('reports the frontend build stamp from app/dist, and null once it is gone', async () => {
+    // CI runs this suite before `npm run build`, so the stamp is written here rather than
+    // hoped for — this is the one test of the path `health()` actually reads. A developer's
+    // real `build.json` is put back afterwards.
+    const distDir = join(cds.root, 'app', 'dist')
+    const stampPath = join(distDir, 'build.json')
+    const hadDist = existsSync(distDir)
+    const previous = existsSync(stampPath) ? readFileSync(stampPath) : null
+    const stamp = { version: '9.9.9', commit: 'cafe123', builtAt: '2026-09-01T10:47:13.211Z' }
+    try {
+      mkdirSync(distDir, { recursive: true })
+      writeFileSync(stampPath, JSON.stringify(stamp))
+      const stamped = (await (await fetch(`${origin}/health`)).json()) as { build: unknown }
+      expect(stamped.build).toEqual(stamp)
+
+      rmSync(stampPath)
+      const bare = (await (await fetch(`${origin}/health`)).json()) as { build: unknown }
+      expect(bare.build).toBeNull()
+    } finally {
+      if (previous !== null) writeFileSync(stampPath, previous)
+      else if (!hadDist) rmSync(distDir, { recursive: true, force: true })
+    }
   })
 
   it('leaks no credential, with every secret in the environment set to a canary', async () => {

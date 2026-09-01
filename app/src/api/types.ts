@@ -313,6 +313,19 @@ export interface ScanResult extends Expense {
   momentTop3?: ScoredLabel[]
 }
 
+/**
+ * Which build a bundle is — written by `app/vite/buildStamp.ts` into the SPA (as
+ * `__TWM_BUILD__`) and into `dist/build.json`, which `/health` reports. The SPA compares
+ * the two to tell whether the device has taken the latest deploy.
+ */
+export interface BuildStamp {
+  version: string
+  /** Short git SHA (`-dirty` if shipped uncommitted), or `unknown` when the build could not tell. */
+  commit: string
+  /** ISO 8601. */
+  builtAt: string
+}
+
 /** `GET /health` — the probe `srv/server.ts` serves outside the OData router. */
 export interface Health {
   status: string
@@ -321,6 +334,8 @@ export interface Health {
   llm: string
   version?: string
   uptime?: number
+  /** The build the server is serving at `/`; absent when `app/dist` has no stamp. */
+  build?: BuildStamp
 }
 
 /** Filter arguments accepted by `api.listExpenses` / `useExpenses`. */

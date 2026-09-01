@@ -24,6 +24,7 @@
     "ml:export": "ml/.venv/bin/python ml/export_ts.py",
     "ml:export-data": "cds-tsx run scripts/export-training-data.ts",
     "ml:retrain": "npm run ml:export-data && ml/.venv/bin/python ml/train.py --csv ml/data/live_transactions.csv --n-buckets 65536 && npm run ml:export && vitest run test/classifier-parity.test.ts",
+    "deploy": "scripts/deploy.sh",
     "backup": "cds-tsx run scripts/backup.ts",
     "hash": "cds-tsx run scripts/hash-password.ts"
   },

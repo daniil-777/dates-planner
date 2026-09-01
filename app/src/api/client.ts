@@ -27,6 +27,7 @@
  */
 
 import type {
+  BuildStamp,
   CalendarEntry,
   Category,
   Event,
@@ -781,7 +782,8 @@ function toMood(payload: unknown): Mood {
     note: strOrNull(row.note),
     source: row.source === 'face' ? 'face' : 'manual',
     detected: strOrNull(row.detected),
-    confidence: row.confidence === null || row.confidence === undefined ? null : Number(row.confidence),
+    confidence:
+      row.confidence === null || row.confidence === undefined ? null : Number(row.confidence),
   }
 }
 
@@ -1055,7 +1057,19 @@ async function health(): Promise<Health> {
   if (version) result.version = version
   const uptime = numOrNull(row.uptime)
   if (uptime !== null) result.uptime = uptime
+  const build = readBuildStamp(row.build)
+  if (build !== null) result.build = build
   return result
+}
+
+/** The `build` object of `/health`, or null when it is missing or not a whole stamp. */
+function readBuildStamp(value: unknown): BuildStamp | null {
+  const row = asRow(value)
+  const version = strOrNull(row.version)
+  const commit = strOrNull(row.commit)
+  const builtAt = strOrNull(row.builtAt)
+  if (version === null || commit === null || builtAt === null) return null
+  return { version, commit, builtAt }
 }
 
 /** The whole client surface, exactly as FRONTEND-CONTRACT §3 declares it. */

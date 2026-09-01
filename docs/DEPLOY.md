@@ -212,8 +212,18 @@ Dockerfile, not a build arg — a build arg is visible in `docker history` forev
 ## 5. First deploy
 
 ```bash
-fly deploy
+npm run deploy
 ```
+
+That is `scripts/deploy.sh`: `fly deploy --build-arg GIT_SHA=<short HEAD>`, with a guard in
+front. The build context has no `.git`, so the commit has to be handed in; the frontend
+build stamps it, together with the version and the build time, into the bundle and into
+`app/dist/build.json`. The guard refuses an uncommitted tree — `fly deploy` ships whatever
+is on disk, and a stamp that names a commit the code is not would send you reading the
+wrong diff. `DEPLOY_DIRTY=1 npm run deploy` ships anyway and stamps it `8cea17b-dirty`, so
+the phone still tells you. Extra arguments go through: `npm run deploy -- --strategy
+immediate`. A bare `fly deploy` works too — the stamp then reads `unknown` where the SHA
+would be.
 
 What happens, in order:
 
@@ -287,17 +297,29 @@ curl -u 'you@example.com:your-password' https://twm.example.com/health
 
 ```json
 { "status": "ok", "version": "1.0.0", "uptime": 41,
-  "model": "2026-09-01T12:20:32", "docai": "mock", "llm": "Deterministic template · …" }
+  "model": "2026-09-01T12:20:32", "docai": "mock", "llm": "Deterministic template · …",
+  "build": { "version": "1.0.0", "commit": "8cea17b", "builtAt": "2026-09-01T10:47:13.211Z" } }
 ```
 
-Read all four of the interesting fields:
+Read all five of the interesting fields:
 
 * `model` — `null` means `ml/model/weights.json` did not make it into the image and every
   prediction is a fallback.
 * `docai` — `mock` or `live`. If you set the four `DOCAI_*` secrets and this still says
   `mock`, one of them is empty.
 * `llm` — names the *variable* a key came from, never the key.
-* `version` — comes from `package.json`, so it is how you tell which build is running.
+* `version` — comes from `package.json`, so it is how you tell which release is running.
+* `build` — which *frontend build* is being served: the commit and the time the bundle was
+  built, read from `app/dist/build.json`. `null` means `app/dist` has no stamp, which on a
+  deployed machine means the `web` stage did not run the current `app/vite/buildStamp.ts`.
+  `"commit": "unknown"` means the image was built without `GIT_SHA` — use `npm run deploy`.
+  A `-dirty` suffix means it was shipped with uncommitted changes (`DEPLOY_DIRTY=1`).
+
+The same stamp is compiled into the bundle, and **Settings → Version** on a phone shows
+both: the one the phone is running and the one the server has. When they differ the card
+says so, asks the service worker to look, and the moment the new build is installed a
+banner at the bottom of every screen offers **Reload**. Nothing reloads on its own — the
+service worker runs in `prompt` mode, so a half-typed expense is never lost to a deploy.
 
 Without credentials that endpoint returns **401**, by design: `srv/server.ts` mounts basic
 auth in front of every route, `/health` included. That is why `fly.toml` uses a TCP check
@@ -424,7 +446,7 @@ fly logs -n                 # no follow
 fly ssh console             # a root shell on the machine
 fly status                  # machine, region, volume, checks
 fly volumes list
-fly deploy                  # ship a change; `immediate` strategy, a few seconds of 502
+npm run deploy              # ship a change with the commit stamped in; a few seconds of 502
 fly apps restart <app>      # when you have changed a secret and want to be sure
 ```
 
@@ -439,7 +461,7 @@ Retraining is a laptop operation:
 npm run ml:export-data      # pull the confirmed rows out of the live database
 npm run ml:retrain          # train, export, and run the parity test
 git commit ml/model/weights.json
-fly deploy
+npm run deploy
 ```
 
 CI will not let a broken `weights.json` through: `.github/workflows/ci.yml` checks that the
@@ -470,6 +492,9 @@ is the difference between a tool and a chore.
 | Everybody is signed out after every deploy | `SESSION_SECRET` is unset, so the cookie key is regenerated on each boot | set it; §4 |
 | `npm ci` fails on alpine building a native module | no musl prebuild for something | add `RUN apk add --no-cache python3 make g++` to the failing stage |
 | `fly ssh console` hangs | the machine is stopped | `fly status`; `auto_stop_machines` should be `'off'` |
+| A phone keeps showing last week's screen after a deploy | the service worker has the new build but is waiting for a tap — or has not looked yet | **Settings → Version**: the card names both builds and has **Check for updates**; the **Reload** banner appears once the new build is installed. Killing and reopening the app also makes the browser check |
+| No banner, and the Version card is missing altogether | the phone is still on a build from before the card existed: that worker updated on its own and never waits, so it has nothing to tap and nothing that tells the new worker to take over | close the installed app fully (swipe it away) and open it again — once. From then on the banner does the job |
+| `/health` says `"build": null` or `"commit": "unknown"` | the `web` stage did not write `dist/build.json`, or was built without `GIT_SHA` | `npm run deploy`, not `fly deploy`; check the `COPY app/vite/` line in the Dockerfile |
 | a scan or face-scan fails with `anthropic-workspace-id is required when authenticating with an identity-linked API key` | the key is tied to your user, not to a workspace | `fly secrets set ANTHROPIC_WORKSPACE_ID='wrkspc_…'` — or create the key *inside* a workspace instead, which needs no id |
 
 `docs/RUNBOOK.md` covers the application-level failures — a scan that will not extract, a

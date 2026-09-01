@@ -6,6 +6,36 @@ All notable changes to Two-Way Match. Format loosely after
 
 ---
 
+## [Unreleased]
+
+### Added
+
+- **A version stamp, and an honest update banner.** Every frontend build now carries its
+  `package.json` version, short commit and build time — compiled into the bundle by
+  `app/vite/buildStamp.ts` and written to `app/dist/build.json`, which `/health` reports as
+  `build`. **Settings → Version** shows the build this device is running next to the one
+  the server has, says which state the service worker is in, and has *Check for updates*.
+  When a newer build is installed and waiting, a banner at the bottom of every screen offers
+  *Reload*.
+- `npm run deploy` (`scripts/deploy.sh`) — `fly deploy` with the commit handed in as
+  `GIT_SHA`, since the build context has no `.git`. It refuses an uncommitted tree: the
+  stamp names HEAD and `fly deploy` ships the working tree, and a stamp that lies is worse
+  than none. `DEPLOY_DIRTY=1` ships anyway, stamped `8cea17b-dirty`.
+
+### Changed
+
+- The service worker now registers in `prompt` mode rather than `autoUpdate`: a new build
+  waits for a tap on *Reload* instead of taking over the page underneath whatever was being
+  typed. The app also asks for a new worker once an hour while it stays open, and when it
+  comes back to the foreground after five minutes away — before, a phone that never closed
+  the app never found out about a deploy. Readiness is read off the registration itself,
+  not only off the plugin's callback, so the second deploy of a week-long session brings
+  the banner back after *Later* just like the first.
+- **One-time step for the deploy that ships this change:** phones running the previous
+  `autoUpdate` build have no banner to show and never tell the new worker to take over, so
+  after this deploy each installed app has to be closed (swiped away) and reopened once.
+  From the next build on, the banner does it.
+
 ## [1.0.0] — 2026-09-01
 
 First release. A private expense app for a household of any size, wearing SAP clothing on

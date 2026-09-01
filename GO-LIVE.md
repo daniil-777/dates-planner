@@ -142,7 +142,7 @@ Follow `docs/DEPLOY.md`. The checkboxes here are the ones people skip.
 - [ ] `fly secrets list` shows names only. If you can see a value, something is very wrong
 - [ ] `ANTHROPIC_API_KEY` and any `DOCAI_*` set as **Fly secrets**, never in `fly.toml`,
       never as a build arg (a build arg lives in `docker history` forever)
-- [ ] `fly deploy` succeeds
+- [ ] `npm run deploy` succeeds (it refuses an uncommitted tree — commit first)
 - [ ] `fly logs` shows `no database at /data/twm.sqlite — creating it` exactly once, then
       `server listening`
 - [ ] `curl -u 'you@example.com:…' https://…/health` returns `"status": "ok"`
@@ -229,7 +229,7 @@ Not bugs. Decisions, listed so nobody has to rediscover them.
   03:00 job that spawns `npm run ml:retrain`, which needs `ml/.venv` and scikit-learn —
   neither of which is in the image, and neither of which belongs in a 512 MB machine. After
   20 new confirmed rows the job fires, fails, logs a note, and changes nothing. Retraining
-  is a laptop operation: `npm run ml:retrain`, commit `ml/model/weights.json`, `fly deploy`.
+  is a laptop operation: `npm run ml:retrain`, commit `ml/model/weights.json`, `npm run deploy`.
 * **Images live in the database.** `db/schema.cds` stores receipts and photos as
   `LargeBinary`. It makes the backup a single file you can carry, and it means the volume is
   the only copy of the photographs. §3 is why.

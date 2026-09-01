@@ -148,7 +148,8 @@ export const api = {
 
   receiptImageUrl(receiptId: string): string   // '/ledger/Receipts(<id>)/image'
   photoImageUrl(photoId: string): string
-  health(): Promise<{ status: string; model?: string; docai: string; llm: string }>
+  health(): Promise<{ status: string; model?: string; docai: string; llm: string;
+                     version: string; build: BuildStamp | null }>
 }
 ```
 

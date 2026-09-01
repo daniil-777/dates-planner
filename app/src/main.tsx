@@ -26,6 +26,7 @@ import { ThemeProvider } from '@ui5/webcomponents-react'
 import { setTheme } from '@ui5/webcomponents-base/dist/config/Theme.js'
 import { registerSW } from 'virtual:pwa-register'
 import { I18nProvider } from './i18n'
+import { updates } from './update/store'
 import { App } from './App'
 
 /* ------------------------------------------------------------------ *
@@ -106,20 +107,10 @@ const queryClient = new QueryClient({
  *  Service worker
  * ------------------------------------------------------------------ */
 
-const updateServiceWorker = registerSW({
-  immediate: true,
-  onNeedRefresh() {
-    // `registerType: 'autoUpdate'` in vite.config.ts — take the new build straight away
-    // rather than asking anybody to think about cache invalidation.
-    void updateServiceWorker(true)
-  },
-  onOfflineReady() {
-    console.info('[twm] the ledger is available offline')
-  },
-  onRegisterError(error: unknown) {
-    console.warn('[twm] the service worker could not be registered', error)
-  },
-})
+// `prompt` mode (vite.config.ts): a new build waits until somebody taps Reload. The store
+// owns the registration, the periodic checks and the banner's state; this is the one place
+// that imports the virtual module, so everything else stays testable without it.
+updates.connect(registerSW)
 
 /* ------------------------------------------------------------------ *
  *  Mount

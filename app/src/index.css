@@ -24,6 +24,8 @@
 
   --twm-touch: 44px;
   --twm-bottomnav-height: 56px;
+  /* What the update banner (update/update.css) takes off the bottom of the page while shown. */
+  --twm-update-height: 88px;
   --twm-content-max: 62rem;
 
   --twm-safe-top: env(safe-area-inset-top, 0px);
