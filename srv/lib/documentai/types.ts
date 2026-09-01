@@ -98,5 +98,14 @@ export interface DocAiClient {
   submitJob(image: Buffer, mimeType: string, fileName: string): Promise<string>
   getJob(jobId: string): Promise<unknown>
   pollJob(jobId: string, opts?: { timeoutMs?: number; intervalMs?: number }): Promise<unknown>
-  readonly mode: 'live' | 'mock'
+  /**
+   * Which engine actually read the picture.
+   *
+   * `live`  — SAP Document AI, the real thing.
+   * `llm`   — Claude reading the image (`srv/lib/documentai/llm-extractor.ts`), used when
+   *           there are no Document AI credentials but there is an `ANTHROPIC_API_KEY`.
+   * `mock`  — bundled fixtures. Not an extractor: the sample is chosen by file name, so
+   *           the answer has nothing to do with the photograph. Surfaced in the UI.
+   */
+  readonly mode: 'live' | 'mock' | 'llm'
 }

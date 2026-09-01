@@ -45,6 +45,40 @@ function job(fields: DocAiField[], lineItems: DocAiField[][] = []): DocAiJobResu
 /* ---------------------------------------------------------------- amounts */
 
 describe('mapper — parseAmount across CH/DE/FR number formats (CONTRACTS §6)', () => {
+  /**
+   * `3.-` is three francs, not minus three.
+   *
+   * On a Swiss receipt the dash stands in for the two rappen digits, and it is everywhere:
+   * price tags, restaurant bills, the round-number lines on a Migros slip. The trailing-sign
+   * rule below it — which reads `12,30-` as negative, the way accounting prints it — used to
+   * claim that same dash and flip the sign, so a CHF 3.00 coffee posted as CHF -3.00 and
+   * the month totalled short. The two notations are told apart by what sits before the
+   * dash: a digit means accounting, a decimal separator means rappen.
+   */
+  it('reads the Swiss round-francs dash as .00, not as a minus sign', () => {
+    expect(parseAmount('3.-')).toBe(3)
+    expect(parseAmount('3,-')).toBe(3)
+    expect(parseAmount('12.–')).toBe(12)
+    expect(parseAmount('48.—')).toBe(48)
+    expect(parseAmount('7.−')).toBe(7)
+    expect(parseAmount("1'234.–")).toBe(1234)
+    expect(parseAmount('CHF 5.-')).toBe(5)
+    expect(parseAmount('Fr. 5.-')).toBe(5)
+  })
+
+  it('still reads accounting\'s trailing minus as negative', () => {
+    expect(parseAmount('12,30-')).toBe(-12.3)
+    expect(parseAmount('12.30-')).toBe(-12.3)
+    expect(parseAmount('-12,30')).toBe(-12.3)
+    expect(parseAmount('(12.30)')).toBe(-12.3)
+  })
+
+  it('does not invent a zero out of a bare separator and dash', () => {
+    // A silent 0.00 in an amount column is worse than the review flag null raises.
+    expect(parseAmount('.-')).toBeNull()
+    expect(parseAmount('-')).toBeNull()
+  })
+
   it("reads the Swiss apostrophe form 1'234.50", () => {
     expect(parseAmount("1'234.50")).toBe(1234.5)
     expect(parseAmount("1'234'567.89")).toBe(1234567.89)

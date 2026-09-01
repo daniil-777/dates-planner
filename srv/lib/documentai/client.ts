@@ -12,6 +12,7 @@
 import { Buffer } from 'node:buffer'
 import { createHash, randomUUID } from 'node:crypto'
 import { pickFixture } from './fixtures'
+import { createLlmClient, llmExtractionConfigured } from './llm-extractor'
 import type { DocAiClient, DocAiJobResult, DocAiSubmitOptions } from './types'
 
 export type { DocAiClient } from './types'
@@ -81,6 +82,10 @@ const ENV_KEYS = [
   'DOCAI_CLIENT_SECRET',
   'DOCAI_SCHEMA_NAME',
   'DOCAI_DOCUMENT_TYPE',
+  // Not a Document AI variable, but it decides whether the fallback reads the picture or
+  // replays a fixture — so it has to invalidate the cached client the same way.
+  'ANTHROPIC_API_KEY',
+  'ANTHROPIC_EXTRACT_EFFORT',
 ]
 
 function env(name: string): string | null {
@@ -390,12 +395,25 @@ export function getDocAiClient(): DocAiClient {
   const signature = envSignature()
   if (cached !== null && cached.signature === signature) return cached.client
 
+  // Order of preference, and the reasoning for it: SAP Document AI is what this app is
+  // built around and is the only engine trained on the document types it names, so it wins
+  // whenever it is configured. Claude reading the image is the fallback that still actually
+  // reads the image. Fixtures are last, because they do not.
+  //
+  // MOCK_DOCAI forces fixtures past both, which is what makes a deploy testable without
+  // spending BTP quota or Anthropic tokens.
   const config = mockRequested() ? null : readLiveConfig()
-  const client = config === null ? createMockClient() : createLiveClient(config)
-  if (client.mode === 'mock') {
-    log(mockRequested() ? 'mock mode (MOCK_DOCAI)' : 'mock mode (no Document AI credentials)')
-  } else {
+  let client: DocAiClient
+  if (config !== null) client = createLiveClient(config)
+  else if (!mockRequested() && llmExtractionConfigured()) client = createLlmClient()
+  else client = createMockClient()
+
+  if (client.mode === 'live') {
     log('live mode')
+  } else if (client.mode === 'llm') {
+    log('llm mode (no Document AI credentials; reading receipts with ANTHROPIC_API_KEY)')
+  } else {
+    log(mockRequested() ? 'mock mode (MOCK_DOCAI)' : 'mock mode (no credentials of any kind)')
   }
   cached = { signature, client }
   return client

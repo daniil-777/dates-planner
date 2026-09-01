@@ -145,6 +145,25 @@ const APOSTROPHES = /[\u0027\u2018\u2019\u0060\u00b4]/g
 const LETTERS = /[a-zA-ZÀ-ɏ]+/g
 const CURRENCY_MARKS = /[€$£¥₣₤₹¢]/g
 
+/**
+ * The Swiss "round francs" ending: `3.-`, `12.–`, `1'234.—`, `5.−`.
+ *
+ * On a Swiss receipt or price tag the dash stands in for the two rappen digits, so `3.-` is
+ * three francs exactly. It is not a minus sign, and it must be resolved before the
+ * trailing-sign handling in {@link parseAmount} — which would otherwise read that same dash
+ * as accounting's negative marker and turn a CHF 3.00 coffee into CHF -3.00.
+ *
+ * The two notations do not actually collide: accounting puts the sign after the *cents*
+ * (`12,30-`), so a digit sits between the separator and the dash. Anchoring on the
+ * separator is what tells them apart. All four dashes are matched because receipt printers
+ * and PDF exporters disagree about which one they use.
+ *
+ * A digit is required before the separator so that a field holding nothing but `.-` stays
+ * unparseable. Returning 0.00 for it would be a silent zero in an amount column, which is
+ * worse than the review flag the caller raises on `null`.
+ */
+const ROUND_FRANCS = /(\d[.,])[-\u2010-\u2015\u2212]$/
+
 function hasDigit(text: string): boolean {
   return /\d/.test(text)
 }
@@ -218,6 +237,9 @@ export function parseAmount(raw: unknown): number | null {
   // sits between them and the digits ("CHF -12.30"), and the leftover space is
   // what tells the abbreviation dot of "Fr. 5.60" apart from a decimal point.
   text = text.replace(LETTERS, ' ').replace(CURRENCY_MARKS, ' ').trim()
+
+  // `3.-` is three francs, not minus three. See ROUND_FRANCS.
+  text = text.replace(ROUND_FRANCS, (_match, head: string) => `${head}00`)
 
   if (/^[-−+]/.test(text)) {
     if (!text.startsWith('+')) negative = !negative

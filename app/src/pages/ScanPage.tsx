@@ -15,8 +15,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactElement } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Text, Title, Toast } from '@ui5/webcomponents-react'
-import { useCategories, useDeleteExpense, useEvents, usePeople } from '@/api/hooks'
+import { MessageStrip, Text, Title, Toast } from '@ui5/webcomponents-react'
+import { useCategories, useDeleteExpense, useEvents, useHealth, usePeople } from '@/api/hooks'
 import type { Expense, MomentCode } from '@/api/types'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { ErrorState } from '@/components/ErrorState'
@@ -59,6 +59,13 @@ export function ScanPage(): ReactElement {
   const categories = useCategories()
   const people = usePeople()
   const events = useEvents()
+
+  // `/health` already reports which Document AI path is live, so the banner below needs no
+  // new field on the scan response. Undefined while the probe is in flight, and treated as
+  // "not mock" then: a strip that flashes on every page load would be noise, and the real
+  // answer arrives in milliseconds.
+  const health = useHealth()
+  const docAiIsMock = health.data?.docai === 'mock'
   const deleteExpense = useDeleteExpense()
   const queue = useScanQueue()
   const posting = usePostExpense()
@@ -266,6 +273,25 @@ export function ScanPage(): ReactElement {
       <Text className="scan-hint">
         Photograph a receipt. Document AI reads it, the classifier files it, you confirm it.
       </Text>
+
+      {/*
+        Say so when nothing is actually being read.
+
+        With no DOCAI_* credentials configured the client falls back to replaying a bundled
+        fixture (CONTRACTS.md §6), and the fixture is chosen by *file name* — so a photo
+        straight off a phone camera always lands on the same one, and every scan comes back
+        with the same merchant and the same amount no matter what was photographed. That is
+        the intended behaviour for a laptop with no BTP account. What is not acceptable is
+        letting it look like a reading: an amount nobody extracted, presented the way an
+        extracted one is, gets confirmed and posted, and the ledger is quietly wrong.
+      */}
+      {docAiIsMock ? (
+        <MessageStrip design="Critical" hideCloseButton className="scan-mock-strip">
+          Demo extraction — no Document AI credentials are configured, so these amounts come
+          from a bundled sample receipt and not from your photo. Check every field before
+          posting.
+        </MessageStrip>
+      ) : null}
 
       {masterLoading ? (
         <LoadingSkeleton rows={3} variant="card" />

@@ -117,6 +117,9 @@ vi.mock('@/api/hooks', () => ({
   useConfirmExpense: () => mutation(confirmExpense),
   useCreateMemory: () => mutation(createMemory),
   useScanReceipt: () => ({ mutateAsync: scanReceipt, isPending: false, error: null }),
+  // Live extraction by default, so the demo-extraction strip stays out of the way of every
+  // other assertion in this file. The strip has its own test below.
+  useHealth: () => query({ status: 'ok', model: null, docai: 'live', llm: 'template' }),
 }))
 
 vi.mock('@/api/client', async () => {

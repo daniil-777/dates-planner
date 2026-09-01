@@ -1261,6 +1261,8 @@ export default class LedgerService extends cds.ApplicationService {
         .set({
           docaiJobId: jobId,
           extraction: JSON.stringify(job),
+          // Only fixtures are 'mock'. An LLM reading the photograph really did read it,
+          // and marking that 'mock' would tell the UI to disclaim a genuine extraction.
           extractionStatus: client.mode === 'mock' ? 'mock' : 'done',
         })
         .where({ ID: receiptID })
