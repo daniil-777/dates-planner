@@ -67,6 +67,15 @@ import { existsSync, readFileSync, statSync } from 'node:fs'
 import { extname, join } from 'node:path'
 import type { NextFunction, Request, RequestHandler, Response } from 'express'
 import { MAX_UPLOAD_BYTES } from './lib/images'
+import {
+  expiredSessionCookie,
+  issueSessionToken,
+  readSessionToken,
+  sessionCookie,
+  sessionSecretConfigured,
+  verifyCredentials,
+  verifySessionToken,
+} from './lib/auth'
 import { describeProvider } from './lib/llm'
 import { getDocAiClient } from './lib/documentai'
 // Relative rather than '#cds-models/twowaymatch': package.json carries no "imports"
@@ -121,6 +130,20 @@ const STATEMENT_PATH = /(^|\/)generateStatement(\W|$)/i
 
 const HOUR_MS = 60 * 60 * 1000
 
+/**
+ * The sign-in limiter: ten attempts per IP per quarter hour.
+ *
+ * bcrypt at cost 12 already bounds guessing to a few attempts a second per core, so this
+ * is not the only thing standing between a stranger and the ledger — it is what stops a
+ * script from spending the server's entire CPU budget on that bcrypt, which is the real
+ * cost of an unlimited login endpoint. Successful sign-ins do not count against it.
+ */
+const LOGIN_WINDOW_MS = 15 * 60 * 1000
+const LOGIN_LIMIT_PER_WINDOW = 10
+
+/** A sign-in body is two short strings. Four kilobytes is already absurd headroom. */
+const MAX_LOGIN_BODY_BYTES = 4 * 1024
+
 /** A big shopping day is ten receipts; sixty an hour is a broken client, not a user. */
 const SCAN_LIMIT_PER_HOUR = 60
 
@@ -170,7 +193,12 @@ export function configureApp(app: express.Application): void {
   app.use(requestLog)
   app.use(requestSizeGuard)
   app.use(sameOriginCors)
-  if (credentials !== null) app.use(basicAuth(credentials))
+
+  // Ahead of the guard, and that ordering is the whole point: signing in is the one thing
+  // a request that cannot yet authenticate has to be allowed to do.
+  mountAuthRoutes(app)
+
+  if (credentials !== null) app.use(requestAuth(credentials))
   app.use(expensiveActionLimits())
 
   app.get('/health', health)
@@ -652,6 +680,38 @@ function loadCredentials(): Credentials {
 }
 
 /**
+ * The same variables, read leniently, for a process that is not production.
+ *
+ * Development has always been wide open, and with nothing configured it stays that way —
+ * `null` here means no guard is mounted and every request is allowed, which is what makes
+ * `npm run dev` work against an empty `.env`.
+ *
+ * What it adds is that a developer who *does* configure a login gets the real thing:
+ * the sign-in screen, the cookie, the guard. Otherwise the one flow this change is about
+ * would be unreachable outside a production deployment. Half-configured slots are skipped
+ * in silence rather than thrown on — on a laptop a stray `AUTH_HASH_A` is a leftover, and
+ * in production {@link loadCredentials} already refuses to start on exactly that.
+ */
+function optionalCredentials(): Credentials | null {
+  const accounts: Account[] = []
+  for (const slot of credentialSlots()) {
+    const variable = `AUTH_USER_${slot}`
+    const username = (process.env[variable] ?? '').trim()
+    const hash = (process.env[`AUTH_HASH_${slot}`] ?? '').trim()
+    if (username === '' || !BCRYPT_HASH.test(hash)) continue
+    if (accounts.some(account => account.username === username)) continue
+    accounts.push({ username, hash, slot, variable })
+  }
+  if (accounts.length === 0) return null
+
+  LOG.info(
+    `sign-in is required for ${accounts.length} configured login(s) ` +
+      `(${accounts.map(account => account.variable).join(', ')})`,
+  )
+  return { accounts, decoyHash: makeDecoyHash(accounts[0].hash) }
+}
+
+/**
  * A hash of 32 random bytes, at the same cost factor as the real ones so that verifying
  * against it takes the same time. Costs one bcrypt round at startup, once.
  */
@@ -661,44 +721,100 @@ function makeDecoyHash(reference: string): string {
 }
 
 /**
- * The bootstrap-phase middleware: every request, including the SPA and `/health`.
+ * The bootstrap-phase guard: every request, including the SPA and `/health`.
  *
- * Brute forcing is bounded by bcrypt itself — cost 12 is roughly four guesses per second
- * per core — which is why there is no separate limiter on this path.
+ * Two ways in, in this order.
+ *
+ *  1. **The session cookie.** One HMAC verification, no bcrypt, no password on the wire.
+ *     This is what the browser uses after somebody has signed in once.
+ *  2. **HTTP basic auth**, byte for byte the check this file has always done. curl,
+ *     monitoring probes and every deployment that predates the cookie keep working, and
+ *     `docs/API.md` stays true.
+ *
+ * What is deliberately *not* guarded is the SPA shell — see {@link isPublicShell}. Without
+ * that exception there is nowhere to render a sign-in form, and the browser falls back to
+ * the chrome-drawn basic-auth popup, which is the thing the cookie exists to replace.
+ *
+ * Brute forcing through basic auth is bounded by bcrypt itself — cost 12 is roughly four
+ * guesses per second per core. The sign-in endpoint, which a script would actually target,
+ * has its own limiter.
  */
-function basicAuth({ accounts, decoyHash }: Credentials): RequestHandler {
+function requestAuth(config: Credentials): RequestHandler {
   return (req, res, next) => {
-    void (async () => {
-      const offered = parseBasic(req.headers.authorization)
-      if (offered === null) return challenge(res)
-
-      // Every account is compared, with no early exit, so the time taken says nothing
-      // about which username was tried.
-      let matched: Account | null = null
-      for (const account of accounts) {
-        if (constantTimeEquals(account.username, offered.username)) matched = account
-      }
-
-      // Exactly one bcrypt verification either way: a wrong username must cost the same
-      // as a wrong password.
-      const ok = await bcrypt.compare(offered.password, matched?.hash ?? decoyHash)
-      if (!ok || matched === null) return challenge(res)
-
-      authenticated.set(
-        req,
-        new cds.User({
-          id: matched.username,
-          // `admin` is the only role anything in this app checks (`srv/admin-service.cds`),
-          // and everybody who can sign in is trusted with the whole ledger: there is no
-          // privilege boundary to draw between people who share a bank account.
-          roles: ['admin'],
-          // Which configured login this is, for the request log. Not a person.
-          attr: { slot: matched.slot },
-        }),
-      )
-      next()
-    })().catch(next)
+    void identify(req, config)
+      .then(account => {
+        if (account !== null) {
+          authenticated.set(
+            req,
+            new cds.User({
+              id: account.username,
+              // `admin` is the only role anything in this app checks
+              // (`srv/admin-service.cds`), and everybody who can sign in is trusted with
+              // the whole ledger: there is no privilege boundary to draw between people
+              // who share a bank account.
+              roles: ['admin'],
+              // Which configured login this is, for the request log. Not a person.
+              attr: { slot: account.slot },
+            }),
+          )
+          return next()
+        }
+        if (isPublicShell(req)) return next()
+        challenge(res)
+      })
+      .catch(next)
   }
+}
+
+/**
+ * The account this request proves it is, or `null`.
+ *
+ * The cookie is checked first because it is the cheap path and the common one. A valid
+ * signature only proves *this deployment* minted the token, so the username is still looked
+ * up in the configured accounts: pulling `AUTH_USER_C` out of the environment has to end
+ * that person's sessions, not merely stop them signing in again.
+ *
+ * The basic-auth half below is unchanged: every account is compared with no early exit, and
+ * exactly one bcrypt verification runs either way, so a wrong username costs the same as a
+ * wrong password and the endpoint is not a username oracle.
+ */
+async function identify(
+  req: Request,
+  { accounts, decoyHash }: Credentials,
+): Promise<Account | null> {
+  const session = verifySessionToken(readSessionToken(req.headers.cookie))
+  if (session !== null) {
+    const account = accounts.find(entry => entry.username === session.username)
+    if (account !== undefined) return account
+  }
+
+  const offered = parseBasic(req.headers.authorization)
+  if (offered === null) return null
+
+  let matched: Account | null = null
+  for (const account of accounts) {
+    if (constantTimeEquals(account.username, offered.username)) matched = account
+  }
+
+  const ok = await bcrypt.compare(offered.password, matched?.hash ?? decoyHash)
+  return ok ? matched : null
+}
+
+/**
+ * Requests that are answered to a signed-out browser: the SPA shell and its assets.
+ *
+ * This is exactly the surface {@link mountSpa} serves — `index.html`, the hashed bundles,
+ * the manifest, the service worker — and nothing else. Every path carrying ledger data is
+ * under one of the `API_PREFIXES` (`/api/ledger` and `/api/admin` are both under `/api`,
+ * and `/health` names what is running), so it stays behind the guard.
+ *
+ * It has to be public, because a sign-in form has to be *served* before anyone can sign in.
+ * A 401 on a top-level navigation is what makes a browser draw its own credential dialog,
+ * and that dialog is the thing this app is replacing. The shell contains no data: it is a
+ * bundle that then calls `/api/auth/me` and finds out whether it may ask for anything.
+ */
+function isPublicShell(req: Request): boolean {
+  return (req.method === 'GET' || req.method === 'HEAD') && !isApiPath(req.path)
 }
 
 function challenge(res: Response): void {
@@ -758,8 +874,9 @@ function installProductionAuth(config: Credentials): void {
 
   const adopt: RequestHandler = (req, _res, next) => {
     const user = authenticated.get(req)
-    // Unreachable: `basicAuth` runs first, on every path, and either sets this or answers
-    // 401 itself. Belt and braces, because the cost of being wrong here is the whole app.
+    // Unreachable: `requestAuth` runs first, and every path CAP mounts a service on is an
+    // API path, so it either sets this or answers 401 itself — the public-shell exception
+    // cannot reach here. Belt and braces: the cost of being wrong is the whole ledger.
     if (user === undefined)
       return next(Object.assign(new Error('unauthenticated'), { status: 401 }))
     const context = cds.context
@@ -806,6 +923,175 @@ async function verifyLoginMapping(): Promise<void> {
     }
   } catch (error) {
     LOG.warn('could not check the AUTH_USER_* → People mapping:', message(error))
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ *  7b. Sessions: sign in, sign out, who am I
+ * ------------------------------------------------------------------ */
+
+/**
+ * The three endpoints the SPA boots on, mounted ahead of {@link requestAuth}.
+ *
+ * `express.json()` is scoped to the one route that needs it rather than applied globally:
+ * at bootstrap CAP has not mounted its own body parsers yet, and a global JSON parser here
+ * would consume the request stream of every OData call before the protocol adapter that
+ * knows how to read it ever saw one.
+ */
+function mountAuthRoutes(app: express.Application): void {
+  const body = express.json({ limit: MAX_LOGIN_BODY_BYTES })
+
+  app.post('/api/auth/login', loginLimiter(), body, (req, res, next) => {
+    void authLogin(req, res).catch(next)
+  })
+
+  app.post('/api/auth/logout', (_req, res) => {
+    // Unconditional, and never an error: signing out a request that was not signed in is
+    // exactly what a user who is not sure means by it.
+    res.setHeader('Set-Cookie', expiredSessionCookie())
+    res.setHeader('Cache-Control', 'no-store')
+    res.status(204).end()
+  })
+
+  app.get('/api/auth/me', (req, res, next) => {
+    void authMe(req, res).catch(next)
+  })
+}
+
+/**
+ * A limiter on sign-in attempts, per IP.
+ *
+ * Keyed by address rather than by the offered username on purpose: keying on the username
+ * would let a stranger exhaust somebody else's budget and lock them out of their own
+ * ledger. `ipKeyGenerator` normalises IPv6 to a /56, so a client cannot walk an address
+ * block for a fresh budget. Built per `configureApp` call so each app carries its own
+ * store.
+ */
+function loginLimiter(): RequestHandler {
+  return rateLimit({
+    windowMs: LOGIN_WINDOW_MS,
+    limit: LOGIN_LIMIT_PER_WINDOW,
+    standardHeaders: 'draft-7',
+    legacyHeaders: false,
+    keyGenerator: req => ipKeyGenerator(req.ip ?? 'unknown'),
+    // Only failures cost. Somebody signing in on a phone and a laptop on the same evening
+    // is not what this is for.
+    skipSuccessfulRequests: true,
+    message: {
+      error: {
+        code: 'rate_limited',
+        message: 'too many sign-in attempts — wait a few minutes and try again',
+      },
+    },
+  })
+}
+
+/** `POST /api/auth/login` — `{username, password}` in, a session cookie and `{name}` out. */
+async function authLogin(req: Request, res: Response): Promise<void> {
+  const payload: unknown = req.body
+  const account = await verifyCredentials(field(payload, 'username'), field(payload, 'password'))
+
+  res.setHeader('Cache-Control', 'no-store')
+
+  if (account === null) {
+    // One message for every failure. A wrong password, a login nobody configured and a
+    // server with no logins at all must be indistinguishable from out here.
+    res.status(401).json({
+      error: { code: 'invalid_credentials', message: 'that username and password do not match' },
+    })
+    return
+  }
+
+  res.setHeader('Set-Cookie', sessionCookie(issueSessionToken(account.username)))
+  // The name the ledger knows this person by, so the SPA can greet them without a second
+  // round trip. Falls back to the login itself when the roster has no matching row.
+  res.json({ name: (await rosterEntry(account.username))?.name ?? account.username })
+}
+
+function field(payload: unknown, key: 'username' | 'password'): unknown {
+  if (typeof payload !== 'object' || payload === null) return undefined
+  return (payload as Record<string, unknown>)[key]
+}
+
+interface MePayload {
+  authenticated: boolean
+  username: string | null
+  personId: string | null
+  personName: string | null
+}
+
+/**
+ * `GET /api/auth/me` — **always 200**, which is the entire contract.
+ *
+ * The SPA calls this on boot to decide whether to show the app or the sign-in screen. A 401
+ * here would be answered by the browser's own credential dialog on some paths and by an
+ * error boundary on others, and either way the app would have to guess.
+ *
+ * With no `AUTH_*` configured — a laptop running `npm run dev` — this reports
+ * `authenticated: true` with the first `isDefault` person, because that is exactly what the
+ * server does: no guard is mounted and every request is allowed. Reporting anything else
+ * would send a developer to a sign-in screen that no password can get past.
+ */
+async function authMe(req: Request, res: Response): Promise<void> {
+  const config = credentials
+  const account = config === null ? null : await identify(req, config)
+  const signedIn = config === null || account !== null
+  const who = signedIn ? await rosterEntry(account?.username ?? null) : null
+
+  const payload: MePayload = {
+    authenticated: signedIn,
+    username: account?.username ?? null,
+    personId: who?.ID ?? null,
+    personName: who?.name ?? null,
+  }
+  res.setHeader('Cache-Control', 'no-store')
+  res.json(payload)
+}
+
+interface RosterRow {
+  ID: string
+  name: string | null
+  email: string | null
+  isDefault: boolean | null
+}
+
+/**
+ * The `People` row a login belongs to, matched the way `srv/ledger-service.ts` matches it.
+ *
+ * Same rule as `LedgerService`'s viewer (CONTRACTS.md §11.3): email first, then name, then
+ * the first `isDefault` person, then whoever is first. The roster is sorted here rather than
+ * in SQL so "the first `isDefault` person" means the same thing on every driver.
+ *
+ * **This never throws.** A bare express app in a test has no database at all, and
+ * `/api/auth/me` still has to answer — the SPA routes on it.
+ */
+async function rosterEntry(login: string | null): Promise<{ ID: string; name: string } | null> {
+  try {
+    const rows = (await SELECT.from(People).columns(
+      'ID',
+      'name',
+      'email',
+      'isDefault',
+    )) as unknown as RosterRow[]
+    if (!Array.isArray(rows) || rows.length === 0) return null
+
+    const roster = [...rows].sort(
+      (a, b) =>
+        (a.name ?? '').localeCompare(b.name ?? '') || String(a.ID).localeCompare(String(b.ID)),
+    )
+    // Case-folded on both sides: humans and identity providers are inconsistent about the
+    // case of a local part, and `Anna@` failing to match `anna@` is a dull bug to chase.
+    const claimed = (login ?? '').trim().toLowerCase()
+    const matched =
+      claimed === ''
+        ? undefined
+        : (roster.find(row => (row.email ?? '').toLowerCase() === claimed) ??
+          roster.find(row => (row.name ?? '').toLowerCase() === claimed))
+
+    const chosen = matched ?? roster.find(row => row.isDefault === true) ?? roster[0]
+    return { ID: String(chosen.ID), name: chosen.name ?? '' }
+  } catch {
+    return null
   }
 }
 
@@ -947,8 +1233,20 @@ cds.env.server.cors = false
 // request with no Content-Length, because raw-body counts bytes as they arrive.
 cds.env.server.body_parser = { ...cds.env.server.body_parser, limit: MAX_UPLOAD_REQUEST_BYTES }
 
-const credentials = isProduction() ? loadCredentials() : null
-if (credentials !== null) installProductionAuth(credentials)
+const credentials = isProduction() ? loadCredentials() : optionalCredentials()
+if (isProduction() && credentials !== null) {
+  installProductionAuth(credentials)
+  if (!sessionSecretConfigured()) {
+    // Not fatal — the fallback key is random, so it is stronger than a configured one,
+    // it simply does not outlive the process or reach a second instance. Basic auth,
+    // which is what every existing deployment uses, is unaffected either way.
+    LOG.warn(
+      'SESSION_SECRET is not set: cookie sessions are signed with a key chosen at boot, ' +
+        'so everyone signs in again after a restart and a session only works on the ' +
+        'instance that issued it',
+    )
+  }
+}
 
 cds.on('bootstrap', configureApp)
 cds.on('served', verifyLoginMapping)

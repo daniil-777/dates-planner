@@ -54,6 +54,7 @@ import {
   draftsFigure,
   eventsFigure,
   figureFrom,
+  figureFromBoth,
   memoriesFigure,
   monthFigure,
   peopleFigure,
@@ -109,7 +110,7 @@ export function HomePage() {
     ledger: figureFrom<PeriodTotals>(periodQuery, monthFigure),
     events: figureFrom<Event[]>(eventsQuery, events => eventsFigure(events, today)),
     calendar: figureFrom<CalendarEntry[]>(upcomingQuery, () => calendarFigure(scheduled)),
-    memories: figureFrom<Memory[]>(memoriesQuery, memoriesFigure),
+    memories: figureFromBoth<Memory[], Expense[]>(memoriesQuery, expensesQuery, memoriesFigure),
     statement: figureFrom<Statement[]>(statementsQuery, statementFigure),
     settings: figureFrom<Person[]>(peopleQuery, peopleFigure),
   }

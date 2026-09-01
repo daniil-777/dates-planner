@@ -118,7 +118,11 @@ async function readJson(response: Response): Promise<unknown> {
  * The `body` is passed straight through and never referenced again — in particular it is
  * never attached to an error, which is what keeps the password out of the failure path.
  */
-async function call(path: string, init: RequestInit, action: 'sign in' | 'sign out'): Promise<Response> {
+async function call(
+  path: string,
+  init: RequestInit,
+  action: 'sign in' | 'sign out',
+): Promise<Response> {
   try {
     return await fetch(`${AUTH_BASE}${path}`, {
       credentials: 'include',

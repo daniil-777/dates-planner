@@ -299,6 +299,33 @@ describe('the home grid', () => {
     expect(within(tile('settings')).getByText('2')).toBeInTheDocument()
   })
 
+  it('counts the Memories tile the way the Memories page counts its own header', () => {
+    // The timeline is memories *plus* the memorable expenses no memory has absorbed
+    // (`buildTimeline`). Counting raw Memories rows here made the tile say "1 entry" and
+    // the page it opens say "10 entries" — one tap apart, same word, different number.
+    state.expenses = [
+      ...state.expenses,
+      expense({ ID: 'x-4', moment: 'date_night', documentNumber: null }),
+      expense({ ID: 'x-5', moment: 'trip', documentNumber: null }),
+    ]
+
+    renderHome()
+
+    // Three memories and two memorable expenses that no memory claims.
+    expect(within(tile('memories')).getByText('5')).toBeInTheDocument()
+    expect(within(tile('memories')).getByText('entries')).toBeInTheDocument()
+  })
+
+  it('holds the Memories figure until both of its reads have landed', () => {
+    // It needs memories and expenses. Printing the memories half alone would show a
+    // number that jumps the moment the postings arrive.
+    state.pending.add('expenses')
+    renderHome()
+
+    expect(within(tile('memories')).getByTestId('home-tile-shimmer')).toBeInTheDocument()
+    expect(tile('memories')).toHaveAttribute('href', '/memories')
+  })
+
   it('invites a first receipt when nothing is waiting', () => {
     state.expenses = [expense({ ID: 'x-3' })]
     renderHome()

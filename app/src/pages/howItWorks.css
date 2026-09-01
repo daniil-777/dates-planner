@@ -1,0 +1,99 @@
+/* The in-app reader for the engineering write-up. The article inside the iframe brings
+   its own design; everything here is only the frame around it. */
+
+.hiw {
+  display: flex;
+  flex-direction: column;
+  /* Fill what the shell gives us without creating a second scrollbar: the iframe
+     scrolls internally, the page itself does not. */
+  height: 100%;
+  min-height: 0;
+}
+
+.hiw-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  padding: 1rem 1rem 0.85rem;
+  border-bottom: 1px solid var(--sapList_BorderColor, #d9d9d9);
+  background: var(--sapObjectHeader_Background, var(--sapBackgroundColor, #fff));
+}
+
+.hiw-titles {
+  min-width: 0;
+}
+
+.hiw-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--sapTitleColor, #1d2d3e);
+}
+
+.hiw-sub {
+  margin: 0.25rem 0 0;
+  font-size: 0.875rem;
+  line-height: 1.35;
+  color: var(--sapContent_LabelColor, #556b82);
+  /* Two lines at most on a phone; the article says the rest. */
+  max-width: 56ch;
+}
+
+.hiw-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.hiw-actions > * {
+  min-height: 2.75rem; /* 44px touch target */
+}
+
+.hiw-frame-wrap {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.hiw-busy {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: var(--sapBackgroundColor, #f5f6f7);
+}
+
+.hiw-frame {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: var(--sapBackgroundColor, #fff);
+}
+
+/* On a phone the header eats vertical space that the article needs, so tighten it and
+   let the actions sit under the title rather than squeezing beside it. */
+@media (max-width: 30rem) {
+  .hiw-bar {
+    padding: 0.75rem 0.75rem 0.7rem;
+  }
+  .hiw-sub {
+    display: none;
+  }
+  .hiw-actions {
+    width: 100%;
+  }
+  .hiw-actions > * {
+    flex: 1 1 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hiw * {
+    animation: none !important;
+    transition: none !important;
+  }
+}

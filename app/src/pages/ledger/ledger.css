@@ -6,12 +6,15 @@
   gap: var(--twm-space-m);
 }
 
-/* Sticky under the ShellBar, which is 2.75rem tall and sits above the safe area. */
+/* Sticky under the ShellBar, which is 2.75rem tall and sits above the safe area.
+   It wraps, so that once the row is too narrow for the picker, its two arrows and the
+   payment run, the button drops to a second row instead of everything being squeezed. */
 .ledger__bar {
   position: sticky;
   top: calc(var(--twm-safe-top) + 2.75rem);
   z-index: 3;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--twm-space-s);
   padding: var(--twm-space-s) 0;
@@ -19,19 +22,59 @@
   border-bottom: 1px solid var(--twm-border);
 }
 
-.ledger__bar-spacer {
-  flex: 1 1 auto;
-}
-
+/* The picker takes the slack of the row; its flex basis is also the wrap threshold, the
+   width below which it keeps the first row to itself and the payment run moves down. */
 .ledger__month {
   display: flex;
   align-items: center;
   gap: 0.25rem;
+  flex: 1 1 18rem;
   min-width: 0;
 }
 
+/* The select holds the longest string in the row ("September 2026"), so it takes the slack
+   and is also the part allowed to give way when there is none. */
 .ledger__month ui5-select {
-  min-width: 10.5rem;
+  flex: 1 1 8rem;
+  min-width: 0;
+  max-width: 16rem;
+  min-height: var(--twm-touch);
+}
+
+/* Pushed to the end of its row, wrapped or not. */
+.ledger__run {
+  flex: 0 0 auto;
+  margin-inline-start: auto;
+}
+
+/* One label at a time. `tokens.desktopBreakpoint` is 1024, the same width `AppShell` calls
+   desktop; below it the button is icon plus a label that fits, and `accessibleName` and
+   `tooltip` on the button carry the full wording regardless. */
+.ledger__run-full {
+  display: none;
+}
+
+.ledger__run-short {
+  display: inline;
+}
+
+@media (min-width: 1024px) {
+  .ledger__month {
+    flex: 0 0 auto;
+  }
+
+  .ledger__month ui5-select {
+    flex: 0 0 auto;
+    min-width: 10.5rem;
+  }
+
+  .ledger__run-full {
+    display: inline;
+  }
+
+  .ledger__run-short {
+    display: none;
+  }
 }
 
 .ledger-touch {
@@ -239,6 +282,14 @@
   gap: 0.35rem;
   font-size: 0.8125rem;
   color: var(--twm-muted);
+  min-width: 0;
+}
+
+/* Category · place · time. A long place name must break rather than push the amount off
+   the end of a 390 px row. */
+.expense-row__meta > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .expense-row__trailing {
@@ -490,11 +541,13 @@
 
 /* ---------- detail sheet ---------- */
 
+/* 88vw, not 92: the Dialog adds its own horizontal padding around this, and at 390 px the
+   wider figure put the sheet's right edge past the viewport. */
 .detail {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  min-width: min(92vw, 26rem);
+  min-width: min(88vw, 26rem);
   padding-bottom: var(--twm-safe-bottom);
 }
 

@@ -11,6 +11,7 @@
 import type { Event, Expense, Memory, PeriodTotals, Person, Statement } from '@/api/types'
 import { DEFAULT_CURRENCY, formatPeriod } from '@/theme'
 import { sectionEvents } from '../events/summary'
+import { buildTimeline } from '../memories/timeline'
 import { KIND_LABELS, countdownLabel, type NextUpItem } from './nextUp'
 
 /**
@@ -44,6 +45,27 @@ export function figureFrom<T>(query: QueryLike<T>, read: (data: T) => Figure): F
   if (query.data !== undefined) return { status: 'ready', figure: read(query.data) }
   if (query.isError) return UNAVAILABLE
   if (query.isPending) return LOADING
+  return UNAVAILABLE
+}
+
+/**
+ * A figure that needs two reads before it can be honest.
+ *
+ * Only the Memories tile wants this, and for a specific reason: its number is the length of
+ * the timeline, and the timeline is built from memories *and* expenses. Reading only the
+ * memories half would let the tile print a number the page it opens then contradicts, so it
+ * waits for both rather than announcing half of one.
+ */
+export function figureFromBoth<A, B>(
+  first: QueryLike<A>,
+  second: QueryLike<B>,
+  read: (first: A, second: B) => Figure,
+): FigureState {
+  if (first.data !== undefined && second.data !== undefined) {
+    return { status: 'ready', figure: read(first.data, second.data) }
+  }
+  if (first.isError || second.isError) return UNAVAILABLE
+  if (first.isPending || second.isPending) return LOADING
   return UNAVAILABLE
 }
 
@@ -97,9 +119,17 @@ export function calendarFigure(items: readonly NextUpItem[]): Figure {
   return phraseFigure(countdownLabel(next), `${KIND_LABELS[next.kind]} · ${next.title}`)
 }
 
-/** Memories — how much of the year has been written down. */
-export function memoriesFigure(memories: readonly Memory[]): Figure {
-  return countFigure(memories.length, memories.length === 1 ? 'entry' : 'entries')
+/**
+ * Memories — how much of the year has been written down.
+ *
+ * Counted with `buildTimeline`, not `memories.length`, because the Memories page's own
+ * header counts the timeline: memories plus the memorable expenses no memory has absorbed
+ * yet. Counting raw rows here made the tile promise "1 entry" and the page it opened
+ * announce "10 entries" — the same word for two different numbers, one tap apart.
+ */
+export function memoriesFigure(memories: readonly Memory[], expenses: readonly Expense[]): Figure {
+  const entries = buildTimeline(memories, expenses).length
+  return countFigure(entries, entries === 1 ? 'entry' : 'entries')
 }
 
 /** Statement — the most recent year that has actually been generated. */

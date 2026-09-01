@@ -160,17 +160,25 @@ export function LedgerPage() {
     <div className="twm-page ledger">
       <div className="ledger__bar">
         <MonthPicker period={period} onChange={changePeriod} />
-        <span className="ledger__bar-spacer" />
+        {/* Two labels, one shown at a time by `ledger.css` at the desktop breakpoint: the
+            full one has no room beside the month picker on a phone, and shrinking the type
+            until it fits is not a fix. The accessible name and the tooltip say "Payment
+            run" at every width, so the short label never becomes the only description. */}
         <Button
-          className="ledger-touch"
+          className="ledger-touch ledger__run"
           design="Emphasized"
           icon="money-bills"
+          accessibleName="Payment run"
+          tooltip="Payment run"
           onClick={() => {
             setCloseError(undefined)
             setCloseOpen(true)
           }}
         >
-          Payment run
+          <span className="ledger__run-full">Payment run</span>
+          <span className="ledger__run-short" aria-hidden="true">
+            Pay run
+          </span>
         </Button>
       </div>
 

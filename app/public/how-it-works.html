@@ -1,0 +1,1279 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{color-scheme:light dark}html,body{margin:0}img{max-width:100%}</style>
+<title>Teaching a Ledger to Read</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+  :root {
+    --paper:      #F7F8FB;
+    --paper-deep: #ECEFF6;
+    --card:       #FFFFFF;
+    --ink:        #0B1220;
+    --ink-soft:   #44536B;
+    --ink-faint:  #7A8AA3;
+    --rule:       #D5DCE8;
+    --horizon:    #0070F2;
+    --magenta:    #C2189B;
+    --teal:       #05807C;
+    --amber:      #A85A00;
+    --shadow:     0 1px 0 rgba(11,18,32,.05), 0 8px 24px -16px rgba(11,18,32,.35);
+
+    --f-display: "Fraunces", "Iowan Old Style", Georgia, serif;
+    --f-body:    "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --f-mono:    "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+    --col: 67ch;
+    --wide: 60rem;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:      #080D16;
+      --paper-deep: #0D1421;
+      --card:       #111A29;
+      --ink:        #E6EDF8;
+      --ink-soft:   #A2B2C9;
+      --ink-faint:  #6B7E99;
+      --rule:       #23324A;
+      --horizon:    #58A6FF;
+      --magenta:    #F782E4;
+      --teal:       #35C9C2;
+      --amber:      #E9A23B;
+      --shadow:     0 1px 0 rgba(0,0,0,.4), 0 10px 30px -18px rgba(0,0,0,.9);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper:      #080D16;
+    --paper-deep: #0D1421;
+    --card:       #111A29;
+    --ink:        #E6EDF8;
+    --ink-soft:   #A2B2C9;
+    --ink-faint:  #6B7E99;
+    --rule:       #23324A;
+    --horizon:    #58A6FF;
+    --magenta:    #F782E4;
+    --teal:       #35C9C2;
+    --amber:      #E9A23B;
+    --shadow:     0 1px 0 rgba(0,0,0,.4), 0 10px 30px -18px rgba(0,0,0,.9);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--f-body);
+    font-size: 17px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: var(--wide); margin: 0 auto; padding: 0 1.5rem; }
+  .col  { max-width: var(--col); margin-inline: auto; }
+
+  p, ul, ol { margin: 0 0 1.15em; }
+  a { color: var(--horizon); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  :focus-visible { outline: 2px solid var(--horizon); outline-offset: 3px; }
+
+  /* ---------- masthead ---------- */
+  .masthead {
+    border-bottom: 1px solid var(--rule);
+    background: var(--paper-deep);
+  }
+  .masthead .wrap {
+    display: flex; flex-wrap: wrap; gap: .75rem 1.5rem;
+    align-items: baseline; justify-content: space-between;
+    padding-block: .8rem;
+  }
+  .brand {
+    font-family: var(--f-mono); font-size: .74rem; font-weight: 600;
+    letter-spacing: .14em; text-transform: uppercase; color: var(--ink-soft);
+  }
+  .brand b { color: var(--horizon); font-weight: 600; }
+  .dateline {
+    font-family: var(--f-mono); font-size: .7rem; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--ink-faint);
+  }
+
+  /* ---------- hero ---------- */
+  .hero { padding: 4.5rem 0 3rem; border-bottom: 1px solid var(--rule); }
+  .eyebrow {
+    font-family: var(--f-mono); font-size: .72rem; font-weight: 600;
+    letter-spacing: .16em; text-transform: uppercase; color: var(--horizon);
+    margin: 0 0 1.1rem;
+  }
+  h1 {
+    font-family: var(--f-display);
+    font-optical-sizing: auto;
+    font-weight: 900;
+    font-size: clamp(2.6rem, 7vw, 4.6rem);
+    line-height: .98;
+    letter-spacing: -.022em;
+    text-wrap: balance;
+    margin: 0 0 1.2rem;
+  }
+  h1 em { font-style: italic; font-weight: 400; color: var(--horizon); }
+  .standfirst {
+    font-size: clamp(1.1rem, 2.2vw, 1.32rem);
+    line-height: 1.5;
+    color: var(--ink-soft);
+    max-width: 46ch;
+    margin: 0 0 2rem;
+  }
+  .byline {
+    font-family: var(--f-mono); font-size: .74rem; letter-spacing: .06em;
+    color: var(--ink-faint); border-top: 1px solid var(--rule); padding-top: 1rem;
+  }
+
+  /* ---------- scoreboard ---------- */
+  .scoreboard {
+    display: grid; gap: 1px;
+    /* exactly four figures: two-up on phones, four-up above — never a stranded cell */
+    grid-template-columns: repeat(2, 1fr);
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    margin: 2.5rem 0 0;
+  }
+  @media (min-width: 52rem) {
+    .scoreboard { grid-template-columns: repeat(4, 1fr); }
+  }
+  .score { background: var(--card); padding: 1.1rem 1.2rem; }
+  .score dt {
+    font-family: var(--f-mono); font-size: .68rem; font-weight: 500;
+    letter-spacing: .12em; text-transform: uppercase; color: var(--ink-faint);
+    margin-bottom: .45rem;
+  }
+  .score dd {
+    margin: 0; font-family: var(--f-display); font-weight: 600;
+    font-size: 1.85rem; line-height: 1; letter-spacing: -.02em;
+    font-variant-numeric: tabular-nums;
+  }
+  .score dd small {
+    display: block; font-family: var(--f-body); font-weight: 400;
+    font-size: .78rem; letter-spacing: 0; color: var(--ink-soft);
+    margin-top: .4rem; line-height: 1.4;
+  }
+  .score--hero dd { color: var(--horizon); }
+  .score--warm dd { color: var(--magenta); }
+
+  /* ---------- sections ---------- */
+  section { padding: 3.5rem 0; border-bottom: 1px solid var(--rule); }
+  .sec-head { margin-bottom: 1.8rem; }
+  .sec-num {
+    font-family: var(--f-mono); font-size: .72rem; font-weight: 600;
+    letter-spacing: .16em; color: var(--horizon); display: block; margin-bottom: .5rem;
+  }
+  h2 {
+    font-family: var(--f-display); font-weight: 600;
+    font-size: clamp(1.75rem, 4vw, 2.5rem); line-height: 1.1;
+    letter-spacing: -.018em; text-wrap: balance; margin: 0;
+  }
+  h3 {
+    font-family: var(--f-body); font-weight: 600; font-size: 1.06rem;
+    letter-spacing: -.005em; margin: 2rem 0 .6rem;
+  }
+  .lede { font-size: 1.1rem; color: var(--ink-soft); }
+
+  code {
+    font-family: var(--f-mono); font-size: .88em;
+    background: var(--paper-deep); border: 1px solid var(--rule);
+    padding: .08em .34em; border-radius: 2px; word-break: break-word;
+  }
+  strong { font-weight: 600; }
+
+  /* ---------- receipt panel ---------- */
+  .receipt {
+    background: var(--card);
+    border: 1px solid var(--rule);
+    box-shadow: var(--shadow);
+    font-family: var(--f-mono);
+    font-size: .82rem;
+    line-height: 1.75;
+    padding: 1.5rem 1.4rem 1.7rem;
+    margin: 2rem 0;
+    position: relative;
+    overflow-x: auto;
+  }
+  .receipt::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: -9px; height: 9px;
+    background: repeating-linear-gradient(135deg, var(--card) 0 7px, transparent 7px 14px);
+    border-inline: 1px solid var(--rule);
+  }
+  .receipt-title {
+    font-weight: 600; letter-spacing: .12em; text-transform: uppercase;
+    font-size: .68rem; color: var(--ink-faint);
+    border-bottom: 1px dashed var(--rule); padding-bottom: .7rem; margin-bottom: .9rem;
+  }
+  .rrow { display: flex; gap: 1rem; justify-content: space-between; white-space: nowrap; }
+  .rrow span:first-child { color: var(--ink-soft); }
+  .rrow span:last-child { font-weight: 500; }
+  .rsep { border-top: 1px dashed var(--rule); margin: .8rem 0; }
+  .arrowdown { color: var(--horizon); font-weight: 600; }
+
+  /* ---------- figures ---------- */
+  figure { margin: 2.5rem 0; }
+  .fig-frame {
+    background: var(--card); border: 1px solid var(--rule);
+    padding: 1.5rem 1.2rem; overflow-x: auto; box-shadow: var(--shadow);
+  }
+  figure svg { display: block; width: 100%; max-width: 100%; height: auto; color: var(--ink); }
+  /* diagram hues follow the theme tokens, so they read on both grounds */
+  .fig-frame svg .sh { stroke: var(--horizon); }
+  .fig-frame svg .fh { fill:   var(--horizon); }
+  .fig-frame svg .sm { stroke: var(--magenta); }
+  .fig-frame svg .fm { fill:   var(--magenta); }
+  .fig-frame svg .st { stroke: var(--teal); }
+  .fig-frame svg .ft { fill:   var(--teal); }
+
+  figcaption {
+    font-size: .87rem; color: var(--ink-soft); margin-top: .85rem;
+    padding-left: .9rem; border-left: 2px solid var(--horizon); line-height: 1.55;
+  }
+
+  /* ---------- callouts ---------- */
+  .note {
+    background: var(--paper-deep); border: 1px solid var(--rule);
+    border-left: 3px solid var(--amber);
+    padding: 1.1rem 1.25rem; margin: 2rem 0;
+  }
+  .note .note-k {
+    font-family: var(--f-mono); font-size: .68rem; font-weight: 600;
+    letter-spacing: .13em; text-transform: uppercase; color: var(--amber);
+    display: block; margin-bottom: .4rem;
+  }
+  .note p:last-child { margin-bottom: 0; }
+  .note--true { border-left-color: var(--teal); }
+  .note--true .note-k { color: var(--teal); }
+
+  /* ---------- plain-words glossary ---------- */
+  .plain {
+    display: grid; gap: 1px; background: var(--rule);
+    border: 1px solid var(--rule); margin: 2rem 0;
+  }
+  .plain div { background: var(--card); padding: .95rem 1.1rem; }
+  .plain dt {
+    font-family: var(--f-mono); font-size: .8rem; font-weight: 600;
+    color: var(--horizon); margin-bottom: .25rem;
+  }
+  .plain dd { margin: 0; font-size: .93rem; color: var(--ink-soft); line-height: 1.55; }
+
+  /* ---------- results table ---------- */
+  .tablewrap { overflow-x: auto; margin: 2rem 0; border: 1px solid var(--rule); }
+  table { border-collapse: collapse; width: 100%; font-size: .9rem; min-width: 34rem; }
+  th, td { text-align: left; padding: .7rem .9rem; border-bottom: 1px solid var(--rule); }
+  thead th {
+    font-family: var(--f-mono); font-size: .68rem; font-weight: 600;
+    letter-spacing: .1em; text-transform: uppercase; color: var(--ink-faint);
+    background: var(--paper-deep);
+  }
+  tbody tr:last-child td { border-bottom: 0; }
+  td.num { font-family: var(--f-mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  td.mono { font-family: var(--f-mono); font-size: .84rem; }
+  .ok { color: var(--teal); font-weight: 600; }
+  .warnv { color: var(--amber); font-weight: 600; }
+
+  /* ---------- closing ---------- */
+  .kicker { padding: 3.5rem 0 4.5rem; border-bottom: 0; }
+  .kicker p:first-of-type {
+    font-family: var(--f-display); font-size: clamp(1.3rem, 3vw, 1.75rem);
+    line-height: 1.35; font-weight: 400; letter-spacing: -.012em;
+  }
+  .stamp {
+    display: inline-block; margin-top: 2rem;
+    font-family: var(--f-mono); font-size: .72rem; font-weight: 600;
+    letter-spacing: .12em; text-transform: uppercase;
+    color: var(--teal); border: 2px solid var(--teal);
+    padding: .5rem .9rem; transform: rotate(-3deg);
+  }
+
+
+  /* ---------- print / PDF ---------- */
+  @page {
+    size: A4;
+    margin: 15mm 14mm 17mm;
+  }
+  @media print {
+    /* Always print the light palette: a dark ground would flood the page with ink
+       and the artifact may be exported from a viewer in either theme. */
+    :root, :root[data-theme="dark"], :root:not([data-theme="light"]) {
+      --paper:      #FFFFFF;
+      --paper-deep: #F2F5FA;
+      --card:       #FFFFFF;
+      --ink:        #0B1220;
+      --ink-soft:   #3C4A60;
+      --ink-faint:  #6B7A91;
+      --rule:       #C4CEDD;
+      --horizon:    #0058C4;
+      --magenta:    #A8127F;
+      --teal:       #046763;
+      --amber:      #8A4A00;
+      --shadow:     none;
+    }
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+    body { font-size: 10pt; line-height: 1.5; background: #fff; }
+    .wrap { max-width: none; padding: 0; }
+    .col  { max-width: none; }
+
+    /* the masthead is a screen affordance; the running head belongs to @page */
+    .masthead { border-bottom: 1.5pt solid var(--ink); margin-bottom: 8mm; }
+    .masthead .wrap { padding-block: 0 3mm; }
+
+    .hero { padding: 0 0 6mm; break-after: page; }
+    h1 { font-size: 34pt; }
+    .standfirst { font-size: 12pt; max-width: none; }
+
+    section { padding: 7mm 0; }
+    h2 { font-size: 17pt; }
+    h3 { font-size: 11pt; }
+    .lede { font-size: 11pt; }
+
+    /* nothing that reads as one unit may be split across a page */
+    figure, .receipt, .note, .tablewrap, .plain, .scoreboard, tr { break-inside: avoid; }
+    h2, h3, .sec-head { break-after: avoid; }
+    figcaption { break-before: avoid; }
+
+    .fig-frame { padding: 4mm; overflow: visible; }
+    .tablewrap { overflow: visible; }
+    table { min-width: 0; font-size: 9pt; }
+    .receipt { overflow: visible; font-size: 8.5pt; }
+    .rrow { white-space: normal; }
+
+    a { color: var(--ink); text-decoration: none; }
+    .kicker { padding-bottom: 0; }
+    .stamp { transform: none; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+
+<header class="masthead">
+  <div class="wrap">
+    <span class="brand">Two&#8209;Way&nbsp;Match <b>/</b> Engineering Notebook</span>
+    <span class="dateline">Field note №1 · Machine learning</span>
+  </div>
+</header>
+
+<div class="hero">
+  <div class="wrap col">
+    <p class="eyebrow">How it works</p>
+    <h1>Teaching a ledger to <em>read</em></h1>
+    <p class="standfirst">
+      A bank statement says <code>MIGROS 6010 08.01.25</code>. A person says “groceries.”
+      This is the story of the small machine that learned to close that gap — and how it
+      ended up living inside enterprise software.
+    </p>
+    <p class="byline">
+      Written for people who have never trained a model. No mathematics beyond
+      multiplication is required, and every number below was measured, not estimated.
+    </p>
+
+    <dl class="scoreboard">
+      <div class="score score--hero">
+        <dt>Category accuracy</dt>
+        <dd>99.75%<small>Which of ten spending categories a purchase belongs to</small></dd>
+      </div>
+      <div class="score score--warm">
+        <dt>Occasion F1</dt>
+        <dd>0.839<small>Whether it was everyday life, a date night, a trip or a gift</small></dd>
+      </div>
+      <div class="score">
+        <dt>Examples learned from</dt>
+        <dd>4,000<small>Rows of realistic Swiss card transactions</small></dd>
+      </div>
+      <div class="score">
+        <dt>Answer time</dt>
+        <dd>&lt;1 ms<small>No network call — the model runs inside the app itself</small></dd>
+      </div>
+    </dl>
+  </div>
+</div>
+
+<main>
+
+  <section>
+    <div class="wrap col">
+      <div class="sec-head">
+        <span class="sec-num">01 — The problem</span>
+        <h2>Machines are bad at merchant names</h2>
+      </div>
+
+      <p class="lede">
+        Every card payment leaves behind a short, ugly string of text. Banks were never
+        trying to make it readable — it is a routing label, not a description.
+      </p>
+
+      <p>Here are four real examples from the training set, exactly as they appear:</p>
+
+      <div class="receipt">
+        <div class="receipt-title">Raw statement lines</div>
+        <div class="rrow"><span>MIGROS 6010 08.01.25</span><span>CHF 16.77</span></div>
+        <div class="rrow"><span>CAFÉ SPRÜNGLI PARADEPLATZ</span><span>CHF 12.50</span></div>
+        <div class="rrow"><span>SBB CFF FFS BILLETT NR. 88213</span><span>CHF 41.00</span></div>
+        <div class="rrow"><span>RESTAURANT BLAUE ENTE</span><span>CHF 148.50</span></div>
+      </div>
+
+      <p>
+        A human reads those instantly. A computer sees four unrelated blobs of characters.
+        Worse, the same shop appears a dozen different ways — <code>MIGROS ZÜRICH HB</code>,
+        <code>MIGROS MM 4021</code>, <code>Migros 6010 08.01.25</code> — so you cannot simply
+        keep a list of shop names and look them up. There will always be a spelling you
+        have not seen.
+      </p>
+
+      <p>
+        So instead of teaching the computer <em>names</em>, we teach it <em>shapes</em>. That
+        turns out to be the whole trick.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap col">
+      <div class="sec-head">
+        <span class="sec-num">02 — The dataset</span>
+        <h2>Four thousand receipts that never happened</h2>
+      </div>
+
+      <p class="lede">
+        A model is mostly its data, so this deserves saying plainly: <strong>the training
+        data is synthetic.</strong> Nobody's real bank statements were used. Every one of
+        the 4,000 rows was generated by a script.
+      </p>
+
+      <p>
+        That was not a shortcut, it was the only honest option. Real card data for two
+        people is both private and far too small — a couple produces a few hundred
+        transactions a year, and the categories they never use produce none at all. So
+        <code>ml/generate_data.py</code> builds a ledger that behaves like a real one:
+        a fixed random seed, so it is reproducible to the byte, and roughly two years of
+        spending between <strong>15 June 2024</strong> and <strong>31 August 2026</strong>.
+      </p>
+
+      <div class="receipt">
+        <div class="receipt-title">ml/data/transactions.csv · 4,000 rows, 7 columns</div>
+        <div class="rrow"><span>header</span><span>date,time,merchant_raw,amount_chf,payer,category,moment</span></div>
+        <div class="rsep"></div>
+        <div class="rrow"><span>row 1</span><span>2024-06-15,10:49,MIGROS 6010 08.01.25,16.77,A,Groceries,everyday</span></div>
+        <div class="rrow"><span>row 2</span><span>2024-06-15,13:05,RESTAURANT SANTA LUCIA,52.56,A,Dining,everyday</span></div>
+      </div>
+
+      <h3>Making it look like a real bank feed</h3>
+      <p>
+        A generator that emits a clean <code>MIGROS</code> every time would teach the model
+        nothing, because reality never looks like that. So each merchant is drawn from a
+        table of genuine Swiss businesses — Migros, Coop, Denner, SBB CFF FFS, Zeughauskeller,
+        Sprüngli, Hallenstadion, Salt, Swisscom — and then deliberately mangled the way a
+        card terminal would mangle it: random casing, a store number bolted on, a booking
+        date or reference number embedded mid-string, city suffixes, and umlauts that
+        sometimes survive and sometimes do not.
+      </p>
+
+      <h3>The classes are lopsided, on purpose</h3>
+      <p>
+        Real spending is not evenly distributed, and the generator does not pretend
+        otherwise. This imbalance matters later, when we choose which score to trust.
+      </p>
+
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Category</th><th>Rows</th><th>Occasion</th><th>Rows</th></tr></thead>
+          <tbody>
+            <tr><td>Dining</td><td class="num">732</td><td>everyday</td><td class="num">2,567</td></tr>
+            <tr><td>Groceries</td><td class="num">715</td><td>trip</td><td class="num">751</td></tr>
+            <tr><td>Transport</td><td class="num">506</td><td>date&nbsp;night</td><td class="num">396</td></tr>
+            <tr><td>Cafés</td><td class="num">480</td><td>gift</td><td class="num">286</td></tr>
+            <tr><td>Entertainment</td><td class="num">357</td><td></td><td></td></tr>
+            <tr><td>Travel · Gifts</td><td class="num">276 each</td><td></td><td></td></tr>
+            <tr><td>Subscriptions</td><td class="num">245</td><td></td><td></td></tr>
+            <tr><td>Home</td><td class="num">229</td><td></td><td></td></tr>
+            <tr><td>Health</td><td class="num">184</td><td></td><td></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Where the occasion labels come from</h3>
+      <p>
+        Category is easy to generate: pick a merchant, you know its category. Occasion is
+        the interesting one. Each merchant carries a quiet “romance prior” — the odds that
+        an evening there was a date rather than a Tuesday — and the generator combines that
+        with the hour, the weekday and the amount through a logistic curve. Dinner at
+        Kronenhalle at 20:30 on a Saturday for CHF 180 comes out <code>date_night</code>
+        with high probability; the same restaurant at noon on a Wednesday for CHF 40 does not.
+      </p>
+
+      <p>
+        Then <strong>8% of the occasion labels are flipped at random.</strong> That is
+        deliberate sabotage, and section 06 explains why a perfect score would have been
+        the bad outcome.
+      </p>
+
+      <div class="note">
+        <span class="note-k">The honest caveat</span>
+        <p>
+          Synthetic data flatters a model. The generator and the classifier share an
+          author, so the patterns the model learns are patterns somebody put there — real
+          receipts are messier than any script imagines. The 99.75% below is a real
+          measurement on data the model never saw during training, but it is a measurement
+          on a rehearsal, not on opening night. The genuine test is the corrections loop:
+          every time a person overrules the model in the running app, that real row is
+          written down and folded into the next retrain. The model gets more honest the
+          longer it is used.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap col">
+      <div class="sec-head">
+        <span class="sec-num">03 — Words into numbers</span>
+        <h2>A model cannot read. It can only add up.</h2>
+      </div>
+
+      <p class="lede">
+        This is the single most important idea on the page. A machine learning model is,
+        underneath, an enormous addition sum. To use one on text, you must first convert
+        the text into a long list of numbers. That conversion is called
+        <strong>featurisation</strong>, and getting it right matters far more than the
+        model itself.
+      </p>
+
+      <p>It happens in four steps. Follow one real merchant string all the way through:</p>
+
+      <div class="receipt">
+        <div class="receipt-title">Worked example · one string, four steps</div>
+        <div class="rrow"><span>0 · as it arrives</span><span>MIGROS ZÜRICH HB 4021 12.03.26</span></div>
+        <div class="rsep"></div>
+        <div class="rrow"><span>1 · tidy it up</span><span class="arrowdown">migros zuerich hb</span></div>
+        <div class="rrow"><span>&nbsp;&nbsp;&nbsp;lowercase, ü→ue, drop the date and the store number</span><span></span></div>
+        <div class="rsep"></div>
+        <div class="rrow"><span>2 · cut into slivers</span><span class="arrowdown">" m", "mi", "ig", "gr" …</span></div>
+        <div class="rrow"><span>&nbsp;&nbsp;&nbsp;every 2-, 3- and 4-letter run, inside each word</span><span></span></div>
+        <div class="rsep"></div>
+        <div class="rrow"><span>3 · file each sliver</span><span class="arrowdown">"mig" → box 41,207</span></div>
+        <div class="rrow"><span>&nbsp;&nbsp;&nbsp;65,536 numbered boxes; count how many land in each</span><span></span></div>
+        <div class="rsep"></div>
+        <div class="rrow"><span>4 · the result</span><span class="arrowdown">a list of 65,543 numbers</span></div>
+      </div>
+
+      <h3>Why slivers instead of whole words?</h3>
+      <p>
+        Because slivers survive mess. <code>MIGROS</code> and <code>Migros 6010</code> share
+        almost every three-letter run — <code>mig</code>, <code>igr</code>, <code>gro</code>,
+        <code>ros</code> — even though the full strings differ. A model that learns
+        “<code>mig</code> + <code>igr</code> + <code>gro</code> usually means groceries”
+        recognises spellings it has never seen. This is why the category accuracy is so high:
+        Swiss shop names are extremely distinctive once you look at them in pieces.
+      </p>
+
+      <figure>
+        <div class="fig-frame">
+          <svg viewBox="0 0 880 250" role="img" aria-label="A merchant string is normalised, cut into overlapping letter slivers, then each sliver is hashed into one of 65,536 numbered boxes, producing a long list of counts.">
+            <defs>
+              <marker id="ar1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <path d="M0 0 L10 5 L0 10 z" fill="currentColor"/>
+              </marker>
+            </defs>
+
+            <!-- stage 1 -->
+            <rect x="8" y="52" width="176" height="52" fill="none" stroke="currentColor" stroke-width="1.5"/>
+            <text x="96" y="74" text-anchor="middle" font-size="12" font-family="monospace" fill="currentColor">MIGROS ZÜRICH</text>
+            <text x="96" y="92" text-anchor="middle" font-size="12" font-family="monospace" fill="currentColor">HB 4021 12.03.26</text>
+            <text x="96" y="38" text-anchor="middle" font-size="11" font-weight="600" fill="currentColor" opacity=".65">RAW STRING</text>
+
+            <line x1="190" y1="78" x2="228" y2="78" stroke="currentColor" stroke-width="1.5" marker-end="url(#ar1)"/>
+            <text x="209" y="68" text-anchor="middle" font-size="10" fill="currentColor" opacity=".7">tidy</text>
+
+            <!-- stage 2 -->
+            <rect x="234" y="52" width="150" height="52" fill="none" stroke="currentColor" stroke-width="1.5"/>
+            <text x="309" y="83" text-anchor="middle" font-size="12" font-family="monospace" fill="currentColor">migros zuerich hb</text>
+            <text x="309" y="38" text-anchor="middle" font-size="11" font-weight="600" fill="currentColor" opacity=".65">NORMALISED</text>
+
+            <line x1="390" y1="78" x2="428" y2="78" stroke="currentColor" stroke-width="1.5" marker-end="url(#ar1)"/>
+            <text x="409" y="68" text-anchor="middle" font-size="10" fill="currentColor" opacity=".7">slice</text>
+
+            <!-- stage 3 : slivers -->
+            <g font-family="monospace" font-size="11">
+              <rect x="434" y="44" width="40" height="20" fill="none" stroke="currentColor" class="sh" stroke-width="1.3"/>
+              <text x="454" y="58" text-anchor="middle" class="fh">mig</text>
+              <rect x="480" y="44" width="40" height="20" fill="none" stroke="currentColor" class="sh" stroke-width="1.3"/>
+              <text x="500" y="58" text-anchor="middle" class="fh">igr</text>
+              <rect x="526" y="44" width="40" height="20" fill="none" stroke="currentColor" class="sh" stroke-width="1.3"/>
+              <text x="546" y="58" text-anchor="middle" class="fh">gro</text>
+              <rect x="434" y="70" width="40" height="20" fill="none" stroke="currentColor" class="sh" stroke-width="1.3"/>
+              <text x="454" y="84" text-anchor="middle" class="fh">ros</text>
+              <rect x="480" y="70" width="40" height="20" fill="none" stroke="currentColor" class="sh" stroke-width="1.3"/>
+              <text x="500" y="84" text-anchor="middle" class="fh">zue</text>
+              <rect x="526" y="70" width="40" height="20" fill="none" stroke="currentColor" class="sh" stroke-width="1.3"/>
+              <text x="546" y="84" text-anchor="middle" class="fh">eri</text>
+              <text x="500" y="108" text-anchor="middle" font-size="10" fill="currentColor" opacity=".7">…and 60 more</text>
+            </g>
+            <text x="500" y="32" text-anchor="middle" font-size="11" font-weight="600" fill="currentColor" opacity=".65">SLIVERS (2–4 LETTERS)</text>
+
+            <line x1="574" y1="78" x2="612" y2="78" stroke="currentColor" stroke-width="1.5" marker-end="url(#ar1)"/>
+            <text x="593" y="68" text-anchor="middle" font-size="10" fill="currentColor" opacity=".7">hash</text>
+
+            <!-- stage 4 : boxes -->
+            <g>
+              <rect x="620" y="40" width="240" height="80" fill="none" stroke="currentColor" stroke-width="1.5"/>
+              <text x="740" y="32" text-anchor="middle" font-size="11" font-weight="600" fill="currentColor" opacity=".65">65,536 NUMBERED BOXES</text>
+              <g stroke="currentColor" stroke-width="1" opacity=".35">
+                <line x1="644" y1="40" x2="644" y2="120"/><line x1="668" y1="40" x2="668" y2="120"/>
+                <line x1="692" y1="40" x2="692" y2="120"/><line x1="716" y1="40" x2="716" y2="120"/>
+                <line x1="740" y1="40" x2="740" y2="120"/><line x1="764" y1="40" x2="764" y2="120"/>
+                <line x1="788" y1="40" x2="788" y2="120"/><line x1="812" y1="40" x2="812" y2="120"/>
+                <line x1="836" y1="40" x2="836" y2="120"/>
+              </g>
+              <rect x="669" y="96" width="22" height="23" class="fh"/>
+              <rect x="717" y="82" width="22" height="37" class="fh"/>
+              <rect x="789" y="104" width="22" height="15" class="fh"/>
+              <rect x="645" y="111" width="22" height="8" class="fh"/>
+              <text x="740" y="137" text-anchor="middle" font-size="10" fill="currentColor" opacity=".7">how many slivers landed in each box</text>
+            </g>
+
+            <!-- result bar -->
+            <line x1="8" y1="176" x2="860" y2="176" stroke="currentColor" stroke-width="1" opacity=".3"/>
+            <text x="8" y="200" font-size="12" font-weight="600" fill="currentColor">The finished list of numbers</text>
+            <rect x="8" y="212" width="640" height="26" fill="none" stroke="currentColor" class="sh" stroke-width="1.5"/>
+            <text x="328" y="229" text-anchor="middle" font-size="11" font-family="monospace" class="fh">65,536 sliver counts</text>
+            <rect x="654" y="212" width="120" height="26" fill="none" stroke="currentColor" class="sm" stroke-width="1.5"/>
+            <text x="714" y="229" text-anchor="middle" font-size="11" font-family="monospace" class="fm">7 more</text>
+            <text x="790" y="229" font-size="11" font-family="monospace" fill="currentColor" opacity=".7">= 65,543</text>
+          </svg>
+        </div>
+        <figcaption>
+          One merchant string becomes a list of 65,543 numbers. Almost all of them are zero —
+          only the boxes that actually received a sliver hold a count. Those seven extra
+          numbers on the right are explained in the next section.
+        </figcaption>
+      </figure>
+
+      <div class="note">
+        <span class="note-k">The one clever bit</span>
+        <p>
+          Why 65,536 boxes rather than a dictionary of every sliver ever seen? Because a
+          dictionary grows forever and breaks the moment a new shop opens. Fixed boxes never
+          grow. Two different slivers occasionally land in the same box — a collision — and
+          the model simply learns to live with it. Trading a little precision for a
+          permanently fixed size is a very old, very good engineering bargain.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap col">
+      <div class="sec-head">
+        <span class="sec-num">04 — The seven extra numbers</span>
+        <h2>What the words don’t tell you</h2>
+      </div>
+
+      <p class="lede">
+        The merchant name says <em>what</em> was bought. It says nothing about
+        <em>the occasion</em>. For that, the model gets seven more numbers describing the
+        moment of the purchase.
+      </p>
+
+      <div class="plain">
+        <div>
+          <dt>log(amount)</dt>
+          <dd>The size of the bill, compressed. The gap between CHF 5 and CHF 50 matters far more than the gap between CHF 500 and CHF 545, and the logarithm captures exactly that.</dd>
+        </div>
+        <div>
+          <dt>is_weekend</dt>
+          <dd>1 on Saturday or Sunday, otherwise 0.</dd>
+        </div>
+        <div>
+          <dt>is_evening</dt>
+          <dd>1 after 18:00, otherwise 0.</dd>
+        </div>
+        <div>
+          <dt>hour_sin · hour_cos</dt>
+          <dd>The time of day as a position on a clock face. Two numbers, not one, so that 23:00 and 01:00 sit next to each other instead of at opposite ends of a scale.</dd>
+        </div>
+        <div>
+          <dt>dow_sin · dow_cos</dt>
+          <dd>The same trick for the day of the week, so Sunday and Monday are neighbours.</dd>
+        </div>
+      </div>
+
+      <p>
+        That clock-face trick is worth pausing on, because it is a lovely piece of
+        engineering taste. If you feed a model the hour as a plain number from 0 to 23, it
+        concludes that 23:00 and 00:00 are twenty-three hours apart — the two most similar
+        moments of the night, treated as maximally different. Placing the hour on a circle
+        instead, and handing over its two coordinates, fixes the problem completely.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap col">
+      <div class="sec-head">
+        <span class="sec-num">05 — Two questions, two heads</span>
+        <h2>One model that answers twice</h2>
+      </div>
+
+      <p class="lede">
+        Every purchase raises two separate questions, and they are not the same question at all.
+      </p>
+
+      <figure>
+        <div class="fig-frame">
+          <svg viewBox="0 0 820 300" role="img" aria-label="A single list of 65,543 numbers feeds two independent scoring heads: one choosing among ten categories, one choosing among four occasions.">
+            <defs>
+              <marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <path d="M0 0 L10 5 L0 10 z" fill="currentColor"/>
+              </marker>
+            </defs>
+
+            <rect x="10" y="120" width="180" height="58" fill="none" stroke="currentColor" stroke-width="1.5"/>
+            <text x="100" y="144" text-anchor="middle" font-size="12" font-weight="600" fill="currentColor">65,543 numbers</text>
+            <text x="100" y="163" text-anchor="middle" font-size="11" fill="currentColor" opacity=".7">one purchase</text>
+
+            <path d="M196 149 L250 149 L250 78 L296 78" fill="none" stroke="currentColor" class="sh" stroke-width="1.6" marker-end="url(#ar2)"/>
+            <path d="M196 149 L250 149 L250 220 L296 220" fill="none" stroke="currentColor" class="sm" stroke-width="1.6" marker-end="url(#ar2)"/>
+
+            <!-- category head -->
+            <rect x="302" y="52" width="170" height="52" fill="none" stroke="currentColor" class="sh" stroke-width="1.6"/>
+            <text x="387" y="74" text-anchor="middle" font-size="12" font-weight="600" class="fh">CATEGORY HEAD</text>
+            <text x="387" y="92" text-anchor="middle" font-size="11" class="fh" opacity=".85">10 scores</text>
+            <line x1="478" y1="78" x2="516" y2="78" stroke="currentColor" stroke-width="1.5" marker-end="url(#ar2)"/>
+            <text x="497" y="68" text-anchor="middle" font-size="9" fill="currentColor" opacity=".7">softmax</text>
+
+            <g font-family="monospace" font-size="11">
+              <text x="524" y="56" fill="currentColor" opacity=".75">Groceries</text>
+              <rect x="620" y="46" width="150" height="12" class="fh"/>
+              <text x="778" y="56" class="fh" font-weight="600">99%</text>
+              <text x="524" y="78" fill="currentColor" opacity=".55">Home</text>
+              <rect x="620" y="68" width="9" height="12" fill="currentColor" opacity=".3"/>
+              <text x="524" y="100" fill="currentColor" opacity=".55">Transport</text>
+              <rect x="620" y="90" width="5" height="12" fill="currentColor" opacity=".3"/>
+            </g>
+
+            <!-- moment head -->
+            <rect x="302" y="194" width="170" height="52" fill="none" stroke="currentColor" class="sm" stroke-width="1.6"/>
+            <text x="387" y="216" text-anchor="middle" font-size="12" font-weight="600" class="fm">OCCASION HEAD</text>
+            <text x="387" y="234" text-anchor="middle" font-size="11" class="fm" opacity=".85">4 scores</text>
+            <line x1="478" y1="220" x2="516" y2="220" stroke="currentColor" stroke-width="1.5" marker-end="url(#ar2)"/>
+            <text x="497" y="210" text-anchor="middle" font-size="9" fill="currentColor" opacity=".7">softmax</text>
+
+            <g font-family="monospace" font-size="11">
+              <text x="524" y="198" fill="currentColor" opacity=".75">Everyday</text>
+              <rect x="620" y="188" width="112" height="12" class="fm"/>
+              <text x="778" y="198" class="fm" font-weight="600">74%</text>
+              <text x="524" y="220" fill="currentColor" opacity=".55">Date night</text>
+              <rect x="620" y="210" width="30" height="12" fill="currentColor" opacity=".3"/>
+              <text x="524" y="242" fill="currentColor" opacity=".55">Gift</text>
+              <rect x="620" y="232" width="14" height="12" fill="currentColor" opacity=".3"/>
+            </g>
+
+            <text x="410" y="288" text-anchor="middle" font-size="11" fill="currentColor" opacity=".7">
+              The two heads share the same input and never talk to each other.
+            </text>
+          </svg>
+        </div>
+        <figcaption>
+          The real percentages for <code>MIGROS ZUERICH HB 4021 12.03.26</code>, CHF 43.15,
+          on a Thursday evening: Groceries at 99.4%, Everyday at 74.0%.
+        </figcaption>
+      </figure>
+
+      <h3>What “softmax” means</h3>
+      <p>
+        Each head produces one raw score per option — ten scores for category, four for
+        occasion. Those scores are unbounded and hard to interpret. Softmax is the step that
+        turns them into percentages that add up to 100. That is all it is: a way of saying
+        “99.4% sure it is groceries, 0.4% sure it is home supplies” instead of “7.2 versus
+        1.1”.
+      </p>
+
+      <p>
+        The percentage matters as much as the answer. Anything the model reports below
+        <strong>60% confidence</strong> is not posted automatically — it is flagged for a
+        human to confirm. A model that knows when it is unsure is far more useful than one
+        that is merely often right.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap col">
+      <div class="sec-head">
+        <span class="sec-num">06 — How it was trained</span>
+        <h2>Nudging 65,543 numbers into shape</h2>
+      </div>
+
+      <p class="lede">
+        Training is less mysterious than it sounds. The model starts with every weight at
+        zero, guesses, is told how wrong it was, and nudges each weight slightly in the
+        direction that would have been less wrong. Then it repeats, up to two thousand times,
+        until the nudges stop helping.
+      </p>
+
+      <p>
+        The model is <strong>logistic regression</strong> — one of the oldest and plainest
+        tools in the box. No hidden layers, no neural network. Each of the 65,543 inputs
+        gets one weight per possible answer; the score for “Groceries” is every input
+        multiplied by its Groceries weight, all added together. That is the entire
+        calculation. It trains in seconds and answers in under a millisecond.
+      </p>
+
+      <h3>The exact procedure</h3>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Step</th><th>Setting</th><th>Why</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>Split</td>
+              <td class="mono">80 / 20, seed 42<br>stratified on category</td>
+              <td>Stratifying matters here: Health has only 184 rows, and an unlucky split could leave it nearly absent from the test set and make the score meaningless.</td>
+            </tr>
+            <tr>
+              <td>Scaling</td>
+              <td class="mono">StandardScaler</td>
+              <td>Fitted on the <em>training rows only</em>. Fitting it on everything first would leak information about the test set into training and inflate the result.</td>
+            </tr>
+            <tr>
+              <td>Solver</td>
+              <td class="mono">lbfgs, max_iter 2000</td>
+              <td>Converges reliably on a sparse problem this size.</td>
+            </tr>
+            <tr>
+              <td>Regularisation</td>
+              <td class="mono">C = 12.0</td>
+              <td>The interesting knob. The default of 1.0 held the weights so close to zero that the model was right but permanently unconfident — every answer around 60%. Since the app uses confidence to decide what to auto-post, that was useless. C = 12 lets the merchant n-grams speak.</td>
+            </tr>
+            <tr>
+              <td>Final refit</td>
+              <td class="mono">all 4,000 rows</td>
+              <td>Once the honest estimate is taken from the held-out fold, the shipped model is retrained on every row. Throwing away 20% of an already small ledger would cost real accuracy for no benefit.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>
+        That last row is a distinction worth keeping straight: <strong>the numbers you are
+        about to read were measured on 800 rows the model had never seen</strong>, and the
+        model that actually ships is a second one, trained the same way on all 4,000.
+      </p>
+
+      <h3>What came out — category</h3>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Category</th><th>Precision</th><th>Recall</th><th>F1</th><th>Held-out rows</th></tr></thead>
+          <tbody>
+            <tr><td>Groceries</td><td class="num">1.000</td><td class="num">1.000</td><td class="num ok">1.000</td><td class="num">143</td></tr>
+            <tr><td>Dining</td><td class="num">0.993</td><td class="num">0.993</td><td class="num">0.993</td><td class="num">146</td></tr>
+            <tr><td>Cafés</td><td class="num">0.990</td><td class="num">1.000</td><td class="num">0.995</td><td class="num">96</td></tr>
+            <tr><td>Home</td><td class="num">1.000</td><td class="num">0.978</td><td class="num">0.989</td><td class="num">46</td></tr>
+            <tr><td>Transport · Travel · Gifts · Health · Entertainment · Subscriptions</td><td class="num">1.000</td><td class="num">1.000</td><td class="num ok">1.000</td><td class="num">369</td></tr>
+            <tr><td><strong>Overall accuracy</strong></td><td></td><td></td><td class="num ok"><strong>0.998</strong></td><td class="num">800</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        Six of the ten categories are perfect. The only confusion is between Dining, Cafés
+        and Home — which is exactly where a human hesitates too, since a café that serves
+        lunch and a homeware shop with a restaurant are genuinely ambiguous.
+      </p>
+
+      <h3>What came out — occasion</h3>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Occasion</th><th>Precision</th><th>Recall</th><th>F1</th><th>Held-out rows</th></tr></thead>
+          <tbody>
+            <tr><td>everyday</td><td class="num">0.903</td><td class="num">0.934</td><td class="num">0.918</td><td class="num">518</td></tr>
+            <tr><td>trip</td><td class="num">0.906</td><td class="num">0.868</td><td class="num">0.887</td><td class="num">144</td></tr>
+            <tr><td>gift</td><td class="num">0.898</td><td class="num">0.772</td><td class="num">0.830</td><td class="num">57</td></tr>
+            <tr><td>date night</td><td class="num">0.740</td><td class="num">0.704</td><td class="num warnv">0.722</td><td class="num">81</td></tr>
+            <tr><td><strong>Macro average</strong></td><td class="num">0.862</td><td class="num">0.820</td><td class="num warnv"><strong>0.839</strong></td><td class="num">800</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Why the headline number is 0.839 and not 0.887</h3>
+      <p>
+        The occasion head gets <strong>88.7% of individual rows right</strong>. The number
+        reported everywhere else in this article is <strong>0.839</strong>, and the lower
+        one is deliberate.
+      </p>
+      <p>
+        Plain accuracy counts every row equally, so it is dominated by the biggest class —
+        and <code>everyday</code> is 2,567 of the 4,000 rows. A lazy model that answered
+        “everyday” to absolutely everything would still score 64%. <strong>Macro F1</strong>
+        averages the score of each class separately, so the 286 gifts count exactly as much
+        as the 2,567 everyday purchases, and there is nowhere for a lazy model to hide.
+        Quoting the harder number is the point.
+      </p>
+      <p>
+        Date night is the weakest class at 0.722, and that is the correct outcome. It is the
+        genuinely ambiguous label — a CHF 90 dinner on a Friday might be a date or might
+        just be dinner — and it is the one carrying most of the deliberate 8% label noise.
+      </p>
+
+      <div class="note note--true">
+        <span class="note-k">Why a perfect score would have been bad news</span>
+        <p>
+          If the occasion head had scored 1.000, the correct response would be suspicion,
+          not celebration. On a task where a thoughtful person could not always agree with
+          themselves, a perfect score means the model memorised its examples rather than
+          learning the pattern — and it would collapse on the first real receipt. The 8% of
+          labels flipped at random in the generator make memorising impossible: the ceiling
+          is deliberately below perfect, so a high score has to come from genuine signal.
+          An honest 0.84 on a hard question beats a suspicious 1.00.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap col">
+      <div class="sec-head">
+        <span class="sec-num">07 — The move</span>
+        <h2>Trained in Python, working in TypeScript</h2>
+      </div>
+
+      <p class="lede">
+        Training happens in Python, because that is where the tools live. But the finished
+        app is a TypeScript web application, and putting a Python process in the middle of
+        every request would mean a slower app and a second thing to keep running.
+      </p>
+
+      <p>
+        So the model moves house. After training, its weights are exported to a single
+        4.7 MB file, and a second implementation — written in TypeScript — loads that file
+        and does the arithmetic itself. Python trains; TypeScript answers.
+      </p>
+
+      <p>
+        Which raises the obvious danger: <strong>two implementations can drift apart.</strong>
+        A rounding difference, a slightly different way of cutting slivers, and the app
+        quietly starts giving different answers from the model that was actually tested.
+        The fix is a bridge built specifically to catch that.
+      </p>
+
+      <figure>
+        <div class="fig-frame">
+          <svg viewBox="0 0 840 260" role="img" aria-label="Python trains the model and exports weights and sixty test cases; TypeScript loads the weights and must reproduce all sixty answers to within one ten-thousandth, or the build fails.">
+            <defs>
+              <marker id="ar3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <path d="M0 0 L10 5 L0 10 z" fill="currentColor"/>
+              </marker>
+            </defs>
+
+            <!-- python side -->
+            <text x="130" y="28" text-anchor="middle" font-size="11" font-weight="600" letter-spacing="1.5" fill="currentColor" opacity=".65">PYTHON · ONCE</text>
+            <rect x="20" y="40" width="220" height="44" fill="none" stroke="currentColor" stroke-width="1.5"/>
+            <text x="130" y="67" text-anchor="middle" font-size="12" fill="currentColor">4,000 examples → training</text>
+
+            <line x1="130" y1="90" x2="130" y2="116" stroke="currentColor" stroke-width="1.5" marker-end="url(#ar3)"/>
+
+            <rect x="20" y="122" width="220" height="44" fill="none" stroke="currentColor" class="sh" stroke-width="1.6"/>
+            <text x="130" y="141" text-anchor="middle" font-size="12" font-weight="600" class="fh">weights.json</text>
+            <text x="130" y="157" text-anchor="middle" font-size="10" class="fh" opacity=".8">4.7 MB of numbers</text>
+
+            <rect x="20" y="180" width="220" height="44" fill="none" stroke="currentColor" class="sm" stroke-width="1.6"/>
+            <text x="130" y="199" text-anchor="middle" font-size="12" font-weight="600" class="fm">60 sealed test cases</text>
+            <text x="130" y="215" text-anchor="middle" font-size="10" class="fm" opacity=".8">with Python’s exact answers</text>
+
+            <!-- arrows across -->
+            <line x1="246" y1="144" x2="326" y2="144" stroke="currentColor" class="sh" stroke-width="1.6" marker-end="url(#ar3)"/>
+            <text x="286" y="134" text-anchor="middle" font-size="10" fill="currentColor" opacity=".75">loads</text>
+            <line x1="246" y1="202" x2="326" y2="202" stroke="currentColor" class="sm" stroke-width="1.6" marker-end="url(#ar3)"/>
+            <text x="286" y="192" text-anchor="middle" font-size="10" fill="currentColor" opacity=".75">checks</text>
+
+            <!-- ts side -->
+            <text x="440" y="28" text-anchor="middle" font-size="11" font-weight="600" letter-spacing="1.5" fill="currentColor" opacity=".65">TYPESCRIPT · EVERY REQUEST</text>
+            <rect x="332" y="122" width="216" height="44" fill="none" stroke="currentColor" stroke-width="1.5"/>
+            <text x="440" y="149" text-anchor="middle" font-size="12" fill="currentColor">the same maths, again</text>
+
+            <rect x="332" y="180" width="216" height="44" fill="none" stroke="currentColor" stroke-width="1.5"/>
+            <text x="440" y="199" text-anchor="middle" font-size="12" fill="currentColor">parity test</text>
+            <text x="440" y="215" text-anchor="middle" font-size="10" fill="currentColor" opacity=".75">all 60 must match</text>
+
+            <!-- verdict -->
+            <line x1="554" y1="202" x2="600" y2="202" stroke="currentColor" stroke-width="1.5" marker-end="url(#ar3)"/>
+            <rect x="606" y="178" width="212" height="48" fill="none" stroke="currentColor" class="st" stroke-width="2"/>
+            <text x="712" y="198" text-anchor="middle" font-size="12" font-weight="600" class="ft">agree within 0.0001</text>
+            <text x="712" y="215" text-anchor="middle" font-size="10" class="ft" opacity=".85">or the build fails</text>
+
+            <line x1="554" y1="144" x2="600" y2="144" stroke="currentColor" stroke-width="1.5" marker-end="url(#ar3)"/>
+            <rect x="606" y="122" width="212" height="44" fill="none" stroke="currentColor" stroke-width="1.5"/>
+            <text x="712" y="149" text-anchor="middle" font-size="12" fill="currentColor">answer in under 1 ms</text>
+          </svg>
+        </div>
+        <figcaption>
+          Before exporting, Python records its own answers for sixty randomly chosen
+          purchases. The TypeScript version must reproduce all sixty to within one
+          ten-thousandth. If it cannot, the tests fail and the code does not ship.
+        </figcaption>
+      </figure>
+
+      <p>
+        This is the part of the project I would defend hardest. It converts a vague worry —
+        “are these two really the same model?” — into a question a machine answers on every
+        single build. Ninety-one automated checks now guard that boundary.
+      </p>
+
+      <div class="receipt">
+        <div class="receipt-title">The same input, both languages, measured</div>
+        <div class="rrow"><span>input</span><span>CAFÉ SPRÜNGLI PARADEPLATZ · CHF 12.50 · 09:10</span></div>
+        <div class="rsep"></div>
+        <div class="rrow"><span>Python says</span><span>Cafes &nbsp; 0.997317</span></div>
+        <div class="rrow"><span>TypeScript says</span><span>Cafes &nbsp; 0.997317</span></div>
+        <div class="rsep"></div>
+        <div class="rrow"><span>difference</span><span class="arrowdown">none, to six decimal places</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap col">
+      <div class="sec-head">
+        <span class="sec-num">08 — Where SAP comes in</span>
+        <h2>A small model inside big enterprise software</h2>
+      </div>
+
+      <p class="lede">
+        The model does not work alone. Getting from a photograph of a crumpled receipt to a
+        posted, categorised, split expense takes three distinct pieces, and only one of them
+        is the model.
+      </p>
+
+      <div class="tablewrap">
+        <table>
+          <thead>
+            <tr><th>Piece</th><th>Who built it</th><th>What it does</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="mono">SAP Document AI</td>
+              <td>SAP</td>
+              <td>Reads the photograph. Pulls out the merchant, the date, the total and the line items.</td>
+            </tr>
+            <tr>
+              <td class="mono">The two-head classifier</td>
+              <td>Ours, from scratch</td>
+              <td>Decides the category and the occasion, and says how confident it is.</td>
+            </tr>
+            <tr>
+              <td class="mono">SAP CAP</td>
+              <td>SAP</td>
+              <td>The application framework the whole thing lives in — data model, services, the Fiori interface.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="note">
+        <span class="note-k">Worth being precise about</span>
+        <p>
+          The classifier is <strong>not</strong> an SAP model, and it is not a large language
+          model either. It is a purpose-built logistic regression trained specifically for
+          this task, running inside an SAP application. SAP supplies the reading (Document AI)
+          and the scaffolding (CAP); the categorising is bespoke. Conflating those three is
+          the most common way this kind of write-up becomes untrue.
+        </p>
+      </div>
+
+      <h3>The loop that makes it better</h3>
+      <p>
+        Every time a person overrules the model — changing “Home” to “Gifts” — that
+        correction is written down. When twenty corrections have accumulated, the model
+        retrains overnight on the original examples plus the real ones, re-exports its
+        weights, re-runs all sixty parity checks, and reloads itself without the app
+        restarting. Being corrected is how it learns.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap col">
+      <div class="sec-head">
+        <span class="sec-num">09 — What SAP can and cannot train</span>
+        <h2>The fine-tuning question, answered honestly</h2>
+      </div>
+
+      <p class="lede">
+        The obvious next question is: why train your own model at all, when SAP has machine
+        learning services? So we went and read the documentation — SAP's own 670-page
+        service guide, the AI API specification, and the product guides — rather than
+        recalling it. The answer is more interesting than expected.
+      </p>
+
+      <div class="note">
+        <span class="note-k">The headline</span>
+        <p>
+          <strong>You cannot fine-tune SAP's models.</strong> Not in Document AI, and not in
+          the generative AI hub. That is not a gap somebody forgot to fill — it is a
+          deliberate position. SAP gives you pre-trained models to call, a governed runtime
+          to call them in, and a place to run <em>your own</em> training. What it does not
+          offer is a button that adjusts the weights of a model it hosts.
+        </p>
+      </div>
+
+      <h3>Layer by layer</h3>
+
+      <div class="tablewrap">
+        <table>
+          <thead>
+            <tr><th>Layer</th><th>What you really can customise</th><th>What you cannot</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="mono">Document&nbsp;AI</td>
+              <td>Custom <strong>schemas</strong> (which fields to pull out), custom document types, per-field prompts, choice of LLM, and layout <strong>templates</strong>.</td>
+              <td class="warnv">Train a model on your annotated documents. There are exactly three extraction methods — pre-trained models, generative AI, and templates. None of them produces a model of yours.</td>
+            </tr>
+            <tr>
+              <td class="mono">Generative&nbsp;AI&nbsp;hub</td>
+              <td>Prompt templates and a prompt registry, <strong>grounding / RAG</strong>, content filtering, data masking, and switching model with a config parameter.</td>
+              <td class="warnv">Fine-tune a hosted model. There is no tuning endpoint and no LoRA capability anywhere in the API.</td>
+            </tr>
+            <tr>
+              <td class="mono">AI&nbsp;Core</td>
+              <td><strong>Everything</strong> — this is the bring-your-own-model layer. Training runs as an Argo workflow from your own Docker image, on resource plans that go up to a V100 GPU, and the trained artefact is registered and served through the same API.</td>
+              <td>Nothing much. You supply the model, so you own the problem.</td>
+            </tr>
+            <tr>
+              <td class="mono">HANA&nbsp;PAL&nbsp;/&nbsp;APL</td>
+              <td>Genuine <strong>in-database training</strong>: classification, regression, gradient boosting, clustering and time series, trained and scored where the data already lives.</td>
+              <td>Anything resembling a language model. This is classical ML, and very good at it.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>The sentence that nearly caught us out</h3>
+      <p>
+        SAP's own overview page for the generative AI hub says: <em>“Generative AI models
+        are general by design, but you can fine-tune them with additional embeddings.”</em>
+        Read quickly, that sounds like managed fine-tuning. It is not. It is describing
+        <strong>grounding</strong> — retrieving relevant text and putting it in the prompt.
+        No weights change. An article that quoted that line as evidence of fine-tuning would
+        be repeating marketing prose as a technical claim, and any SAP architect would catch
+        it immediately.
+      </p>
+      <p>
+        The plainest confirmation comes from SAP itself. Asked whether the weights of its
+        own ABAP coding model can be obtained for further fine-tuning, SAP's FAQ answers
+        simply: <strong>no</strong>.
+      </p>
+
+      <div class="note">
+        <span class="note-k">Check the shelf life before you build on it</span>
+        <p>
+          There <em>was</em> an SAP service that did almost exactly what our classifier does
+          — <strong>Data Attribute Recommendation</strong>, which trains on a CSV of text
+          and categories and predicts the category of new rows. It is the obvious answer to
+          this problem, and it is being wound down: SAP removed it from the list of
+          eligible cloud services in <strong>March 2026</strong>, available only to the end
+          of existing subscription terms. Business Entity Recognition went the same way a
+          year earlier, and Service Ticket Intelligence before that. Had this project
+          started six months earlier and reached for the obvious service, it would now be
+          rebuilding. A 200-line model you own has a longer shelf life than a managed
+          service you do not.
+        </p>
+      </div>
+
+      <h3>So what would we actually train next?</h3>
+      <p>
+        Knowing where the seams are, these are the realistic next steps for this app —
+        each at the layer that genuinely supports it:
+      </p>
+      <ul>
+        <li><strong>A receipt schema in Document AI.</strong> Today it uses the standard
+          invoice type. A custom schema with receipt-shaped fields — tip, VAT rate, table
+          number, covers — would extract more per photograph. Schema work, not training.</li>
+        <li><strong>Line-item categorisation.</strong> Right now a whole receipt gets one
+          category. A supermarket trip is really wine, nappies and flowers. The same
+          two-head model, applied per line item, would split one posting into several —
+          and needs no new technology at all.</li>
+        <li><strong>Forecasting in HANA.</strong> The spending forecast is Holt-Winters in
+          TypeScript. PAL does time series in-database, so the same forecast could run
+          where the data lives. This one is genuinely a fit for an SAP service.</li>
+        <li><strong>Grounding the yearly statement.</strong> Instead of passing a year of
+          aggregates in the prompt, embed previous statements and memories and let the model
+          retrieve them — so it can notice that you went back to the same restaurant three
+          Februaries running. That is grounding, which the hub does support.</li>
+        <li><strong>Retraining on AI Core.</strong> The nightly retrain currently runs on
+          the app's own machine. Packaged as a Docker image and an Argo workflow template,
+          it would run on AI Core and serve through <code>CLASSIFIER_URL</code> — which the
+          code already supports, precisely so this swap needs no code change.</li>
+      </ul>
+
+      <p>
+        Notice the shape of that list. Only one item is “use an SAP model”. The rest are
+        either schema and prompt work, or our own model running on SAP's infrastructure.
+        That is not a criticism of the platform — it is what the platform is actually for.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap col">
+      <div class="sec-head">
+        <span class="sec-num">10 — Where it fails</span>
+        <h2>The honest part</h2>
+      </div>
+
+      <p class="lede">
+        Any write-up that only lists successes is advertising. Here is a real failure, found
+        by testing the finished model on inputs it had never seen.
+      </p>
+
+      <div class="receipt">
+        <div class="receipt-title">A genuine miss</div>
+        <div class="rrow"><span>input</span><span>NETFLIX.COM · CHF 24.90</span></div>
+        <div class="rrow"><span>correct answer</span><span>Subscriptions</span></div>
+        <div class="rrow"><span>model said</span><span>Groceries</span></div>
+        <div class="rrow"><span>confidence</span><span class="arrowdown">0.40 — below the 0.60 threshold</span></div>
+        <div class="rsep"></div>
+        <div class="rrow"><span>what happened next</span><span>flagged for review, not posted</span></div>
+      </div>
+
+      <p>
+        The cause is coverage, not mathematics. The training data contains
+        <code>NETFLIX</code> but never <code>NETFLIX.COM</code>, and the extra slivers from
+        <code>com</code> were enough to confuse it. The fix is more varied examples, not a
+        cleverer model.
+      </p>
+
+      <p>
+        The consolation is that the system behaved correctly anyway. It was unsure, it knew
+        it was unsure, and it asked rather than guessing. That is the behaviour worth
+        engineering for — being right often, and being honest about the rest.
+      </p>
+    </div>
+  </section>
+
+  <div class="wrap col kicker">
+    <p>
+      There is no neural network here, no cloud inference, no model with a name you would
+      recognise. There is a list of 65,543 numbers, a very old statistical method, and a
+      test that refuses to let two languages disagree.
+    </p>
+    <p>
+      It reads a receipt in under a millisecond, admits when it is lost, and gets a little
+      better every time someone corrects it. For a ledger kept by two people, that is
+      precisely enough.
+    </p>
+    <span class="stamp">Verified · 91 parity checks passing</span>
+  </div>
+
+</main>
+
+</body>
+</html>
