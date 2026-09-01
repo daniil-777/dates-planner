@@ -17,6 +17,7 @@ import { BankImport } from './settings/BankImport'
 import { OnboardingWizard } from './settings/OnboardingWizard'
 import { AddPerson, PersonEditor } from './settings/PeopleSettings'
 import { PlannerCard } from './settings/PlannerCard'
+import { SessionCard } from './settings/SessionCard'
 import { SettingsCard } from './settings/SettingsCard'
 import { SystemCard } from './settings/SystemCard'
 import { clearOnboarded, isOnboarded, markOnboarded, onboardedAt } from './settings/onboarding'
@@ -94,6 +95,8 @@ export function SettingsPage() {
         <PlannerCard />
 
         <BankImport id={IMPORT_ANCHOR} />
+
+        <SessionCard />
 
         <SystemCard onReplayOnboarding={replayOnboarding} />
 
