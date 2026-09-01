@@ -85,6 +85,7 @@ const ENV_KEYS = [
   // Not a Document AI variable, but it decides whether the fallback reads the picture or
   // replays a fixture — so it has to invalidate the cached client the same way.
   'ANTHROPIC_API_KEY',
+  'ANTHROPIC_WORKSPACE_ID',
   'ANTHROPIC_EXTRACT_EFFORT',
 ]
 

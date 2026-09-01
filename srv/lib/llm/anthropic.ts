@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk'
+import { createAnthropicClient } from '../anthropic-client'
 import {
   DEFAULT_MAX_TOKENS,
   LlmError,
@@ -36,7 +37,7 @@ export interface AnthropicConfig {
  */
 export function createAnthropicProvider(config: AnthropicConfig): LlmProvider {
   const model = config.model ?? DEFAULT_ANTHROPIC_MODEL
-  const client = new Anthropic({
+  const client = createAnthropicClient({
     apiKey: config.apiKey,
     ...(config.baseUrl === undefined ? {} : { baseURL: config.baseUrl }),
     timeout: REQUEST_TIMEOUT_MS,

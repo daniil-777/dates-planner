@@ -171,6 +171,7 @@ from `ml/model/weights.json`. Nothing degrades into a stub.
 | Name | Notes |
 |---|---|
 | `ANTHROPIC_API_KEY` | **secret.** Its presence alone selects the Anthropic provider |
+| `ANTHROPIC_WORKSPACE_ID` | only for an *identity-linked* key (one tied to your user, not created inside a workspace): the API refuses those with `anthropic-workspace-id is required` until this names the workspace (`wrkspc_…`, console → Settings → Workspaces). Shared by the statement writer, the receipt reader and the mood estimate |
 | `ANTHROPIC_MODEL` | optional; defaults to `claude-opus-5` |
 | `ANTHROPIC_BASE_URL` | optional; only for a gateway |
 | `LLM_BASE_URL` + `LLM_API_KEY` | any OpenAI-compatible `/chat/completions`. **Both** required |
@@ -469,6 +470,7 @@ is the difference between a tool and a chore.
 | Everybody is signed out after every deploy | `SESSION_SECRET` is unset, so the cookie key is regenerated on each boot | set it; §4 |
 | `npm ci` fails on alpine building a native module | no musl prebuild for something | add `RUN apk add --no-cache python3 make g++` to the failing stage |
 | `fly ssh console` hangs | the machine is stopped | `fly status`; `auto_stop_machines` should be `'off'` |
+| a scan or face-scan fails with `anthropic-workspace-id is required when authenticating with an identity-linked API key` | the key is tied to your user, not to a workspace | `fly secrets set ANTHROPIC_WORKSPACE_ID='wrkspc_…'` — or create the key *inside* a workspace instead, which needs no id |
 
 `docs/RUNBOOK.md` covers the application-level failures — a scan that will not extract, a
 settlement that looks wrong, a restore. This file stops at the edge of the machine.

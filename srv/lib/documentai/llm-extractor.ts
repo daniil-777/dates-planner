@@ -24,10 +24,10 @@
  *    hygiene (blank strings, empty line items). A mis-shapen answer degrades to a failed or
  *    partial read the flow already handles, never to a crash or a silently wrong posting.
  */
-import Anthropic from '@anthropic-ai/sdk'
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod'
 import { randomUUID } from 'node:crypto'
 import { z } from 'zod'
+import { createAnthropicClient } from '../anthropic-client'
 import type { DocAiClient, DocAiJobResult } from './types'
 
 /** Exact, and carries no date suffix — the same rule CONTRACTS.md §7 states for the LLM. */
@@ -170,7 +170,7 @@ interface PendingJob {
  * {@link DEFAULT_EFFORT}.
  */
 async function extract(image: Buffer, mimeType: string, model: string): Promise<ExtractedReceipt> {
-  const client = new Anthropic()
+  const client = createAnthropicClient()
 
   const response = await client.messages.parse({
     model,

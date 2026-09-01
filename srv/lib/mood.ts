@@ -17,9 +17,9 @@
  * answer is a thrown error the handler turns into a plain sentence, never a half-parsed
  * guess that gets saved.
  */
-import Anthropic from '@anthropic-ai/sdk'
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod'
 import { z } from 'zod'
+import { createAnthropicClient } from './anthropic-client'
 
 /** Exact, and carries no date suffix — the same rule CONTRACTS.md §7 states for the LLM. */
 const DEFAULT_MODEL = 'claude-opus-5'
@@ -96,7 +96,7 @@ export async function detectMood(
   mimeType: string,
   model = DEFAULT_MODEL,
 ): Promise<MoodReading> {
-  const client = new Anthropic()
+  const client = createAnthropicClient()
 
   const response = await client.messages.parse({
     model,

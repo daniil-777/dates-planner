@@ -181,9 +181,14 @@ describe('the session cookie as a credential', () => {
     expect(verifySessionToken(`${forgedPayload}.${signature}`)).toBeNull()
     expect(await statusWithCookie(`${forgedPayload}.${signature}`)).toBe(401)
 
-    // …and the mirror image: the right payload with a doctored signature.
+    // …and the mirror image: the right payload with a doctored signature. The *first*
+    // character of the signature is the one to change: a 32-byte digest is 43 base64url
+    // characters, and the last one carries only two significant bits, so swapping it for
+    // a neighbour can decode to the very same bytes and the "forgery" then verifies.
     const genuine = issueSessionToken(USER_A)
-    const flipped = `${genuine.slice(0, -1)}${genuine.endsWith('A') ? 'B' : 'A'}`
+    const [payload, sig] = genuine.split('.')
+    const flipped = `${payload}.${sig.startsWith('A') ? 'B' : 'A'}${sig.slice(1)}`
+    expect(verifySessionToken(flipped)).toBeNull()
     expect(await statusWithCookie(flipped)).toBe(401)
 
     // Nonsense in the cookie is a 401, not a 500.
