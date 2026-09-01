@@ -64,6 +64,26 @@ interface StoredAccount extends AuthAccount {
 /** `$2a$`, `$2b$` or `$2y$`, cost 04–99, 53 characters of salt-and-digest. */
 const BCRYPT_HASH = /^\$2[aby]?\$\d{2}\$[./A-Za-z0-9]{53}$/
 
+/**
+ * Open-door mode: any username, any non-empty password, no configuration needed.
+ *
+ * `AUTH_ALLOW_ANY=1` makes the sign-in form accept whatever is typed into it. It exists for
+ * one purpose — handing somebody the link without first issuing them a credential — and it
+ * is the only switch in this file that trades safety for reach.
+ *
+ * Be clear about what it costs: while it is on, everything the ledger holds is readable and
+ * writable by anyone who knows the URL. There is no second gate behind it.
+ *
+ * What it does *not* do is remove the sign-in step. An anonymous request is still
+ * challenged and still gets the login screen, so a session still has a name attached and
+ * `People.email` still resolves for anyone whose typed name happens to match a row.
+ * Unsetting the flag restores the configured logins with no other change.
+ */
+export function allowAnyCredentials(): boolean {
+  const raw = (process.env.AUTH_ALLOW_ANY ?? '').trim().toLowerCase()
+  return raw === '1' || raw === 'true' || raw === 'yes'
+}
+
 /* ------------------------------------------------------------------ *
  *  Configured logins
  * ------------------------------------------------------------------ */
@@ -124,18 +144,33 @@ export async function verifyCredentials(
   username: unknown,
   password: unknown,
 ): Promise<AuthAccount | null> {
-  const accounts = storedAccounts()
-  if (accounts.length === 0) return null
   if (typeof username !== 'string' || typeof password !== 'string') return null
 
-  let matched: StoredAccount | null = null
-  for (const account of accounts) {
-    if (constantTimeEquals(account.username, username)) matched = account
+  // Configured logins get first refusal, and keep the timing properties described above.
+  // Only what they reject falls through to the open door below, so a real credential still
+  // resolves to its own slot and its own Person instead of being flattened into `ANY`.
+  // `srv/server.ts` resolves basic auth in the same order, and the two must not disagree.
+  const accounts = storedAccounts()
+  if (accounts.length > 0) {
+    let matched: StoredAccount | null = null
+    for (const account of accounts) {
+      if (constantTimeEquals(account.username, username)) matched = account
+    }
+
+    const ok = await bcrypt.compare(password, matched?.hash ?? decoyHash(accounts[0].hash))
+    if (ok && matched !== null) {
+      return { username: matched.username, slot: matched.slot, variable: matched.variable }
+    }
   }
 
-  const ok = await bcrypt.compare(password, matched?.hash ?? decoyHash(accounts[0].hash))
-  if (!ok || matched === null) return null
-  return { username: matched.username, slot: matched.slot, variable: matched.variable }
+  // Open door. A blank name or password is still refused: a session needs something to be
+  // called by, and an empty form is a mistake rather than a login.
+  if (allowAnyCredentials()) {
+    const offered = username.trim()
+    if (offered === '' || password === '') return null
+    return { username: offered, slot: 'ANY', variable: 'AUTH_ALLOW_ANY' }
+  }
+  return null
 }
 
 /**

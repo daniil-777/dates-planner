@@ -68,6 +68,7 @@ import { extname, join } from 'node:path'
 import type { NextFunction, Request, RequestHandler, Response } from 'express'
 import { MAX_UPLOAD_BYTES } from './lib/images'
 import {
+  allowAnyCredentials,
   expiredSessionCookie,
   issueSessionToken,
   readSessionToken,
@@ -494,7 +495,7 @@ interface HealthPayload {
   uptime: number
   /** `trainedAt` from `ml/model/weights.json`, or null when no model is deployed. */
   model: string | null
-  docai: 'live' | 'mock'
+  docai: 'live' | 'mock' | 'llm'
   llm: string
 }
 
@@ -632,8 +633,12 @@ function loadCredentials(): Credentials {
   const accounts: Account[] = []
   const problems: string[] = []
   const slots = credentialSlots()
+  const openDoor = allowAnyCredentials()
 
-  if (slots.length === 0) {
+  // With AUTH_ALLOW_ANY set, having no configured login is the intended state rather than
+  // the deployment mistake this function otherwise refuses to start on. A slot that *is*
+  // present is still validated, so a half-written AUTH_HASH_A is caught either way.
+  if (slots.length === 0 && !openDoor) {
     problems.push(
       'no login is configured — set AUTH_USER_A and AUTH_HASH_A, plus a further pair for ' +
         'every other person who signs in',
@@ -676,7 +681,17 @@ function loadCredentials(): Credentials {
     )
   }
 
-  return { accounts, decoyHash: makeDecoyHash(accounts[0].hash) }
+  // The decoy keeps a wrong username costing the same as a wrong password. Open-door mode
+  // can reach here with nothing configured, and there is then no reference hash to copy a
+  // cost factor from, so one is minted at the same cost the project hashes at.
+  const reference = accounts[0]?.hash
+  return {
+    accounts,
+    decoyHash:
+      reference === undefined
+        ? bcrypt.hashSync(randomBytes(32).toString('hex'), 12)
+        : makeDecoyHash(reference),
+  }
 }
 
 /**
@@ -708,13 +723,34 @@ function optionalCredentials(): Credentials | null {
     `sign-in is required for ${accounts.length} configured login(s) ` +
       `(${accounts.map(account => account.variable).join(', ')})`,
   )
-  return { accounts, decoyHash: makeDecoyHash(accounts[0].hash) }
+  // The decoy keeps a wrong username costing the same as a wrong password. Open-door mode
+  // can reach here with nothing configured, and there is then no reference hash to copy a
+  // cost factor from, so one is minted at the same cost the project hashes at.
+  const reference = accounts[0]?.hash
+  return {
+    accounts,
+    decoyHash:
+      reference === undefined
+        ? bcrypt.hashSync(randomBytes(32).toString('hex'), 12)
+        : makeDecoyHash(reference),
+  }
 }
 
 /**
  * A hash of 32 random bytes, at the same cost factor as the real ones so that verifying
  * against it takes the same time. Costs one bcrypt round at startup, once.
  */
+/**
+ * The account open-door mode authenticates as: whatever name was typed, and no hash.
+ *
+ * The empty `hash` is never compared against — nothing reaches bcrypt on this path — and
+ * the `ANY` slot is what shows up in the request log, so a glance at the log says which
+ * requests came in through the open door rather than through a configured login.
+ */
+function openDoorAccount(username: string): Account {
+  return { username: username.trim(), hash: '', slot: 'ANY', variable: 'AUTH_ALLOW_ANY' }
+}
+
 function makeDecoyHash(reference: string): string {
   const rounds = bcrypt.getRounds(reference)
   return bcrypt.hashSync(randomBytes(32).toString('hex'), rounds)
@@ -782,10 +818,15 @@ async function identify(
   req: Request,
   { accounts, decoyHash }: Credentials,
 ): Promise<Account | null> {
+  const openDoor = allowAnyCredentials()
+
   const session = verifySessionToken(readSessionToken(req.headers.cookie))
   if (session !== null) {
     const account = accounts.find(entry => entry.username === session.username)
     if (account !== undefined) return account
+    // The token's signature already proves this deployment minted it, so in open-door mode
+    // the name it carries is simply the name this browser signed in as.
+    if (openDoor) return openDoorAccount(session.username)
   }
 
   const offered = parseBasic(req.headers.authorization)
@@ -797,7 +838,14 @@ async function identify(
   }
 
   const ok = await bcrypt.compare(offered.password, matched?.hash ?? decoyHash)
-  return ok ? matched : null
+  if (ok && matched !== null) return matched
+
+  // Configured logins get first refusal above, so a real credential still resolves to its
+  // own slot and its own Person; only what they reject falls through to here.
+  if (openDoor && offered.username.trim() !== '' && offered.password !== '') {
+    return openDoorAccount(offered.username)
+  }
+  return null
 }
 
 /**
@@ -886,6 +934,19 @@ function installProductionAuth(config: Credentials): void {
   }
 
   chain.before[slot] = Object.assign(adopt, { factory: chain.auth })
+
+  if (allowAnyCredentials()) {
+    // Loud, every boot, and deliberately not a one-liner. Anyone reading this log should be
+    // able to tell in one glance that the ledger is open, and how to close it.
+    LOG.warn(
+      'AUTH_ALLOW_ANY is set: ANY username and password will be accepted. Everything in ' +
+        'this ledger is readable and writable by anyone who has the URL. ' +
+        `${config.accounts.length} configured login(s) still resolve to their own Person; ` +
+        'unset AUTH_ALLOW_ANY to require them.',
+    )
+    return
+  }
+
   LOG.info(
     `production basic auth active for ${config.accounts.length} logins ` +
       `(${config.accounts.map(a => a.variable).join(', ')}); CAP's mocked strategy replaced`,

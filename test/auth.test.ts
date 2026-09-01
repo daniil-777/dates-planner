@@ -32,8 +32,10 @@ import { createServer, type Server } from 'node:http'
 import {
   SESSION_COOKIE,
   SESSION_TTL_MS,
+  allowAnyCredentials,
   issueSessionToken,
   parseCookies,
+  verifyCredentials,
   verifySessionToken,
 } from '../srv/lib/auth'
 
@@ -328,3 +330,64 @@ function basic(username: string, password: string): Record<string, string> {
   const encoded = Buffer.from(`${username}:${password}`, 'utf8').toString('base64')
   return { authorization: `Basic ${encoded}` }
 }
+
+/* ------------------------------------------------------------------ *
+ *  5. The open door — AUTH_ALLOW_ANY
+ * ------------------------------------------------------------------ */
+
+/**
+ * `AUTH_ALLOW_ANY=1` makes the sign-in form accept whatever is typed into it.
+ *
+ * It is a deliberate hole, so it is tested as one. Three of these four assertions exist to
+ * keep it from being wider than it says: that it is off unless the variable turns it on,
+ * that it does not swallow an empty form, and — the one most worth pinning — that a
+ * configured login still wins, so a real credential keeps resolving to its own slot and its
+ * own `People` row rather than being flattened into `ANY`. `srv/server.ts` resolves basic
+ * auth in the same order; if these two ever disagree, the cookie and the header would
+ * authenticate the same person as two different accounts.
+ */
+describe('AUTH_ALLOW_ANY', () => {
+  async function withFlag<T>(value: string | null, body: () => Promise<T>): Promise<T> {
+    const saved = process.env.AUTH_ALLOW_ANY
+    if (value === null) delete process.env.AUTH_ALLOW_ANY
+    else process.env.AUTH_ALLOW_ANY = value
+    try {
+      return await body()
+    } finally {
+      if (saved === undefined) delete process.env.AUTH_ALLOW_ANY
+      else process.env.AUTH_ALLOW_ANY = saved
+    }
+  }
+
+  it('is off unless it is set, and an unconfigured login stays refused', async () => {
+    await withFlag(null, async () => {
+      expect(allowAnyCredentials()).toBe(false)
+      expect(await verifyCredentials('nobody@example.com', 'anything at all')).toBeNull()
+    })
+  })
+
+  it('accepts any username and password once it is set', async () => {
+    await withFlag('1', async () => {
+      expect(allowAnyCredentials()).toBe(true)
+      const account = await verifyCredentials('never-configured@example.com', 'hunter2')
+      expect(account?.username).toBe('never-configured@example.com')
+      expect(account?.slot).toBe('ANY')
+      expect(account?.variable).toBe('AUTH_ALLOW_ANY')
+    })
+  })
+
+  it('still refuses an empty username or an empty password', async () => {
+    await withFlag('1', async () => {
+      expect(await verifyCredentials('   ', 'a password')).toBeNull()
+      expect(await verifyCredentials('someone@example.com', '')).toBeNull()
+    })
+  })
+
+  it('lets a configured login keep its own slot instead of flattening it to ANY', async () => {
+    await withFlag('1', async () => {
+      const account = await verifyCredentials(USER_A, PASSWORD)
+      expect(account?.username).toBe(USER_A)
+      expect(account?.slot).toBe('A')
+    })
+  })
+})
