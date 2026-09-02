@@ -79,11 +79,32 @@ import {
 } from './lib/auth'
 import { describeProvider } from './lib/llm'
 import { migrate, refreshViews } from './lib/migrate'
+import {
+  createGroup,
+  currentInvite,
+  GroupError,
+  joinGroup,
+  membershipsOf,
+  registerUser,
+  resolveMembership,
+  rotateInvite,
+  verifyUser,
+  type AccountRow,
+} from './lib/groups'
 import { readBuildStamp, type BuildStamp } from './lib/build-stamp'
 import { getDocAiClient } from './lib/documentai'
 // Relative rather than '#cds-models/twowaymatch': package.json carries no "imports"
 // mapping for that subpath, so the alias resolves at neither compile nor run time.
 import { People } from '../@cds-models/twowaymatch'
+
+/**
+ * The accounts table, by name rather than through a projection.
+ *
+ * These routes run before a session names a household, and `LedgerService` narrows every
+ * read to one — so they address the base tables directly. `Users` is not exposed through
+ * any service in any case: a password hash has no business in an OData projection.
+ */
+const USERS_TABLE = 'twowaymatch.Users'
 
 const LOG = cds.log('server')
 
@@ -1027,6 +1048,171 @@ function mountAuthRoutes(app: express.Application): void {
   app.get('/api/auth/me', (req, res, next) => {
     void authMe(req, res).catch(next)
   })
+
+  mountGroupRoutes(app)
+}
+
+/* ------------------------------------------------------------------ *
+ *  Accounts and households  (TWM-ADR-002 phase 1)
+ * ------------------------------------------------------------------ */
+
+/**
+ * Sign-up, create-a-household and join-a-household.
+ *
+ * These sit beside the existing `/api/auth/*` rather than inside `LedgerService`, for the
+ * same reason `login` does: they all run *before* a caller has a household, and every read
+ * in that service is narrowed to one. They are also the only writes in the app that must
+ * reach the base tables directly.
+ *
+ * All three re-issue the session cookie, because the group claim is what the rest of the
+ * app scopes on. Forgetting that is a subtle bug: everything appears to work until the
+ * next request resolves to the wrong household.
+ */
+function mountGroupRoutes(app: express.Application): void {
+  const body = express.json({ limit: MAX_LOGIN_BODY_BYTES })
+
+  app.post('/api/auth/register', loginLimiter(), body, (req, res, next) => {
+    void handleGroupRoute(res, async () => {
+      const account = await registerUser({
+        email: value(req.body, 'email'),
+        password: value(req.body, 'password'),
+        displayName: value(req.body, 'displayName'),
+      })
+      // Signed in immediately: an account with no household yet is exactly the state the
+      // next screen is for, and making them type the password again proves nothing.
+      issueFor(res, account.email, { userId: account.ID, groupId: null })
+      return { user: publicAccount(account), memberships: [] }
+    }).catch(next)
+  })
+
+  app.post('/api/auth/login-account', loginLimiter(), body, (req, res, next) => {
+    void handleGroupRoute(res, async () => {
+      const account = await verifyUser(value(req.body, 'email'), value(req.body, 'password'))
+      if (account === null) {
+        throw new GroupError(401, 'that email and password do not match')
+      }
+      const memberships = await membershipsOf(account.ID)
+      issueFor(res, account.email, {
+        userId: account.ID,
+        groupId: memberships[0]?.groupId ?? null,
+      })
+      return { user: publicAccount(account), memberships }
+    }).catch(next)
+  })
+
+  app.post('/api/groups/create', body, (req, res, next) => {
+    void handleGroupRoute(res, async () => {
+      const account = await requireAccount(req)
+      const created = await createGroup({
+        userId: account.ID,
+        displayName: account.displayName ?? account.email,
+        name: value(req.body, 'name'),
+        kind: value(req.body, 'kind'),
+        currency: value(req.body, 'currency'),
+      })
+      issueFor(res, account.email, { userId: account.ID, groupId: created.groupId })
+      return { group: created }
+    }).catch(next)
+  })
+
+  app.post('/api/groups/join', body, (req, res, next) => {
+    void handleGroupRoute(res, async () => {
+      const account = await requireAccount(req)
+      const joined = await joinGroup({
+        userId: account.ID,
+        displayName: account.displayName ?? account.email,
+        code: value(req.body, 'code'),
+      })
+      issueFor(res, account.email, { userId: account.ID, groupId: joined.groupId })
+      return { group: joined }
+    }).catch(next)
+  })
+
+  app.post('/api/groups/switch', body, (req, res, next) => {
+    void handleGroupRoute(res, async () => {
+      const account = await requireAccount(req)
+      const wanted = value(req.body, 'groupId')
+      const membership = await resolveMembership(
+        account.ID,
+        typeof wanted === 'string' ? wanted : null,
+      )
+      if (membership === null) throw new GroupError(404, 'you are not in that household')
+      issueFor(res, account.email, { userId: account.ID, groupId: membership.groupId })
+      return { group: membership }
+    }).catch(next)
+  })
+
+  /** The code to read out, minted on demand. Owners only — it is an open door. */
+  app.post('/api/groups/invite', body, (req, res, next) => {
+    void handleGroupRoute(res, async () => {
+      const account = await requireAccount(req)
+      const session = verifySessionToken(readSessionToken(req.headers.cookie))
+      const membership = await resolveMembership(account.ID, session?.groupId ?? null)
+      if (membership === null) throw new GroupError(404, 'you are not in a household yet')
+      if (membership.role !== 'owner') {
+        throw new GroupError(403, 'only an owner can invite somebody')
+      }
+      const rotate = value(req.body, 'rotate') === true
+      const invite = rotate
+        ? await rotateInvite(membership.groupId)
+        : await currentInvite(membership.groupId)
+      return { invite }
+    }).catch(next)
+  })
+}
+
+/** One shape for every reply, and one place errors become status codes. */
+async function handleGroupRoute(
+  res: Response,
+  work: () => Promise<Record<string, unknown>>,
+): Promise<void> {
+  res.setHeader('Cache-Control', 'no-store')
+  try {
+    res.json(await work())
+  } catch (error) {
+    if (error instanceof GroupError) {
+      res.status(error.status).json({ error: { code: 'group_error', message: error.message } })
+      return
+    }
+    // Never leak an internal message to a sign-up form.
+    LOG.error('group route failed', error instanceof Error ? error.message : String(error))
+    res.status(500).json({
+      error: { code: 'server_error', message: 'something went wrong — please try again' },
+    })
+  }
+}
+
+/** The account behind the current session, or a 401 written for a person. */
+async function requireAccount(req: Request): Promise<AccountRow> {
+  const session = verifySessionToken(readSessionToken(req.headers.cookie))
+  if (session?.userId == null) throw new GroupError(401, 'sign in first')
+  const row = (await SELECT.one
+    .from(USERS_TABLE)
+    .columns('ID', 'email', 'displayName')
+    .where({ ID: session.userId })) as AccountRow | null | undefined
+  // `== null`: CAP answers `undefined` for no match, and a strict check would let a
+  // deleted account keep a working session.
+  if (row == null) throw new GroupError(401, 'sign in first')
+  return row
+}
+
+/** Mint the cookie with both claims. Every route above ends by calling this. */
+function issueFor(
+  res: Response,
+  username: string,
+  claims: { userId: string; groupId: string | null },
+): void {
+  res.setHeader('Set-Cookie', sessionCookie(issueSessionToken(username, Date.now(), claims)))
+}
+
+/** An account as the client may see it: never the hash. */
+function publicAccount(account: AccountRow): Record<string, unknown> {
+  return { id: account.ID, email: account.email, displayName: account.displayName }
+}
+
+function value(payload: unknown, key: string): unknown {
+  if (typeof payload !== 'object' || payload === null) return undefined
+  return (payload as Record<string, unknown>)[key]
 }
 
 /**
@@ -1089,6 +1275,13 @@ interface MePayload {
   username: string | null
   personId: string | null
   personName: string | null
+  /** Null until the account joins or creates a household — the SPA routes on exactly this. */
+  userId: string | null
+  groupId: string | null
+  groupName: string | null
+  role: 'owner' | 'member' | null
+  /** Every household this account belongs to, so the switcher needs no second request. */
+  memberships: Array<{ groupId: string; groupName: string; role: string; personName: string }>
 }
 
 /**
@@ -1109,14 +1302,48 @@ async function authMe(req: Request, res: Response): Promise<void> {
   const signedIn = config === null || account !== null
   const who = signedIn ? await rosterEntry(account?.username ?? null) : null
 
+  // An account-based session knows more than a configured-login one: which household it
+  // is looking at, what it is called, and which others it could switch to. A session from
+  // the AUTH_* logins has none of that and falls back to the roster, exactly as before.
+  const session = verifySessionToken(readSessionToken(req.headers.cookie))
+  let membership: Awaited<ReturnType<typeof resolveMembership>> = null
+  let memberships: MembershipSummary[] = []
+  if (session?.userId != null) {
+    try {
+      const all = await membershipsOf(session.userId)
+      memberships = all.map(view => ({
+        groupId: view.groupId,
+        groupName: view.groupName,
+        role: view.role,
+        personName: view.personName,
+      }))
+      membership = all.find(view => view.groupId === session.groupId) ?? all[0] ?? null
+    } catch {
+      // A database that has not been migrated yet must not stop the SPA from booting.
+      membership = null
+    }
+  }
+
   const payload: MePayload = {
     authenticated: signedIn,
     username: account?.username ?? null,
-    personId: who?.ID ?? null,
-    personName: who?.name ?? null,
+    personId: membership?.personId ?? who?.ID ?? null,
+    personName: membership?.personName ?? who?.name ?? null,
+    userId: session?.userId ?? null,
+    groupId: membership?.groupId ?? null,
+    groupName: membership?.groupName ?? null,
+    role: membership?.role ?? null,
+    memberships,
   }
   res.setHeader('Cache-Control', 'no-store')
   res.json(payload)
+}
+
+interface MembershipSummary {
+  groupId: string
+  groupName: string
+  role: string
+  personName: string
 }
 
 interface RosterRow {
