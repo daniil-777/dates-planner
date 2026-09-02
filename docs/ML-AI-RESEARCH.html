@@ -1,0 +1,2654 @@
+<title>Models for a Household</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+  /* The repo's own face, when this file is opened from docs/. Falls back to
+     IBM Plex everywhere else — same neo-grotesque family of shapes. */
+  @font-face { font-family: "72"; src: url("../app/public/fonts/72-Regular.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+  @font-face { font-family: "72"; src: url("../app/public/fonts/72-Semibold.woff2") format("woff2"); font-weight: 600; font-display: swap; }
+  @font-face { font-family: "72"; src: url("../app/public/fonts/72-Bold.woff2") format("woff2"); font-weight: 700; font-display: swap; }
+
+  :root {
+    color-scheme: light;
+    --ground: #f1f4f4;
+    --surface: #ffffff;
+    --sunk: #e7ecec;
+    --ink: #14222e;
+    --ink-2: #3b4f60;
+    --muted: #667a89;
+    --line: #d5dedd;
+    --line-2: #b7c4c5;
+
+    --navy: #0a3b5c;
+    --blue: #1163d2;
+    --teal: #06736f;
+    --violet: #5b4bc0;
+    --coral: #cc4235;
+    --sun: #a97600;
+    --leaf: #1f6d49;
+    --pink: #ad2673;
+
+    --lane-a: var(--navy);
+    --lane-b: var(--teal);
+    --lane-c: var(--violet);
+    --lane-d: var(--coral);
+
+    --tint: rgba(10, 59, 92, 0.05);
+    --shadow: 0 1px 2px rgba(20, 34, 46, 0.06), 0 8px 24px rgba(20, 34, 46, 0.05);
+    --sans: "72", "IBM Plex Sans", ui-sans-serif, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    --wrap: 1180px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --ground: #0b141b;
+      --surface: #121e27;
+      --sunk: #18262f;
+      --ink: #e3ecf1;
+      --ink-2: #b2c2cd;
+      --muted: #8598a5;
+      --line: #24343f;
+      --line-2: #354a59;
+
+      --navy: #79b0d6;
+      --blue: #63a7ff;
+      --teal: #3fbfb5;
+      --violet: #a596fb;
+      --coral: #ff8b7d;
+      --sun: #dfae44;
+      --leaf: #57b783;
+      --pink: #ee79b7;
+
+      --tint: rgba(121, 176, 214, 0.09);
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 10px 28px rgba(0, 0, 0, 0.3);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --ground: #0b141b;
+    --surface: #121e27;
+    --sunk: #18262f;
+    --ink: #e3ecf1;
+    --ink-2: #b2c2cd;
+    --muted: #8598a5;
+    --line: #24343f;
+    --line-2: #354a59;
+    --navy: #79b0d6;
+    --blue: #63a7ff;
+    --teal: #3fbfb5;
+    --violet: #a596fb;
+    --coral: #ff8b7d;
+    --sun: #dfae44;
+    --leaf: #57b783;
+    --pink: #ee79b7;
+    --tint: rgba(121, 176, 214, 0.09);
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 10px 28px rgba(0, 0, 0, 0.3);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
+
+  body {
+    margin: 0;
+    background-color: var(--ground);
+    background-image:
+      linear-gradient(var(--tint) 1px, transparent 1px),
+      linear-gradient(90deg, var(--tint) 1px, transparent 1px);
+    background-size: 30px 30px;
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 17px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: var(--wrap); margin: 0 auto; padding: 0 clamp(1rem, 4vw, 2.5rem); }
+  .prose { max-width: 72ch; }
+  .prose > * + * { margin-top: 0.85em; }
+
+  h1, h2, h3, h4 { margin: 0; line-height: 1.12; text-wrap: balance; letter-spacing: -0.012em; }
+  h1 { font-size: clamp(2.4rem, 6vw, 3.6rem); font-weight: 700; }
+  h2 { font-size: clamp(1.7rem, 3.4vw, 2.2rem); font-weight: 700; }
+  h3 { font-size: 1.22rem; font-weight: 600; letter-spacing: -0.006em; }
+  h4 { font-size: 1rem; font-weight: 600; }
+  p { margin: 0; }
+  a { color: var(--blue); text-underline-offset: 3px; }
+  a:hover { color: var(--navy); }
+  :focus-visible { outline: 3px solid var(--sun); outline-offset: 3px; border-radius: 3px; }
+  strong { font-weight: 700; }
+  em { font-style: normal; color: var(--ink-2); border-bottom: 1px dotted var(--line-2); }
+
+  code, .mono, kbd {
+    font-family: var(--mono);
+    font-size: 0.86em;
+    font-feature-settings: "ss01";
+  }
+  code {
+    padding: 0.1em 0.34em;
+    border-radius: 3px;
+    background: var(--sunk);
+    color: var(--ink-2);
+  }
+  pre {
+    margin: 0;
+    overflow-x: auto;
+    padding: 1rem 1.1rem;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--sunk);
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.62;
+    color: var(--ink-2);
+  }
+  pre code { padding: 0; background: none; font-size: inherit; }
+  pre b { color: var(--ink); font-weight: 600; }
+  pre i { color: var(--muted); font-style: normal; }
+
+  /* ---------------------------------------------------------------- bar */
+  .bar {
+    position: sticky; top: 0; z-index: 40;
+    display: flex; align-items: center; gap: 1.2rem;
+    min-height: 52px;
+    padding: 0 clamp(1rem, 4vw, 2.5rem);
+    border-bottom: 1px solid var(--line);
+    background: color-mix(in srgb, var(--ground) 88%, transparent);
+    backdrop-filter: blur(9px);
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+  .bar-name { font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink); white-space: nowrap; }
+  .bar-nav { display: flex; gap: 1.05rem; overflow-x: auto; scrollbar-width: none; }
+  .bar-nav::-webkit-scrollbar { display: none; }
+  .bar-nav a { color: var(--muted); text-decoration: none; white-space: nowrap; }
+  .bar-nav a:hover { color: var(--ink); text-decoration: underline; }
+
+  /* ------------------------------------------------------------ masthead */
+  .masthead { padding: clamp(2.6rem, 7vw, 4.6rem) 0 2.2rem; }
+  .eyebrow {
+    font-family: var(--mono); font-size: 11.5px; font-weight: 500;
+    letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted);
+  }
+  .standfirst { max-width: 62ch; margin-top: 1.1rem; font-size: 1.24rem; line-height: 1.5; color: var(--ink-2); }
+  .byline {
+    display: flex; flex-wrap: wrap; gap: 0.4rem 1.4rem;
+    margin-top: 1.6rem; padding-top: 1rem; border-top: 1px solid var(--line);
+    font-family: var(--mono); font-size: 12px; color: var(--muted);
+  }
+  .byline b { color: var(--ink-2); font-weight: 500; }
+
+  /* -------------------------------------------------------------- section */
+  section { padding: clamp(2.2rem, 5vw, 3.4rem) 0; border-top: 1px solid var(--line); }
+  .sec-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.5rem 1rem; margin-bottom: 1.3rem; }
+  .sec-num {
+    font-family: var(--mono); font-size: 12px; font-weight: 600;
+    letter-spacing: 0.1em; color: var(--muted);
+  }
+  .sec-head p { flex-basis: 100%; max-width: 72ch; margin-top: 0.35rem; color: var(--ink-2); }
+
+  .stack { display: flex; flex-direction: column; gap: 1.15rem; }
+  .stack-lg { display: flex; flex-direction: column; gap: 1.9rem; }
+
+  /* ---------------------------------------------------------------- lanes */
+  .lane {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    padding: 0.16rem 0.5rem 0.16rem 0.4rem;
+    border: 1px solid var(--line-2); border-radius: 3px;
+    background: var(--surface);
+    font-family: var(--mono); font-size: 11px; font-weight: 500;
+    letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-2);
+    white-space: nowrap;
+  }
+  .lane::before { content: ""; width: 8px; height: 8px; border-radius: 2px; background: var(--dot, var(--muted)); }
+  .lane-a { --dot: var(--lane-a); }
+  .lane-b { --dot: var(--lane-b); }
+  .lane-c { --dot: var(--lane-c); }
+  .lane-d { --dot: var(--lane-d); }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.2rem 0 0; padding: 0; list-style: none; }
+
+  /* ---------------------------------------------------------------- cards */
+  .grid { display: grid; gap: 1.05rem; grid-template-columns: repeat(auto-fit, minmax(310px, 1fr)); }
+  .grid-2 { display: grid; gap: 1.05rem; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); }
+
+  .card {
+    display: flex; flex-direction: column; gap: 0.7rem;
+    padding: 1.05rem 1.15rem 1.15rem;
+    border: 1px solid var(--line); border-radius: 7px;
+    background: var(--surface);
+  }
+  .card-head { display: flex; flex-wrap: wrap; align-items: center; gap: 0.45rem 0.6rem; }
+  .card-head h3 { flex: 1 1 14ch; min-width: 0; }
+  .card-id {
+    font-family: var(--mono); font-size: 11.5px; font-weight: 600;
+    color: var(--accent, var(--muted)); letter-spacing: 0.06em;
+  }
+  .card p { font-size: 15.4px; line-height: 1.55; color: var(--ink-2); }
+  .card p + p { margin-top: 0.55rem; }
+  .card p b { color: var(--ink); }
+
+  .spec {
+    display: grid; gap: 0.05rem 0.9rem;
+    grid-template-columns: auto 1fr;
+    margin-top: auto; padding-top: 0.75rem; border-top: 1px dashed var(--line-2);
+    font-family: var(--mono); font-size: 11.8px; line-height: 1.75;
+  }
+  .spec dt { color: var(--muted); letter-spacing: 0.05em; text-transform: uppercase; font-size: 10.5px; padding-top: 0.28em; }
+  .spec dd { margin: 0; color: var(--ink-2); }
+
+  /* ------------------------------------------------------------- verdict */
+  .verdict {
+    padding: 1.4rem 1.5rem;
+    border: 1px solid var(--line-2); border-radius: 7px;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+  }
+  .verdict h3 { margin-bottom: 0.7rem; }
+  .picks { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); margin-top: 1rem; padding: 0; list-style: none; }
+  .picks li { padding-top: 0.7rem; border-top: 3px solid var(--pick, var(--line-2)); }
+  .picks h4 { margin-bottom: 0.3rem; }
+  .picks p { font-size: 14.8px; line-height: 1.5; color: var(--ink-2); }
+  .picks .rank { display: block; font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.25rem; }
+
+  /* ------------------------------------------------------------- callouts */
+  .note {
+    padding: 0.95rem 1.1rem;
+    border: 1px solid var(--line); border-radius: 6px;
+    background: var(--sunk);
+    font-size: 15.5px; line-height: 1.55; color: var(--ink-2);
+  }
+  .note h4 { margin-bottom: 0.35rem; color: var(--ink); }
+  .note--warn { border-color: color-mix(in srgb, var(--sun) 45%, var(--line)); background: color-mix(in srgb, var(--sun) 8%, var(--surface)); }
+  .note--stop { border-color: color-mix(in srgb, var(--coral) 45%, var(--line)); background: color-mix(in srgb, var(--coral) 7%, var(--surface)); }
+  .note--go { border-color: color-mix(in srgb, var(--leaf) 45%, var(--line)); background: color-mix(in srgb, var(--leaf) 7%, var(--surface)); }
+  .note p + p { margin-top: 0.5rem; }
+
+  /* --------------------------------------------------------------- tables */
+  .scroller { overflow-x: auto; border: 1px solid var(--line); border-radius: 7px; background: var(--surface); }
+  table { width: 100%; border-collapse: collapse; font-size: 14.6px; }
+  caption { padding: 0.8rem 1rem 0; text-align: left; font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted); }
+  th, td { padding: 0.62rem 0.85rem; text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); }
+  thead th {
+    position: sticky; top: 52px;
+    background: var(--sunk);
+    font-family: var(--mono); font-size: 11px; font-weight: 600;
+    letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted);
+    white-space: nowrap;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  td b { font-weight: 600; }
+  td .mono { color: var(--ink-2); }
+  .num { text-align: right; font-variant-numeric: tabular-nums; font-family: var(--mono); }
+  .tight td, .tight th { padding: 0.5rem 0.8rem; }
+
+  /* -------------------------------------------------------------- figures */
+  figure { margin: 0; }
+  figure svg { display: block; width: 100%; max-width: 100%; height: auto; }
+  .fig {
+    padding: 1.1rem 1.2rem 0.9rem;
+    border: 1px solid var(--line); border-radius: 7px;
+    background: var(--surface);
+  }
+  .fig .canvas { overflow-x: auto; }
+  figcaption {
+    margin-top: 0.8rem; padding-top: 0.7rem; border-top: 1px solid var(--line);
+    font-size: 14px; line-height: 1.5; color: var(--muted);
+  }
+  figcaption b { color: var(--ink-2); font-weight: 600; }
+
+  /* ---------------------------------------------------------------- lists */
+  ul.plain, ol.plain { margin: 0; padding-left: 1.15rem; }
+  ul.plain li, ol.plain li { margin-top: 0.35rem; }
+  ul.plain li::marker { color: var(--muted); }
+  ol.plain li::marker { font-family: var(--mono); font-size: 0.85em; color: var(--muted); }
+
+  .kv { display: grid; grid-template-columns: auto 1fr; gap: 0.15rem 1rem; font-size: 15px; }
+  .kv dt { font-family: var(--mono); font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); padding-top: 0.3em; }
+  .kv dd { margin: 0; color: var(--ink-2); }
+
+  /* ---------------------------------------------------------------- misc */
+  .pill {
+    display: inline-block; padding: 0.1rem 0.44rem;
+    border-radius: 3px; background: var(--sunk); border: 1px solid var(--line);
+    font-family: var(--mono); font-size: 11px; color: var(--ink-2); white-space: nowrap;
+  }
+  .pill-go { border-color: color-mix(in srgb, var(--leaf) 50%, var(--line)); color: var(--leaf); }
+  .pill-mid { border-color: color-mix(in srgb, var(--sun) 55%, var(--line)); color: var(--sun); }
+  .pill-hard { border-color: color-mix(in srgb, var(--coral) 50%, var(--line)); color: var(--coral); }
+
+  .rule { height: 1px; border: none; background: var(--line); margin: 0; }
+
+  footer { padding: 2.4rem 0 4rem; border-top: 1px solid var(--line); color: var(--muted); font-size: 14.5px; }
+  footer h3 { color: var(--ink); margin-bottom: 0.6rem; }
+  footer ul { margin: 0; padding-left: 1.15rem; }
+  footer li { margin-top: 0.3rem; }
+
+  @media (max-width: 640px) {
+    body { font-size: 16px; }
+    thead th { position: static; }
+    .bar { gap: 0.9rem; }
+  }
+</style>
+
+<nav class="bar" aria-label="Sections">
+  <span class="bar-name">Models&nbsp;for&nbsp;a&nbsp;Household</span>
+  <span class="bar-nav">
+    <a href="#answer">Answer</a>
+    <a href="#have">What you have</a>
+    <a href="#lanes">Four runtimes</a>
+    <a href="#apple">Apple toolbox</a>
+    <a href="#catalogue">The catalogue</a>
+    <a href="#loop">Learning loop</a>
+    <a href="#recipes">Recipes</a>
+    <a href="#images">Image generation</a>
+    <a href="#never">What not to build</a>
+    <a href="#law">Law &amp; ethics</a>
+    <a href="#roadmap">Roadmap</a>
+  </span>
+</nav>
+
+<header class="masthead wrap">
+  <p class="eyebrow">Two-Way Match · machine-learning dossier · TWM-ML-001</p>
+  <h1>Models for a household</h1>
+  <p class="standfirst">
+    Every custom model, on-device inference path and local generation trick this app could
+    plausibly ship — sorted by where the code would actually execute, what it would learn
+    from, and whether it is worth the weekend.
+  </p>
+  <div class="byline">
+    <span><b>Written</b> 2 September 2026</span>
+    <span><b>Against</b> commit 2f459e3 · CAP 10 · React 19 · Node 22</span>
+    <span><b>Target machine</b> MacBook Pro M3 Pro · 36 GB · macOS 26.5.1 · Swift 6.2</span>
+    <span><b>Deploy target</b> Fly.io · linux/amd64 · SQLite on a volume</span>
+  </div>
+</header>
+
+<main class="wrap">
+
+<section id="answer">
+  <div class="sec-head">
+    <span class="sec-num">§0</span>
+    <h2>The answer, before the detail</h2>
+    <p>
+      Three questions were asked — what custom ML, can images be generated locally, can Apple's
+      tooling be used. The short answers are <b>a great deal</b>, <b>yes but off the request
+      path</b>, and <b>yes, in exactly two of your four runtimes</b>.
+    </p>
+  </div>
+
+  <div class="stack-lg">
+    <div class="prose">
+      <p>
+        The most valuable machine learning in this app is not another LLM call. It is a handful
+        of <b>small models trained on your own ledger</b>, shipped the way the two-head
+        classifier already is: fitted in Python, exported as JSON weights, executed in
+        TypeScript, held to a parity test. That pattern is the single best thing in this
+        repository, and almost every idea below is a re-use of it.
+      </p>
+      <p>
+        The second most valuable thing is <b>moving inference off the server and onto the
+        device</b>. Today a photograph of your face travels to a datacentre so a frontier model
+        can say "content, 0.78". A 52-dimension face-landmark vector computed in the browser,
+        fed to a logistic head you trained on your own taps, gives the same answer in 20
+        milliseconds, for nothing, offline, with the photograph never leaving the phone. That is
+        a better product and a better privacy story at the same time.
+      </p>
+      <p>
+        Apple's frameworks — Core ML, Vision, Foundation Models, Speech, Image Playground — are
+        genuinely excellent and genuinely unreachable from where your code runs today. They are
+        native-process APIs. Your server is Linux on Fly.io; your client is a web page. They
+        become available the moment you add either a <b>Mac-side sidecar</b> (for training and
+        batch work) or a <b>thin native shell</b> around the PWA (for on-device features your
+        users actually get). Both are described below, with the boundary drawn precisely.
+      </p>
+    </div>
+
+    <div class="verdict">
+      <h3>If you only do three things</h3>
+      <p class="prose">
+        Ranked by <em>value delivered per hour spent</em>, given the code that already exists.
+      </p>
+      <ul class="picks">
+        <li style="--pick: var(--teal);">
+          <span class="rank">First</span>
+          <h4>Mood without the cloud</h4>
+          <p>
+            Face landmarks in the browser → a 5-class logistic head trained on your own mood
+            taps. Kills a paid API call, works on a plane, and the photo never leaves the
+            device. Same export-and-parity pattern as the classifier. <b>~2 days.</b>
+          </p>
+        </li>
+        <li style="--pick: var(--blue);">
+          <span class="rank">Second</span>
+          <h4>Find the trips nobody logged</h4>
+          <p>
+            Cluster confirmed expenses in time and space, propose an <code>Event</code> when a
+            cluster is far from home. No training, no labels, uses <code>lat</code>/<code>lon</code>
+            you already store. Turns a ledger into a memory. <b>~1 day.</b>
+          </p>
+        </li>
+        <li style="--pick: var(--violet);">
+          <span class="rank">Third</span>
+          <h4>Postcards from the ledger</h4>
+          <p>
+            A nightly job on your Mac turns each memory's facts into a FLUX prompt and renders
+            an illustration for the timeline. Never on the request path, never blocking a user.
+            30–90 s per image on an M3 Pro. <b>~2 days.</b>
+          </p>
+        </li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="have">
+  <div class="sec-head">
+    <span class="sec-num">§1</span>
+    <h2>What you already have</h2>
+    <p>
+      Six pieces of machine learning are already in this repository, and one of them — the
+      training loop that closes itself — is worth more than anything proposed below, because
+      every new model can borrow it.
+    </p>
+  </div>
+
+  <div class="stack-lg">
+    <div class="scroller">
+      <table>
+        <caption>Existing ML surface, and what it can be extended into</caption>
+        <thead>
+          <tr><th>Piece</th><th>Where</th><th>What it is</th><th>What it unlocks next</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><b>Two-head classifier</b></td>
+            <td><span class="mono">srv/lib/classifier</span></td>
+            <td>crc32-hashed char n-grams (2–4, word-bounded, 65 536 buckets, L2) + 7 dense
+                clock features → two multinomial logistic heads. 4.9 MB of JSON weights,
+                scored in TypeScript, byte-checked against Python.</td>
+            <td>A third and fourth head cost almost nothing: <em>who paid</em>, <em>which
+                event</em>. Same vector, new label column.</td>
+          </tr>
+          <tr>
+            <td><b>Corrections loop</b></td>
+            <td><span class="mono">Corrections</span> entity</td>
+            <td>Every time a human overrules a prediction, both labels are stored. That is a
+                self-growing, perfectly-labelled training set with zero annotation cost.</td>
+            <td>Calibration, active learning, per-household personalisation — all three need
+                exactly this table and nothing else.</td>
+          </tr>
+          <tr>
+            <td><b>Holt-Winters forecaster</b></td>
+            <td><span class="mono">srv/lib/forecast.ts</span></td>
+            <td>Additive Holt-Winters / damped Holt / seasonal naive, chosen by history length.
+                Pure, total, deterministic. Already gives you residual σ.</td>
+            <td>Anomaly detection is <em>free</em>: an observation more than 2σ off the
+                one-step forecast is a flag. Per-category forecasts are a loop.</td>
+          </tr>
+          <tr>
+            <td><b>Remote-engine escape hatch</b></td>
+            <td><span class="mono">CLASSIFIER_URL</span></td>
+            <td>Any HTTP endpoint speaking the §5 <span class="mono">ClassifyResult</span>
+                contract replaces local inference, with automatic fallback on any failure.</td>
+            <td>This is the socket every future model server plugs into — a Swift/Vision
+                sidecar, an ONNX server, an AI Core deployment.</td>
+          </tr>
+          <tr>
+            <td><b>LLM provider abstraction</b></td>
+            <td><span class="mono">srv/lib/llm</span></td>
+            <td>Anthropic → OpenAI-compatible → SAP AI Core → deterministic template, resolved
+                per call, never cached, credentials never logged.</td>
+            <td>A fifth provider slots in unchanged: <em>a local model</em> — Apple Foundation
+                Models over a sidecar, or MLX-served Qwen on the Mac.</td>
+          </tr>
+          <tr>
+            <td><b>Vision-language extraction</b></td>
+            <td><span class="mono">documentai/llm-extractor</span>, <span class="mono">mood.ts</span></td>
+            <td>Structured outputs with zod schemas, model-reported confidence, no fabricated
+                measurements, image discarded after the call.</td>
+            <td>The schema-and-confidence discipline is the template for every generative
+                feature added below.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note note--warn">
+      <h4>The constraint that governs every decision below: your dataset is tiny</h4>
+      <p>
+        A two-person household produces on the order of <b>150–500 confirmed expenses a
+        year</b>, a few dozen events, a few hundred photos, maybe a thousand chat messages.
+        That is three to four orders of magnitude short of what a deep network needs to be
+        trained from scratch, and it is the reason the existing classifier is a linear model
+        over hashed n-grams rather than a transformer — a good decision that should be repeated.
+      </p>
+      <p>
+        The consequences are concrete. <b>Train small</b>: logistic regression, gradient-boosted
+        trees, k-NN over embeddings. <b>Borrow representations</b> rather than learning them:
+        take embeddings from a pretrained encoder (CLIP for photos, MiniLM for text) and train
+        only a small head on top. <b>Prefer geometry to learning</b> where geometry suffices —
+        trip detection is clustering, recurrence detection is autocorrelation, neither needs a
+        label. And <b>personalise as a residual</b>: one shared base model plus a per-household
+        correction, never one model per household trained from nothing.
+      </p>
+    </div>
+
+    <div class="scroller">
+      <table class="tight">
+        <caption>The data you hold, read as a feature store</caption>
+        <thead>
+          <tr><th>Table</th><th>Signal it carries</th><th>Realistic volume / year</th><th>Feeds</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><b>Expenses</b></td><td>merchant, amount, clock, payer, place, lat/lon, category, moment, confidences</td><td class="num">150–500</td><td>classifier, trips, recurrence, forecast, anomaly, next-action</td></tr>
+          <tr><td><b>Corrections</b></td><td>predicted vs corrected label, per head</td><td class="num">20–80</td><td>calibration, personalisation, active learning</td></tr>
+          <tr><td><b>Events + Participants</b></td><td>name, span, place, who was there, surprise flag</td><td class="num">15–60</td><td>event-link head, suggestion ranker, gift timing</td></tr>
+          <tr><td><b>Memories + Photos</b></td><td>title, prose, date, kind, place, images</td><td class="num">20–80</td><td>semantic search, photo tagging, image generation prompts</td></tr>
+          <tr><td><b>Moods</b></td><td>1–5 level, timestamp, source, detected label, confidence</td><td class="num">100–700</td><td>on-device mood head, rhythm model, descriptive correlations</td></tr>
+          <tr><td><b>Messages</b></td><td>text, audio + waveform peaks, images, author, time</td><td class="num">500–5000</td><td>text sentiment, transcription, suggestion context</td></tr>
+          <tr><td><b>Receipts</b></td><td>image bytes + raw extraction JSON, kept verbatim</td><td class="num">150–500</td><td>OCR training data, receipt classifier, line-item extraction</td></tr>
+          <tr><td><b>Settlements</b></td><td>closed periods, frozen totals</td><td class="num">12</td><td>forecast targets, "close the month" prediction</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section id="lanes">
+  <div class="sec-head">
+    <span class="sec-num">§2</span>
+    <h2>Four runtimes, and what each one can hold</h2>
+    <p>
+      Every proposal in this document has to answer one question first: <em>where does the
+      arithmetic happen?</em> There are exactly four answers, they have very different
+      capabilities, and the difference between them is what decides whether Apple's frameworks
+      are available at all.
+    </p>
+  </div>
+
+  <div class="stack-lg">
+    <figure class="fig">
+      <div class="canvas">
+        <svg viewBox="0 0 1000 524" role="img" aria-label="Four runtimes stacked by location: the browser and a native shell on the phone, the CAP server on Linux, and your Mac. A network boundary separates the phone from the server; a second boundary marks the Mac as batch-only, never a server.">
+          <defs>
+            <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"></path>
+            </marker>
+          </defs>
+
+          <!-- location bracket: phone -->
+          <path d="M 128 58 L 116 58 L 116 254 L 128 254" fill="none" stroke="var(--line-2)" stroke-width="1.5"></path>
+          <text x="106" y="146" text-anchor="end" font-size="12.5" font-weight="600" fill="var(--ink-2)">In a pocket</text>
+          <text x="106" y="164" text-anchor="end" font-size="11" fill="var(--muted)">iPhone / any browser</text>
+
+          <!-- lane B -->
+          <rect x="156" y="58" width="828" height="92" rx="6" fill="var(--surface)" stroke="var(--line)"></rect>
+          <rect x="156" y="58" width="5" height="92" rx="2" fill="var(--lane-b)"></rect>
+          <text x="180" y="84" font-size="15" font-weight="600" fill="var(--ink)">Lane B — the web page</text>
+          <text x="180" y="105" font-size="12.5" fill="var(--ink-2)">The React PWA you already ship. WebGPU is enabled by default in Safari 26, so real models run here now.</text>
+          <text x="180" y="130" font-size="11.5" font-family="IBM Plex Mono, ui-monospace, Menlo, monospace" fill="var(--lane-b)">MediaPipe Tasks · transformers.js · ONNX Runtime Web · getUserMedia · canvas · IndexedDB</text>
+          <text x="966" y="84" text-anchor="end" font-size="10.5" font-family="IBM Plex Mono, ui-monospace, Menlo, monospace" letter-spacing="0.08em" fill="var(--leaf)">SHIPS TODAY</text>
+
+          <!-- lane D -->
+          <rect x="156" y="162" width="828" height="92" rx="6" fill="var(--surface)" stroke="var(--line)"></rect>
+          <rect x="156" y="162" width="5" height="92" rx="2" fill="var(--lane-d)"></rect>
+          <text x="180" y="188" font-size="15" font-weight="600" fill="var(--ink)">Lane D — a native shell</text>
+          <text x="180" y="209" font-size="12.5" fill="var(--ink-2)">SwiftUI + WKWebView wrapped around the same PWA. The only door through which Apple Intelligence reaches a user.</text>
+          <text x="180" y="234" font-size="11.5" font-family="IBM Plex Mono, ui-monospace, Menlo, monospace" fill="var(--lane-d)">Core ML on the ANE · Vision · Foundation Models · SpeechAnalyzer · Image Playground · App Intents</text>
+          <text x="966" y="188" text-anchor="end" font-size="10.5" font-family="IBM Plex Mono, ui-monospace, Menlo, monospace" letter-spacing="0.08em" fill="var(--sun)">NEEDS A WRAPPER</text>
+
+          <!-- boundary 1 -->
+          <line x1="116" y1="274" x2="984" y2="274" stroke="var(--coral)" stroke-width="1.5" stroke-dasharray="7 5"></line>
+          <rect x="254" y="264" width="548" height="20" fill="var(--surface)"></rect>
+          <text x="264" y="279" font-size="11.5" font-family="IBM Plex Mono, ui-monospace, Menlo, monospace" fill="var(--coral)">network boundary — below here is a round trip, a bill, and a copy of your data</text>
+
+          <!-- lane A -->
+          <path d="M 128 298 L 116 298 L 116 390 L 128 390" fill="none" stroke="var(--line-2)" stroke-width="1.5"></path>
+          <text x="106" y="338" text-anchor="end" font-size="12.5" font-weight="600" fill="var(--ink-2)">In a datacentre</text>
+          <text x="106" y="356" text-anchor="end" font-size="11" fill="var(--muted)">Fly.io · linux/amd64</text>
+          <rect x="156" y="298" width="828" height="92" rx="6" fill="var(--surface)" stroke="var(--line)"></rect>
+          <rect x="156" y="298" width="5" height="92" rx="2" fill="var(--lane-a)"></rect>
+          <text x="180" y="324" font-size="15" font-weight="600" fill="var(--ink)">Lane A — the CAP server</text>
+          <text x="180" y="345" font-size="12.5" fill="var(--ink-2)">Holds the ledger and every secret. Holds no Neural Engine and not one Apple framework — it is Linux.</text>
+          <text x="180" y="370" font-size="11.5" font-family="IBM Plex Mono, ui-monospace, Menlo, monospace" fill="var(--lane-a)">weights.json scored in TypeScript (~1 ms) · onnxruntime-node · Document AI · the LLM providers</text>
+          <text x="966" y="324" text-anchor="end" font-size="10.5" font-family="IBM Plex Mono, ui-monospace, Menlo, monospace" letter-spacing="0.08em" fill="var(--leaf)">SHIPS TODAY</text>
+
+          <!-- boundary 2 -->
+          <line x1="116" y1="410" x2="984" y2="410" stroke="var(--violet)" stroke-width="1.5" stroke-dasharray="7 5"></line>
+          <rect x="254" y="400" width="534" height="20" fill="var(--surface)"></rect>
+          <text x="264" y="415" font-size="11.5" font-family="IBM Plex Mono, ui-monospace, Menlo, monospace" fill="var(--violet)">not a server — its output arrives as a committed file, never as a response</text>
+
+          <!-- lane C -->
+          <path d="M 128 434 L 116 434 L 116 506 L 128 506" fill="none" stroke="var(--line-2)" stroke-width="1.5"></path>
+          <text x="106" y="466" text-anchor="end" font-size="12.5" font-weight="600" fill="var(--ink-2)">On your desk</text>
+          <text x="106" y="484" text-anchor="end" font-size="11" fill="var(--muted)">M3 Pro · 36 GB</text>
+          <rect x="156" y="434" width="828" height="72" rx="6" fill="var(--surface)" stroke="var(--line)"></rect>
+          <rect x="156" y="434" width="5" height="72" rx="2" fill="var(--lane-c)"></rect>
+          <text x="180" y="460" font-size="15" font-weight="600" fill="var(--ink)">Lane C — your Mac</text>
+          <text x="180" y="481" font-size="12.5" fill="var(--ink-2)">Trains models and renders pictures. Every Apple API is here too, but only for work that can wait.</text>
+          <text x="966" y="460" text-anchor="end" font-size="10.5" font-family="IBM Plex Mono, ui-monospace, Menlo, monospace" letter-spacing="0.08em" fill="var(--violet)">BATCH ONLY</text>
+        </svg>
+      </div>
+      <figcaption>
+        <b>Placement decides capability.</b> Apple's on-device frameworks live in lanes D and C,
+        never in A or B. Anything the user must feel instantly belongs in B or A; anything that
+        may take a minute belongs in C; anything that needs the Neural Engine or Apple
+        Intelligence belongs in D and costs you a native wrapper.
+      </figcaption>
+    </figure>
+
+    <div class="grid">
+      <article class="card" style="--accent: var(--lane-b);">
+        <div class="card-head"><span class="lane lane-b">Lane B</span><h3>The web page</h3></div>
+        <p>
+          The most underrated runtime you own. Safari 26 ships WebGPU on by default across
+          macOS, iOS and iPadOS, which means ONNX Runtime Web and transformers.js get real GPU
+          acceleration on a phone. MediaPipe's face landmarker runs at 30 fps on a mid-range
+          device with no GPU at all.
+        </p>
+        <p>
+          <b>Its superpower is jurisdictional, not technical:</b> data processed here never
+          becomes data you hold. A face never uploaded is a face you never have to protect,
+          retain, or delete.
+        </p>
+        <dl class="spec">
+          <dt>Good for</dt><dd>camera pre-flight, face/gesture, small embeddings, sentiment, offline inference</dd>
+          <dt>Bad for</dt><dd>anything over ~200 MB of weights; first-load cost is real</dd>
+          <dt>Cost</dt><dd>zero, forever</dd>
+        </dl>
+      </article>
+
+      <article class="card" style="--accent: var(--lane-a);">
+        <div class="card-head"><span class="lane lane-a">Lane A</span><h3>The CAP server</h3></div>
+        <p>
+          Where the ledger lives, so it is where anything needing <em>all</em> the data belongs:
+          clustering across a year of expenses, recurrence detection, forecasting, the
+          statement. It already scores a 4.9 MB model in about a millisecond.
+        </p>
+        <p>
+          <b>Its limit is the operating system.</b> Fly.io runs linux/amd64. There is no Neural
+          Engine and there never will be a Core ML call here. If you want an ONNX model on the
+          server, <code>onnxruntime-node</code> is the honest answer.
+        </p>
+        <dl class="spec">
+          <dt>Good for</dt><dd>whole-ledger models, batch jobs, anything needing secrets</dd>
+          <dt>Bad for</dt><dd>heavy GPU work; the Fly machine is small and shared</dd>
+          <dt>Cost</dt><dd>your existing bill, plus RAM for anything you load</dd>
+        </dl>
+      </article>
+
+      <article class="card" style="--accent: var(--lane-c);">
+        <div class="card-head"><span class="lane lane-c">Lane C</span><h3>Your Mac</h3></div>
+        <p>
+          36 GB of unified memory on an M3 Pro is a serious ML workstation. It can fine-tune a
+          small model, render FLUX images, run a 30B-parameter LLM in 4-bit, and convert
+          anything to Core ML. It already trains your classifier.
+        </p>
+        <p>
+          <b>The rule that keeps this sane:</b> nothing here is ever on the request path. Its
+          deliverables are committed artefacts — <code>weights.json</code>, a rendered PNG, a
+          new fixture — reviewed by you and deployed like code.
+        </p>
+        <dl class="spec">
+          <dt>Good for</dt><dd>training, image generation, transcription backfills, experiments</dd>
+          <dt>Bad for</dt><dd>anything a user waits on; the laptop is closed half the time</dd>
+          <dt>Cost</dt><dd>electricity and patience</dd>
+        </dl>
+      </article>
+
+      <article class="card" style="--accent: var(--lane-d);">
+        <div class="card-head"><span class="lane lane-d">Lane D</span><h3>A native shell</h3></div>
+        <p>
+          A SwiftUI app whose entire body is a <code>WKWebView</code> pointed at your PWA, plus a
+          message handler that exposes native capabilities to JavaScript. Perhaps 300 lines. In
+          exchange you get Vision, Core ML on the Neural Engine, the on-device Foundation
+          Models LLM, SpeechAnalyzer, Image Playground, and Siri.
+        </p>
+        <p>
+          <b>The price is a real one:</b> an Apple Developer account, code signing, TestFlight,
+          and a second deployment path forever. Worth it only once two or three lane-D features
+          are on the list — which, by §4, they are.
+        </p>
+        <dl class="spec">
+          <dt>Good for</dt><dd>OCR, faces, on-device LLM, dictation, generated art, widgets</dd>
+          <dt>Bad for</dt><dd>anyone on Android or a laptop — build it as an enhancement, never a requirement</dd>
+          <dt>Cost</dt><dd>USD 99/year and a release process</dd>
+        </dl>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section id="apple">
+  <div class="sec-head">
+    <span class="sec-num">§3</span>
+    <h2>The Apple toolbox, exactly</h2>
+    <p>
+      You asked what Apple's ML tooling can actually do for this app. Here is the whole shelf,
+      with the honest reachability column — because half of these are magnificent and
+      unreachable until you build the wrapper in §3.3.
+    </p>
+  </div>
+
+  <div class="stack-lg">
+    <div class="scroller">
+      <table>
+        <caption>§3.1 — every Apple ML framework worth your time, and where it lands</caption>
+        <thead>
+          <tr><th>Framework</th><th>Lane</th><th>What it actually does</th><th>Use it here for</th><th>The catch</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><b>Core ML</b> + <span class="mono">coremltools</span></td>
+            <td><span class="lane lane-d">D</span> <span class="lane lane-c">C</span></td>
+            <td>Runs a converted model (<span class="mono">.mlpackage</span>) on CPU, GPU or the Neural Engine, picking automatically. Converts from PyTorch, TensorFlow, scikit-learn and ONNX.</td>
+            <td>Any classifier you train — receipt-or-not, photo tagging, the mood head — running at ~1 ms on the ANE with no battery cost.</td>
+            <td>Native process only. Converting your existing logistic regression is possible and pointless: TypeScript already scores it in a millisecond.</td>
+          </tr>
+          <tr>
+            <td><b>Create ML</b> (the app)</td>
+            <td><span class="lane lane-c">C</span></td>
+            <td>Drag a folder of labelled images or a CSV in, get a trained, ANE-optimised model out. Image, object, sound, text, tabular, action, style transfer.</td>
+            <td>The fastest possible path to a receipt-vs-not image classifier or a photo tagger. Genuinely an afternoon of work with 200 images.</td>
+            <td>Transfer learning on Apple's frozen backbones — you get a good model, not a controllable one. Exports Core ML, not ONNX.</td>
+          </tr>
+          <tr>
+            <td><b>Create ML Components</b></td>
+            <td><span class="lane lane-c">C</span> <span class="lane lane-d">D</span></td>
+            <td>The same pipeline as Swift code: feature extractors, augmenters, estimators you compose and fit yourself — including <em>on device</em>, at runtime.</td>
+            <td>Per-household personalisation trained on the phone from that household's own corrections, without a server ever seeing them.</td>
+            <td>Swift-only, and the on-device training story is genuinely niche. Powerful if you commit to lane D.</td>
+          </tr>
+          <tr>
+            <td><b>Vision</b></td>
+            <td><span class="lane lane-d">D</span> <span class="lane lane-c">C</span></td>
+            <td>Free, offline, extremely good: text recognition, document detection and rectification, structured document reading, barcodes, face detection with landmarks and capture quality, saliency, image aesthetics, horizon, animal and object detection.</td>
+            <td><b>The biggest single win available.</b> Receipt OCR with no Document AI call, automatic edge detection and dewarping, face quality gating before a mood reading, hero-photo selection by aesthetics score.</td>
+            <td>Native only. Its OCR is excellent on printed receipts and mediocre on faded thermal paper — keep Document AI as the fallback, not the default.</td>
+          </tr>
+          <tr>
+            <td><b>Foundation Models</b></td>
+            <td><span class="lane lane-d">D</span> <span class="lane lane-c">C</span></td>
+            <td>Apple's on-device ~3-billion-parameter LLM with a Swift API: guided generation into your own <span class="mono">@Generable</span> types, tool calling, streaming. Free, private, offline.</td>
+            <td>A fifth <span class="mono">LlmProvider</span>. Memory titles, chat reply suggestions, a first draft of the yearly statement — all with no key, no bill, no network.</td>
+            <td><b>4 096 tokens of context</b>, shared between prompt and answer. It has no world knowledge and it is not Opus. Great at rewriting your data; poor at anything requiring facts.</td>
+          </tr>
+          <tr>
+            <td><b>Speech</b> — <span class="mono">SpeechAnalyzer</span> + <span class="mono">SpeechTranscriber</span></td>
+            <td><span class="lane lane-d">D</span></td>
+            <td>The transcription engine behind Notes and Voice Memos, exposed since the 26 SDKs. Long-form, on-device only, streamed as an <span class="mono">AsyncSequence</span>.</td>
+            <td>Your chat voice notes, transcribed on the sender's phone before upload. Searchable, quotable, accessible — and it makes voice notes indexable by the semantic search in §4.6.</td>
+            <td>On-device only by design, so it cannot run server-side to backfill the archive. Model assets download on first use.</td>
+          </tr>
+          <tr>
+            <td><b>Natural Language</b></td>
+            <td><span class="lane lane-d">D</span> <span class="lane lane-c">C</span></td>
+            <td>Sentence embeddings, contextual embeddings, sentiment scoring (−1…+1), tokenisation, language identification, named entities — all offline, all tiny.</td>
+            <td>Mood-from-text on chat messages and memory notes. Language ID to pick between your EN/DE/RU strings automatically.</td>
+            <td>Embeddings are weaker than a modern MiniLM. Fine for sentiment, second-best for search.</td>
+          </tr>
+          <tr>
+            <td><b>Translation</b></td>
+            <td><span class="lane lane-d">D</span></td>
+            <td>On-device translation between downloaded language pairs, with a plain Swift API.</td>
+            <td>The app already speaks English, German and Russian. A household that mixes languages in chat could read every message in its own.</td>
+            <td>Language packs are a user-visible download. Native only.</td>
+          </tr>
+          <tr>
+            <td><b>Image Playground</b> / Genmoji</td>
+            <td><span class="lane lane-d">D</span></td>
+            <td>Apple Intelligence image generation as a framework: build an <span class="mono">ImagePlaygroundConcept</span> from text (or a PencilKit drawing), get an image back — on-device where possible, in Animation, Illustration and Sketch styles plus the newer ChatGPT-backed ones.</td>
+            <td>A generated sticker per person. An illustration for a memory, made on the phone, in seconds, for free.</td>
+            <td>Style-limited by design — you will not get a photoreal postcard out of it. It refuses photorealistic people on purpose. That is exactly why §7 keeps FLUX on the Mac as well.</td>
+          </tr>
+          <tr>
+            <td><b>MLX</b> / <span class="mono">mlx-swift</span></td>
+            <td><span class="lane lane-c">C</span> <span class="lane lane-d">D</span></td>
+            <td>Apple's array framework built for unified memory — NumPy-shaped Python API, faster than PyTorch-MPS for the same model. LoRA fine-tuning, quantisation, LLM serving.</td>
+            <td>Running a 7–14B open model locally as an LLM provider; LoRA-tuning one on your own statements; anything where scikit-learn is not enough.</td>
+            <td>Apple silicon only, so nothing here ever deploys to Fly. Strictly lane C.</td>
+          </tr>
+          <tr>
+            <td><b>MFLUX</b> / DiffusionKit / Draw Things</td>
+            <td><span class="lane lane-c">C</span></td>
+            <td>MLX-native image generation. FLUX.1-schnell renders 1024×1024 in roughly 30 s on an M3 Pro at 4-bit; the bigger FLUX models take around 90 s.</td>
+            <td>Every generated illustration in §7. Local, free, unlimited, no content pipeline to explain to anybody.</td>
+            <td>Minutes, not milliseconds. Never put this in an HTTP handler.</td>
+          </tr>
+          <tr>
+            <td><b>App Intents</b>, Widgets, Live Activities</td>
+            <td><span class="lane lane-d">D</span></td>
+            <td>Not ML, but the reason lane D pays for itself: "Hey Siri, log a coffee for eleven eighty", a home-screen widget with this month's total, a Live Activity during a trip.</td>
+            <td>The next-action prediction of §4.5 has somewhere to <em>go</em> — a widget is the natural surface for a single predicted next action.</td>
+            <td>Ties you to iOS. Design them as garnish, never as the only path to a feature.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-head"><span class="card-id" style="--accent: var(--violet);">§3.2</span><h3>Reaching lane C: the sidecar you already designed</h3></div>
+        <p>
+          <code>CLASSIFIER_URL</code> is the pattern. Any HTTP endpoint that speaks the contract
+          replaces local inference and falls back silently when it is gone. A Swift daemon on
+          your Mac exposing Vision and Foundation Models over <span class="mono">localhost</span>
+          plugs into the same socket, with the same failure behaviour.
+        </p>
+<pre><code><i># ml/serve.py already proves the shape. A Swift twin:</i>
+<b>APPLE_VISION_URL</b>=http://127.0.0.1:8090/ocr
+<b>APPLE_LLM_URL</b>=http://127.0.0.1:8090/generate
+
+<i># Only ever set in .env.local — never in fly.toml, because</i>
+<i># the Fly machine cannot reach your laptop and should not try.</i></code></pre>
+        <p>
+          Useful for <b>development and backfills</b>: re-OCR every stored receipt with Vision
+          overnight and compare it against what Document AI returned, without spending a
+          franc. Not useful in production, and the fallback path means that is safe.
+        </p>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><span class="card-id" style="--accent: var(--coral);">§3.3</span><h3>Reaching lane D: about 300 lines of Swift</h3></div>
+        <p>
+          A single-view app, a <code>WKWebView</code> filling it, and a message handler that
+          answers JavaScript. The web app keeps every feature it has; native capabilities appear
+          as an optional object it can feature-detect.
+        </p>
+<pre><code><i>// Swift side — one handler, one switch.</i>
+<b>func</b> userContentController(_ c: WKUserContentController,
+     didReceive m: WKScriptMessage) {
+  <b>switch</b> m.name {
+  <b>case</b> "ocr":       <i>// VNRecognizeTextRequest</i>
+  <b>case</b> "faceMood":  <i>// Vision landmarks → your Core ML head</i>
+  <b>case</b> "transcribe":<i>// SpeechAnalyzer</i>
+  <b>case</b> "generate":  <i>// SystemLanguageModel session</i>
+  <b>default</b>: break
+  }
+}</code></pre>
+<pre><code><i>// Web side — degrade to what you already do.</i>
+<b>const</b> native = window.webkit?.messageHandlers
+<b>const</b> reading = native
+  ? <b>await</b> bridge('faceMood', frame)   <i>// on the ANE</i>
+  : <b>await</b> localHead(landmarks)        <i>// lane B fallback</i></code></pre>
+      </div>
+    </div>
+
+    <div class="note note--go">
+      <h4>The rule that keeps lane D from becoming a trap</h4>
+      <p>
+        <b>Every native capability is a faster path to a result the web app can already
+        produce, never the only path to it.</b> Vision OCR speeds up a scan that Document AI
+        would have handled anyway. The Foundation Models draft is a free version of what an
+        Anthropic call writes better. If a feature cannot degrade gracefully to lane A or B, it
+        does not get built — otherwise half your household is locked out by the phone they own.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section id="catalogue">
+  <div class="sec-head">
+    <span class="sec-num">§4</span>
+    <h2>The catalogue — thirty-nine things you could build</h2>
+    <p>
+      Grouped by what the household experiences, not by what technique is used. Each card names
+      the runtime it belongs in, the kind of model, what it would learn from, and roughly what
+      it costs you in effort. Read the six family openers and skip the rest if you like; the
+      ranked shortlist is in §10.
+    </p>
+    <ul class="legend">
+      <li><span class="lane lane-a">Lane A · server</span></li>
+      <li><span class="lane lane-b">Lane B · browser</span></li>
+      <li><span class="lane lane-c">Lane C · your Mac</span></li>
+      <li><span class="lane lane-d">Lane D · native shell</span></li>
+      <li><span class="pill pill-go">hours</span></li>
+      <li><span class="pill pill-mid">days</span></li>
+      <li><span class="pill pill-hard">weeks</span></li>
+    </ul>
+  </div>
+
+  <div class="stack-lg">
+
+    <!-- ========================================= FAMILY R -->
+    <div>
+      <h3 style="font-size:1.5rem;">R · Reading — making the scan smarter before the server sees it</h3>
+      <p class="prose" style="margin-top:0.6rem;">
+        Today the phone is a dumb camera: it resizes a photo and posts it. Everything that goes
+        wrong — a blurred frame, a glare stripe across the total, a photo of a menu instead of a
+        receipt — costs a full round trip, a Document AI call, and a human's patience. Almost all
+        of that can be caught in thirty milliseconds on the device, and one very common Swiss
+        case can skip the cloud entirely.
+      </p>
+    </div>
+
+    <figure class="fig">
+      <div class="canvas">
+        <svg viewBox="0 0 1000 336" role="img" aria-label="The scan pipeline today, where a bad photo is only discovered after a paid cloud call, compared with a pre-flight version where the device checks the frame first and decodes a Swiss QR-bill without any server call at all.">
+          <defs>
+            <marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"></path>
+            </marker>
+          </defs>
+
+          <text x="16" y="46" font-size="11.5" font-family="IBM Plex Mono, ui-monospace, Menlo, monospace" letter-spacing="0.1em" fill="var(--muted)">TODAY</text>
+          <g fill="var(--surface)" stroke="var(--line-2)">
+            <rect x="90" y="58" width="126" height="52" rx="5"></rect>
+            <rect x="236" y="58" width="126" height="52" rx="5"></rect>
+            <rect x="382" y="58" width="126" height="52" rx="5"></rect>
+            <rect x="528" y="58" width="126" height="52" rx="5"></rect>
+            <rect x="674" y="58" width="126" height="52" rx="5"></rect>
+            <rect x="820" y="58" width="126" height="52" rx="5"></rect>
+          </g>
+          <g font-size="12" fill="var(--ink)" text-anchor="middle">
+            <text x="153" y="89">Photo</text>
+            <text x="299" y="89">Upload ≤ 10 MB</text>
+            <text x="445" y="89">Document AI</text>
+            <text x="591" y="89">Map fields</text>
+            <text x="737" y="89">Classify</text>
+            <text x="883" y="89">Draft</text>
+          </g>
+          <g stroke="var(--ink-2)" stroke-width="1.4" color="var(--ink-2)" marker-end="url(#a2)">
+            <line x1="216" y1="84" x2="230" y2="84"></line>
+            <line x1="362" y1="84" x2="376" y2="84"></line>
+            <line x1="508" y1="84" x2="522" y2="84"></line>
+            <line x1="654" y1="84" x2="668" y2="84"></line>
+            <line x1="800" y1="84" x2="814" y2="84"></line>
+          </g>
+          <path d="M 445 58 L 445 28 L 153 28 L 153 52" fill="none" stroke="var(--coral)" stroke-width="1.4" stroke-dasharray="6 4" color="var(--coral)" marker-end="url(#a2)"></path>
+          <text x="299" y="22" text-anchor="middle" font-size="11.5" fill="var(--coral)">blurred, cropped, not a receipt — found out four seconds and one bill later</text>
+
+          <line x1="16" y1="140" x2="984" y2="140" stroke="var(--line)"></line>
+
+          <text x="16" y="176" font-size="11.5" font-family="IBM Plex Mono, ui-monospace, Menlo, monospace" letter-spacing="0.1em" fill="var(--muted)">WITH A</text>
+          <text x="16" y="192" font-size="11.5" font-family="IBM Plex Mono, ui-monospace, Menlo, monospace" letter-spacing="0.1em" fill="var(--muted)">PRE-FLIGHT</text>
+          <g fill="var(--surface)">
+            <rect x="90" y="176" width="126" height="52" rx="5" stroke="var(--line-2)"></rect>
+            <rect x="236" y="176" width="126" height="52" rx="5" stroke="var(--lane-b)" stroke-width="1.8"></rect>
+            <rect x="382" y="176" width="126" height="52" rx="5" stroke="var(--lane-b)" stroke-width="1.8"></rect>
+            <rect x="528" y="176" width="126" height="52" rx="5" stroke="var(--line-2)"></rect>
+            <rect x="674" y="176" width="126" height="52" rx="5" stroke="var(--line-2)"></rect>
+            <rect x="820" y="176" width="126" height="52" rx="5" stroke="var(--line-2)"></rect>
+          </g>
+          <g font-size="12" fill="var(--ink)" text-anchor="middle">
+            <text x="153" y="207">Photo</text>
+            <text x="299" y="199">sharp? glare?</text>
+            <text x="299" y="215">edges? receipt?</text>
+            <text x="445" y="199">Swiss QR-bill</text>
+            <text x="445" y="215">on the frame?</text>
+            <text x="591" y="207">Upload</text>
+            <text x="737" y="199">Server pipeline</text>
+            <text x="737" y="215">unchanged</text>
+            <text x="883" y="207">Draft</text>
+          </g>
+          <g stroke="var(--ink-2)" stroke-width="1.4" color="var(--ink-2)" marker-end="url(#a2)">
+            <line x1="216" y1="202" x2="230" y2="202"></line>
+            <line x1="362" y1="202" x2="376" y2="202"></line>
+            <line x1="508" y1="202" x2="522" y2="202"></line>
+            <line x1="654" y1="202" x2="668" y2="202"></line>
+            <line x1="800" y1="202" x2="814" y2="202"></line>
+          </g>
+          <text x="299" y="252" text-anchor="middle" font-size="11.5" fill="var(--lane-b)">rejects a bad frame in ~30 ms, on the phone</text>
+          <path d="M 445 228 L 445 292 L 883 292 L 883 234" fill="none" stroke="var(--lane-b)" stroke-width="1.6" color="var(--lane-b)" marker-end="url(#a2)"></path>
+          <text x="664" y="286" text-anchor="middle" font-size="12" fill="var(--lane-b)">exact amount, creditor and reference decoded on the device — zero cloud calls</text>
+        </svg>
+      </div>
+      <figcaption>
+        <b>Two edges change.</b> A frame check removes the retry loop that costs a Document AI
+        call every time it fires; a QR-bill decoder removes the cloud from the path entirely for
+        every Swiss invoice, where the amount is printed in a machine-readable block that needs
+        no model at all.
+      </figcaption>
+    </figure>
+
+    <div class="grid">
+      <article class="card">
+        <div class="card-head"><span class="card-id">R1</span><h3>Capture coach</h3><span class="lane lane-b">B</span></div>
+        <p>
+          Variance of the Laplacian for sharpness, a clipped-highlight ratio for glare, and a
+          coverage estimate from a Sobel edge map — three numbers, computed on a downscaled
+          canvas, updated live while the camera is open. The shutter goes green when all three
+          pass.
+        </p>
+        <p><b>No model, no training, no dependency.</b> Roughly 80 lines beside <code>useCamera.ts</code>, and it removes the most common failure in the whole app.</p>
+        <dl class="spec">
+          <dt>Model</dt><dd>none — classical image statistics</dd>
+          <dt>Data</dt><dd>none</dd>
+          <dt>Effort</dt><dd><span class="pill pill-go">hours</span></dd>
+        </dl>
+      </article>
+
+      <article class="card">
+        <div class="card-head"><span class="card-id">R2</span><h3>Edge detection and dewarping</h3><span class="lane lane-b">B</span><span class="lane lane-d">D</span></div>
+        <p>
+          Find the receipt's quadrilateral and warp it flat before upload. In lane D this is one
+          Vision request and it is excellent. In lane B it is a contour search over a Canny map —
+          harder, but <code>opencv.js</code> does it and the result is deterministic.
+        </p>
+        <p>A dewarped, cropped receipt improves <em>every</em> downstream step: OCR accuracy, file size, and the confidence the classifier reports.</p>
+        <dl class="spec">
+          <dt>Model</dt><dd>geometry; Vision's document segmentation in lane D</dd>
+          <dt>Data</dt><dd>none</dd>
+          <dt>Effort</dt><dd><span class="pill pill-mid">days</span></dd>
+        </dl>
+      </article>
+
+      <article class="card" style="--accent: var(--leaf);">
+        <div class="card-head"><span class="card-id" style="--accent: var(--leaf);">R3</span><h3>Swiss QR-bill decoder</h3><span class="lane lane-b">B</span></div>
+        <p>
+          Not machine learning at all, and probably the highest-value item in this family. Every
+          Swiss invoice since 2020 carries a QR block with a Swiss cross in the middle encoding
+          creditor, IBAN, <b>exact amount</b>, currency and reference in a fixed 31-line format.
+          Safari has a native <code>BarcodeDetector</code>; the payload is a spec, not a guess.
+        </p>
+        <p>
+          <b>Result:</b> a perfectly-populated draft with confidence 1.0, produced offline, with
+          no extraction cost and no ambiguity. Restaurant receipts stay on the model path;
+          invoices stop needing one.
+        </p>
+        <dl class="spec">
+          <dt>Model</dt><dd>none — a published format</dd>
+          <dt>Data</dt><dd>none</dd>
+          <dt>Effort</dt><dd><span class="pill pill-go">hours</span></dd>
+        </dl>
+      </article>
+
+      <article class="card">
+        <div class="card-head"><span class="card-id">R4</span><h3>Offline OCR pre-fill</h3><span class="lane lane-d">D</span></div>
+        <p>
+          Vision's text recognition reads a printed receipt on the phone in well under a second,
+          free and offline. Use it to fill the draft <em>while</em> the upload is in flight, then
+          reconcile against what Document AI returns: agreement raises confidence, disagreement
+          flags the field for review.
+        </p>
+        <p>
+          The newer structured document request returns lines, paragraphs and tables rather than
+          a bag of strings, which is exactly the shape a line-item extractor needs.
+        </p>
+        <dl class="spec">
+          <dt>Model</dt><dd>Apple Vision (bundled)</dd>
+          <dt>Data</dt><dd>none to train; your stored receipts to evaluate</dd>
+          <dt>Effort</dt><dd><span class="pill pill-mid">days</span> after the shell exists</dd>
+        </dl>
+      </article>
+
+      <article class="card">
+        <div class="card-head"><span class="card-id">R5</span><h3>Is this even a receipt?</h3><span class="lane lane-c">C</span><span class="lane lane-b">B</span></div>
+        <p>
+          A four-class image classifier — <em>receipt · invoice · card terminal slip · something
+          else</em> — trained in Create ML on maybe 300 photos, most of which you already have in
+          the <code>Receipts</code> table. Export to Core ML for lane D, or convert to ONNX and
+          run it in lane B under WebGPU.
+        </p>
+        <p><b>Payoff:</b> the app can say "that looks like a menu, not a receipt — take another?" before spending anything.</p>
+        <dl class="spec">
+          <dt>Model</dt><dd>transfer-learned CNN (~2 MB)</dd>
+          <dt>Data</dt><dd>your <span class="mono">Receipts.image</span> archive, hand-labelled</dd>
+          <dt>Effort</dt><dd><span class="pill pill-mid">days</span></dd>
+        </dl>
+      </article>
+
+      <article class="card">
+        <div class="card-head"><span class="card-id">R6</span><h3>Line items, not just totals</h3><span class="lane lane-a">A</span></div>
+        <p>
+          The extraction JSON is already stored verbatim. Parsing it into individual lines opens
+          the door to per-item categories — the grocery run that was 80% food and 20% wine, the
+          hotel bill that was half dinner.
+        </p>
+        <p>
+          <b>Be honest about the payoff.</b> This is a large amount of work for a household that
+          mostly wants one number per receipt. Build it only if you find yourself splitting rows
+          by hand more than once a month.
+        </p>
+        <dl class="spec">
+          <dt>Model</dt><dd>rules first; a token classifier only if rules fail</dd>
+          <dt>Data</dt><dd><span class="mono">Receipts.extraction</span></dd>
+          <dt>Effort</dt><dd><span class="pill pill-hard">weeks</span></dd>
+        </dl>
+      </article>
+    </div>
+
+    <!-- ========================================= FAMILY C -->
+    <div>
+      <h3 style="font-size:1.5rem;">C · Classifying — six more heads on the model you already have</h3>
+      <p class="prose" style="margin-top:0.6rem;">
+        The feature vector is built once per transaction and then thrown at two logistic heads.
+        Adding a head costs a label column in the training CSV and about forty lines of Python.
+        Everything in this family reuses <code>features.py</code> unchanged, which means the
+        parity test protects it for free.
+      </p>
+    </div>
+
+    <div class="grid">
+      <article class="card">
+        <div class="card-head"><span class="card-id">C1</span><h3>Honest confidence</h3><span class="lane lane-c">C</span><span class="lane lane-a">A</span></div>
+        <p>
+          A logistic regression trained with <code>C=12</code> on L2-normalised features is
+          <em>over-confident</em> — it will say 0.97 and be wrong. Fit a one-parameter temperature
+          on a held-out split, store it beside the weights, divide the logits by it before the
+          softmax. Twenty lines, and suddenly 0.7 means seven times out of ten.
+        </p>
+        <p>
+          <b>Then use it.</b> Below a calibrated threshold the draft shows no guess at all rather
+          than a bad one — <code>needsReview</code> already exists to carry exactly that.
+        </p>
+        <dl class="spec">
+          <dt>Model</dt><dd>temperature scaling per head</dd>
+          <dt>Data</dt><dd>the existing held-out split</dd>
+          <dt>Effort</dt><dd><span class="pill pill-go">hours</span></dd>
+        </dl>
+      </article>
+
+      <article class="card">
+        <div class="card-head"><span class="card-id">C2</span><h3>Ask about the ones it doesn't know</h3><span class="lane lane-a">A</span></div>
+        <p>
+          Active learning, and it is nearly free. Rank unconfirmed drafts by the entropy of the
+          predicted distribution and surface the most uncertain one first. A household confirming
+          ten receipts a week teaches the model far more if those ten are the confusing ones.
+        </p>
+        <p>Every answer lands in <code>Corrections</code>, which is already the training set. The loop closes itself.</p>
+        <dl class="spec">
+          <dt>Model</dt><dd>none — a sort key over existing probabilities</dd>
+          <dt>Data</dt><dd><span class="mono">Expenses</span> in draft status</dd>
+          <dt>Effort</dt><dd><span class="pill pill-go">hours</span></dd>
+        </dl>
+      </article>
+
+      <article class="card" style="--accent: var(--blue);">
+        <div class="card-head"><span class="card-id" style="--accent: var(--blue);">C3</span><h3>One model, personalised per household</h3><span class="lane lane-c">C</span></div>
+        <p>
+          Multi-tenancy arrived in the model with <span class="mono">TWM-ADR-002</span>. Each
+          group's ledger is far too small to train on alone, and a shared model gets one
+          household's <em>Coop</em> habits wrong. The answer is a residual: keep the shared base
+          weights, and learn a small per-group correction from that group's own
+          <code>Corrections</code> rows only.
+        </p>
+        <p>
+          Concretely, a second sparse weight matrix over the same 65 536 buckets, fitted with
+          heavy regularisation on 30–80 rows, added to the base logits before the softmax. It
+          serialises the same way, loads the same way, and falls back to the base when a group is
+          new.
+        </p>
+        <dl class="spec">
+          <dt>Model</dt><dd>base logits + per-group residual, same feature space</dd>
+          <dt>Data</dt><dd>that group's <span class="mono">Corrections</span></dd>
+          <dt>Effort</dt><dd><span class="pill pill-mid">days</span></dd>
+        </dl>
+      </article>
+
+      <article class="card">
+        <div class="card-head"><span class="card-id">C4</span><h3>Merchant embeddings</h3><span class="lane lane-c">C</span></div>
+        <p>
+          Learn a 32-dimension vector per normalised merchant from co-occurrence in time — shops
+          visited on the same day, in the same event, at the same hour. Nearest neighbours then
+          tell you that a merchant you have never categorised sits next to five you have.
+        </p>
+        <p>
+          It also gives you a better duplicate test than string distance: two spellings of the
+          same shop end up in the same place.
+        </p>
+        <dl class="spec">
+          <dt>Model</dt><dd>truncated SVD or word2vec over a merchant×context matrix</dd>
+          <dt>Data</dt><dd>all confirmed <span class="mono">Expenses</span></dd>
+          <dt>Effort</dt><dd><span class="pill pill-mid">days</span></dd>
+        </dl>
+      </article>
+
+      <article class="card">
+        <div class="card-head"><span class="card-id">C5</span><h3>Who paid — a third head</h3><span class="lane lane-c">C</span></div>
+        <p>
+          The payer picker is a required field on every confirm, and it is enormously
+          predictable: one person does the weekly shop, the other buys the Friday wine. A third
+          softmax over the roster, on the identical feature vector plus a "who paid last time
+          here" feature, would prefill it correctly most of the time.
+        </p>
+        <p>
+          <b>Roster size is not fixed</b> (§10 of the contract), so the head must be built from
+          the group's <code>People</code> rows at training time, not from a constant.
+        </p>
+        <dl class="spec">
+          <dt>Model</dt><dd>multinomial logistic, variable class count</dd>
+          <dt>Data</dt><dd><span class="mono">Expenses.paidBy</span></dd>
+          <dt>Effort</dt><dd><span class="pill pill-mid">days</span></dd>
+        </dl>
+      </article>
+
+      <article class="card">
+        <div class="card-head"><span class="card-id">C6</span><h3>Which event does this belong to?</h3><span class="lane lane-a">A</span></div>
+        <p>
+          A ranking problem rather than a classification: score each open event against the
+          draft using time overlap, distance between the event's place and the posting's
+          <code>lat</code>/<code>lon</code>, and whether the payer is a participant. Highest
+          score above a threshold gets suggested; nothing wins, nothing is suggested.
+        </p>
+        <p>A learned version can come later from the accept/reject signal. Start with the three features and a hand-set weight — it will be right most of the time.</p>
+        <dl class="spec">
+          <dt>Model</dt><dd>a scoring rule now, a learned ranker later</dd>
+          <dt>Data</dt><dd><span class="mono">Events</span>, <span class="mono">EventParticipants</span>, expense geo</dd>
+          <dt>Effort</dt><dd><span class="pill pill-go">hours</span></dd>
+        </dl>
+      </article>
+    </div>
+
+    <!-- ========================================= FAMILY E -->
+    <div>
+      <h3 style="font-size:1.5rem;">E · Structuring — finding the story already in the ledger</h3>
+      <p class="prose" style="margin-top:0.6rem;">
+        This family needs no labels, no training and no GPU. It is geometry and signal
+        processing over rows you already have, and it produces the single most emotionally
+        valuable output in the app: <em>we went somewhere, and nobody wrote it down, and here it
+        is.</em>
+      </p>
+    </div>
+
+    <figure class="fig">
+      <div class="canvas">
+        <svg viewBox="0 0 1000 340" role="img" aria-label="Schematic scatter of confirmed expenses plotted by date and distance from home. Most sit in a low band of everyday spending; a tight group far from home over three consecutive days is circled and turned into a proposed trip event.">
+          <defs>
+            <marker id="a5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"></path>
+            </marker>
+          </defs>
+          <line x1="86" y1="278" x2="640" y2="278" stroke="var(--line-2)"></line>
+          <line x1="86" y1="40" x2="86" y2="278" stroke="var(--line-2)"></line>
+          <text x="363" y="304" text-anchor="middle" font-size="12" fill="var(--muted)">posting date →</text>
+          <text x="70" y="60" text-anchor="end" font-size="12" fill="var(--muted)">180 km</text>
+          <text x="70" y="274" text-anchor="end" font-size="12" fill="var(--muted)">0 km</text>
+          <text x="30" y="170" text-anchor="middle" font-size="12" fill="var(--muted)" transform="rotate(-90 30 170)">distance from home</text>
+
+          <line x1="86" y1="238" x2="640" y2="238" stroke="var(--line)" stroke-dasharray="4 4"></line>
+          <text x="644" y="242" font-size="11" fill="var(--muted)">15 km — the everyday band</text>
+
+          <g fill="var(--ink-2)" opacity="0.75">
+            <circle cx="112" cy="266" r="4"></circle><circle cx="134" cy="258" r="4"></circle>
+            <circle cx="158" cy="270" r="4"></circle><circle cx="186" cy="252" r="4"></circle>
+            <circle cx="212" cy="264" r="4"></circle><circle cx="238" cy="248" r="4"></circle>
+            <circle cx="266" cy="268" r="4"></circle><circle cx="292" cy="256" r="4"></circle>
+            <circle cx="318" cy="262" r="4"></circle><circle cx="470" cy="252" r="4"></circle>
+            <circle cx="498" cy="266" r="4"></circle><circle cx="524" cy="258" r="4"></circle>
+            <circle cx="552" cy="268" r="4"></circle><circle cx="580" cy="254" r="4"></circle>
+            <circle cx="606" cy="264" r="4"></circle>
+          </g>
+          <g fill="var(--lane-a)">
+            <circle cx="356" cy="118" r="5"></circle><circle cx="368" cy="96" r="5"></circle>
+            <circle cx="382" cy="130" r="5"></circle><circle cx="396" cy="104" r="5"></circle>
+            <circle cx="404" cy="126" r="5"></circle><circle cx="418" cy="110" r="5"></circle>
+            <circle cx="430" cy="134" r="5"></circle>
+          </g>
+          <ellipse cx="393" cy="115" rx="62" ry="42" fill="none" stroke="var(--lane-a)" stroke-width="1.6" stroke-dasharray="6 4"></ellipse>
+          <text x="393" y="58" text-anchor="middle" font-size="12" fill="var(--lane-a)">7 postings · 3 days · 148 km out · 2 payers</text>
+
+          <line x1="460" y1="115" x2="700" y2="115" stroke="var(--lane-a)" stroke-width="1.5" color="var(--lane-a)" marker-end="url(#a5)"></line>
+          <text x="580" y="106" text-anchor="middle" font-size="11.5" fill="var(--muted)">DBSCAN over (day, lat, lon)</text>
+
+          <rect x="712" y="62" width="272" height="146" rx="7" fill="var(--surface)" stroke="var(--lane-a)" stroke-width="1.6"></rect>
+          <text x="732" y="90" font-size="11" font-family="IBM Plex Mono, ui-monospace, Menlo, monospace" letter-spacing="0.08em" fill="var(--muted)">SUGGESTED EVENT</text>
+          <text x="732" y="116" font-size="15" font-weight="600" fill="var(--ink)">A weekend in Lucerne?</text>
+          <text x="732" y="140" font-size="12.5" fill="var(--ink-2)">14–16 March · 7 postings · CHF 486.20</text>
+          <text x="732" y="160" font-size="12.5" fill="var(--ink-2)">Place taken from the densest point</text>
+          <rect x="732" y="172" width="94" height="24" rx="4" fill="var(--lane-a)"></rect>
+          <text x="779" y="188" text-anchor="middle" font-size="12" fill="var(--surface)">Create it</text>
+          <text x="844" y="188" font-size="12" fill="var(--muted)">Not a trip</text>
+        </svg>
+      </div>
+      <figcaption>
+        <b>Schematic, not measured.</b> The mechanism: cluster confirmed postings in three
+        dimensions — day, latitude, longitude — with a distance function that treats a day as
+        roughly fifty kilometres, then keep only clusters whose centre sits outside the everyday
+        band. What comes out is a trip nobody had to log.
+      </figcaption>
+    </figure>
+
+    <div class="grid">
+      <article class="card" style="--accent: var(--leaf);">
+        <div class="card-head"><span class="card-id" style="--accent: var(--leaf);">E1</span><h3>Trips found by clustering</h3><span class="lane lane-a">A</span></div>
+        <p>
+          DBSCAN over <code>(date, lat, lon)</code> with a haversine-plus-days metric, run
+          nightly over confirmed expenses that have no event. Home is the median of the
+          everyday band, so it needs no configuration. A cluster of three or more postings whose
+          centroid is far from home, spanning one to fourteen days, is a candidate trip.
+        </p>
+        <p>
+          <b>Never auto-create.</b> Propose it on the timeline with the dates, the total, and the
+          places, and let a human name it. A wrongly-invented trip is much worse than a missed
+          one.
+        </p>
+        <dl class="spec">
+          <dt>Model</dt><dd>DBSCAN, ~60 lines, no dependency</dd>
+          <dt>Data</dt><dd><span class="mono">Expenses</span> with <span class="mono">lat</span>/<span class="mono">lon</span></dd>
+          <dt>Effort</dt><dd><span class="pill pill-go">a day</span></dd>
+        </dl>
+      </article>
+
+      <article class="card">
+        <div class="card-head"><span class="card-id">E2</span><h3>Subscriptions and rhythms</h3><span class="lane lane-a">A</span></div>
+        <p>
+          Group by <code>merchantNorm</code>, take the gaps between consecutive dates, and look
+          for a stable period with a stable amount. Three occurrences at 30 ± 3 days with the
+          amount varying under 5% is a subscription; a Thursday-evening pattern at the same
+          restaurant is a ritual worth noticing.
+        </p>
+        <p>Output is two useful things: a forecast of what the month already owes, and a gentle "you have been paying for this since 2024".</p>
+        <dl class="spec">
+          <dt>Model</dt><dd>gap histogram + coefficient of variation</dd>
+          <dt>Data</dt><dd>confirmed <span class="mono">Expenses</span></dd>
+          <dt>Effort</dt><dd><span class="pill pill-go">a day</span></dd>
+        </dl>
+      </article>
+
+      <article class="card">
+        <div class="card-head"><span class="card-id">E3</span><h3>Anomalies, for free</h3><span class="lane lane-a">A</span></div>
+        <p>
+          <code>forecast.ts</code> already returns <code>sigma</code>, the residual standard
+          deviation of the fit. An observed month more than two sigma above its one-step
+          forecast is, by definition, unusual — and the per-category breakdown says which
+          category did it.
+        </p>
+        <p><b>Zero new modelling.</b> This is a comparison against a number the forecaster already computes and currently discards.</p>
+        <dl class="spec">
+          <dt>Model</dt><dd>existing Holt-Winters residuals</dd>
+          <dt>Data</dt><dd>monthly totals per category</dd>
+          <dt>Effort</dt><dd><span class="pill pill-go">hours</span></dd>
+        </dl>
+      </article>
+
+      <article class="card">
+        <div class="card-head"><span class="card-id">E4</span><h3>Duplicates that actually look alike</h3><span class="lane lane-a">A</span></div>
+        <p>
+          The current <code>duplicates()</code> matches on the normalised merchant. Add the
+          merchant embedding from C4, a 90-minute time window and an amount tolerance, and it
+          also catches the same lunch entered once from a receipt and once by hand under a
+          different spelling.
+        </p>
+        <dl class="spec">
+          <dt>Model</dt><dd>cosine similarity + windowing</dd>
+          <dt>Data</dt><dd>existing rows</dd>
+          <dt>Effort</dt><dd><span class="pill pill-go">hours</span></dd>
+        </dl>
+      </article>
+    </div>
+
+    <!-- ========================================= FAMILY M -->
+    <div>
+      <h3 style="font-size:1.5rem;">M · Mood — the same feature, without sending a face anywhere</h3>
+      <p class="prose" style="margin-top:0.6rem;">
+        <code>srv/lib/mood.ts</code> already gets two hard things right: the photograph is never
+        stored, and the reading is presented as an estimate to confirm rather than a fact. What
+        it gets wrong is <em>placement</em> — the photograph still travels to a datacentre, which
+        makes the feature cost money, require a network, and put an image of a face in a request
+        body. All three go away if the model runs in the page.
+      </p>
+    </div>
+
+    <figure class="fig">
+      <div class="canvas">
+        <svg viewBox="0 0 1000 320" role="img" aria-label="Mood detection today sends a photograph of a face across the device boundary to a cloud model. The proposed version computes face landmarks in the browser and scores a small local model, so only a level, a label and a confidence ever cross.">
+          <defs>
+            <marker id="a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"></path>
+            </marker>
+          </defs>
+
+          <line x1="560" y1="26" x2="560" y2="300" stroke="var(--line-2)" stroke-width="1.5" stroke-dasharray="7 5"></line>
+          <rect x="470" y="12" width="180" height="20" fill="var(--surface)"></rect>
+          <text x="560" y="27" text-anchor="middle" font-size="11.5" font-family="IBM Plex Mono, ui-monospace, Menlo, monospace" letter-spacing="0.06em" fill="var(--muted)">THE DEVICE BOUNDARY</text>
+
+          <text x="16" y="62" font-size="11.5" font-family="IBM Plex Mono, ui-monospace, Menlo, monospace" letter-spacing="0.1em" fill="var(--muted)">TODAY</text>
+          <g fill="var(--surface)" stroke="var(--line-2)">
+            <rect x="120" y="70" width="140" height="50" rx="5"></rect>
+            <rect x="292" y="70" width="150" height="50" rx="5"></rect>
+            <rect x="600" y="70" width="120" height="50" rx="5"></rect>
+            <rect x="752" y="70" width="132" height="50" rx="5"></rect>
+          </g>
+          <g font-size="12" fill="var(--ink)" text-anchor="middle">
+            <text x="190" y="100">Camera frame</text>
+            <text x="367" y="92">JPEG, 1600 px</text>
+            <text x="367" y="108">of a person's face</text>
+            <text x="660" y="92">CAP server</text>
+            <text x="660" y="108">detectMood()</text>
+            <text x="818" y="92">Anthropic</text>
+            <text x="818" y="108">vision call</text>
+          </g>
+          <g stroke="var(--ink-2)" stroke-width="1.4" color="var(--ink-2)" marker-end="url(#a3)">
+            <line x1="260" y1="95" x2="286" y2="95"></line>
+            <line x1="720" y1="95" x2="746" y2="95"></line>
+          </g>
+          <line x1="442" y1="95" x2="594" y2="95" stroke="var(--coral)" stroke-width="2" color="var(--coral)" marker-end="url(#a3)"></line>
+          <rect x="452" y="126" width="140" height="18" fill="var(--surface)"></rect>
+          <text x="518" y="140" text-anchor="middle" font-size="12" font-weight="600" fill="var(--coral)">a photograph of you</text>
+          <text x="884" y="140" text-anchor="end" font-size="11.5" fill="var(--muted)">billed per call · needs a network · fails on a plane</text>
+
+          <line x1="16" y1="172" x2="984" y2="172" stroke="var(--line)"></line>
+
+          <text x="16" y="208" font-size="11.5" font-family="IBM Plex Mono, ui-monospace, Menlo, monospace" letter-spacing="0.1em" fill="var(--muted)">PROPOSED</text>
+          <g fill="var(--surface)">
+            <rect x="120" y="216" width="118" height="50" rx="5" stroke="var(--line-2)"></rect>
+            <rect x="252" y="216" width="140" height="50" rx="5" stroke="var(--lane-b)" stroke-width="1.8"></rect>
+            <rect x="406" y="216" width="140" height="50" rx="5" stroke="var(--lane-b)" stroke-width="1.8"></rect>
+            <rect x="600" y="216" width="284" height="50" rx="5" stroke="var(--line-2)"></rect>
+          </g>
+          <g font-size="12" fill="var(--ink)" text-anchor="middle">
+            <text x="179" y="246">Camera frame</text>
+            <text x="322" y="238">FaceLandmarker</text>
+            <text x="322" y="254">52 blendshapes</text>
+            <text x="476" y="238">your logistic head</text>
+            <text x="476" y="254">weights.json, 40 KB</text>
+            <text x="742" y="238">POST /Moods — level 4, "content", 0.71</text>
+            <text x="742" y="254">the frame was discarded before this line ran</text>
+          </g>
+          <g stroke="var(--ink-2)" stroke-width="1.4" color="var(--ink-2)" marker-end="url(#a3)">
+            <line x1="238" y1="241" x2="246" y2="241"></line>
+            <line x1="392" y1="241" x2="400" y2="241"></line>
+          </g>
+          <line x1="546" y1="241" x2="594" y2="241" stroke="var(--teal)" stroke-width="2" color="var(--teal)" marker-end="url(#a3)"></line>
+          <text x="322" y="288" text-anchor="middle" font-size="11.5" fill="var(--lane-b)">~20 ms, offline, free</text>
+        </svg>
+      </div>
+      <figcaption>
+        <b>The claim is the arrow that crosses.</b> Same feature, same 1–5 scale, same
+        confirm-before-saving rule — but what leaves the phone changes from an image of a face
+        to three scalars, and the cost changes from a per-call bill to nothing.
+      </figcaption>
+    </figure>
+
+    <div class="grid">
+      <article class="card" style="--accent: var(--teal);">
+        <div class="card-head"><span class="card-id" style="--accent: var(--teal);">M1</span><h3>Mood from blendshapes</h3><span class="lane lane-b">B</span></div>
+        <p>
+          MediaPipe's face landmarker returns 478 3-D landmarks plus <b>52 named blendshape
+          scores</b> — <code>mouthSmileLeft</code>, <code>browDownRight</code>,
+          <code>eyeSquintLeft</code> — each 0…1, computed in the browser at video rate. That is a
+          52-dimension feature vector describing an expression, with the image already thrown
+          away.
+        </p>
+        <p>
+          Train a five-class logistic regression on it, using <b>your own <code>Moods</code>
+          rows as labels</b>: every time somebody taps a face on the mood page with the camera
+          open, you have a labelled example. Two hundred examples is plenty for a linear model
+          over 52 clean features.
+        </p>
+        <p>
+          <b>Ship it exactly like the classifier:</b> fit in <code>ml/</code>, export
+          <code>weights.json</code>, port the scorer to TypeScript, add a parity fixture. A
+          52×5 matrix is 40 KB.
+        </p>
+        <dl class="spec">
+          <dt>Model</dt><dd>multinomial logistic over 52 blendshapes</dd>
+          <dt>Data</dt><dd>your <span class="mono">Moods</span> taps, captured with consent</dd>
+          <dt>Effort</dt><dd><span class="pill pill-mid">~2 days</span></dd>
+        </dl>
+      </article>
+
+      <article class="card">
+        <div class="card-head"><span class="card-id">M2</span><h3>Mood from what was written</h3><span class="lane lane-b">B</span><span class="lane lane-d">D</span></div>
+        <p>
+          Chat messages and memory notes carry mood too. Apple's Natural Language framework
+          scores sentiment offline in one line; in lane B a distilled MiniLM classifier under
+          transformers.js does the same in about 25 MB.
+        </p>
+        <p>
+          <b>Use it to prompt, never to record.</b> "Sounds like a good evening — want to save
+          that as a 4?" is welcome. Silently writing a mood row because somebody typed a sad
+          sentence is surveillance.
+        </p>
+        <dl class="spec">
+          <dt>Model</dt><dd>NL sentiment, or a distilled sentence classifier</dd>
+          <dt>Data</dt><dd>pretrained; no household data needed</dd>
+          <dt>Effort</dt><dd><span class="pill pill-go">hours</span></dd>
+        </dl>
+      </article>
+
+      <article class="card">
+        <div class="card-head"><span class="card-id">M3</span><h3>Voice notes that become text</h3><span class="lane lane-d">D</span><span class="lane lane-b">B</span></div>
+        <p>
+          Phase 2 of the platform ADR adds press-to-record voice messages. Transcribing them on
+          the sender's device — SpeechAnalyzer in lane D, Whisper-tiny under WebGPU in lane B —
+          makes them searchable, quotable and accessible, and it is the only way voice notes ever
+          enter the semantic index in S1.
+        </p>
+        <p>Store the transcript beside the audio, marked as machine-made, and let anybody correct it.</p>
+        <dl class="spec">
+          <dt>Model</dt><dd>SpeechAnalyzer (free) or Whisper-tiny ONNX (~40 MB)</dd>
+          <dt>Data</dt><dd>pretrained</dd>
+          <dt>Effort</dt><dd><span class="pill pill-mid">days</span></dd>
+        </dl>
+      </article>
+
+      <article class="card">
+        <div class="card-head"><span class="card-id">M4</span><h3>The week has a shape</h3><span class="lane lane-a">A</span></div>
+        <p>
+          Mood readings are a time series with a strong seven-day period. The forecaster you
+          already own handles exactly that: set <code>seasonLength</code> to 7 and it will tell
+          you that Wednesdays are reliably the low point.
+        </p>
+        <p>Present it as a shape, never as a prediction about a person. "Wednesdays tend to be quieter" is an observation; "you will feel bad on Wednesday" is not something software should say.</p>
+        <dl class="spec">
+          <dt>Model</dt><dd>existing Holt-Winters, period 7</dd>
+          <dt>Data</dt><dd><span class="mono">Moods.level</span> over time</dd>
+          <dt>Effort</dt><dd><span class="pill pill-go">hours</span></dd>
+        </dl>
+      </article>
+
+      <article class="card">
+        <div class="card-head"><span class="card-id">M5</span><h3>Mood beside spending — descriptive only</h3><span class="lane lane-a">A</span></div>
+        <p>
+          There is a real and interesting question here: do the good weeks look different in the
+          ledger? Lagged correlation between daily mood and category spend answers it, and the
+          answer is often charming — dining up, transport down.
+        </p>
+        <p>
+          <b>Label it what it is.</b> With a few hundred points you have a correlation, not a
+          cause, and the app must say so in the copy. Anything that reads as "spending money
+          makes you happy" is both wrong and manipulative.
+        </p>
+        <dl class="spec">
+          <dt>Model</dt><dd>lagged Pearson / Spearman with a stated n</dd>
+          <dt>Data</dt><dd><span class="mono">Moods</span> × daily category totals</dd>
+          <dt>Effort</dt><dd><span class="pill pill-go">hours</span></dd>
+        </dl>
+      </article>
+    </div>
+
+    <div class="note note--warn">
+      <h4>Two rules this family inherits from the code that already exists</h4>
+      <p>
+        <b>The photograph is never stored</b> — that is already the documented behaviour of
+        <code>detectMood</code>, and moving inference into the browser strengthens it rather than
+        replacing it. And <b>a reading is a suggestion until a human taps it</b>: the model fills
+        the picker, the person confirms, and <code>source</code> records which happened. Neither
+        rule is negotiable, and both are what make this feature acceptable at all — see §9.
+      </p>
+    </div>
+
+    <!-- ========================================= FAMILY P -->
+    <div>
+      <h3 style="font-size:1.5rem;">P · Anticipating — suggestion, and the next thing you were going to do</h3>
+      <p class="prose" style="margin-top:0.6rem;">
+        "Predict the next action" sounds like it needs a sequence model. It does not. A household
+        has perhaps eight things it ever does in this app, and which one comes next is decided
+        almost entirely by the clock, the calendar and what is left undone. That makes it a
+        <em>ranking</em> problem over a handful of candidate actions with a dozen features — a
+        gradient-boosted tree on a few hundred rows, or an honest set of rules until you have
+        enough of them.
+      </p>
+    </div>
+
+    <figure class="fig">
+      <div class="canvas">
+        <svg viewBox="0 0 1000 300" role="img" aria-label="Signals from the clock, the calendar and unfinished work are assembled into one feature row, scored by a ranker over a fixed set of candidate actions, and the top-scoring action is surfaced on the home screen.">
+          <defs>
+            <marker id="a6" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"></path>
+            </marker>
+          </defs>
+          <text x="16" y="28" font-size="11" font-family="IBM Plex Mono, ui-monospace, Menlo, monospace" letter-spacing="0.09em" fill="var(--muted)">SIGNALS ALREADY IN THE DATABASE</text>
+          <g fill="var(--surface)" stroke="var(--line-2)">
+            <rect x="16" y="40" width="196" height="32" rx="4"></rect>
+            <rect x="16" y="80" width="196" height="32" rx="4"></rect>
+            <rect x="16" y="120" width="196" height="32" rx="4"></rect>
+            <rect x="16" y="160" width="196" height="32" rx="4"></rect>
+            <rect x="16" y="200" width="196" height="32" rx="4"></rect>
+            <rect x="16" y="240" width="196" height="32" rx="4"></rect>
+          </g>
+          <g font-size="12" fill="var(--ink-2)">
+            <text x="30" y="60">Friday, 18:40</text>
+            <text x="30" y="100">3 drafts unposted</text>
+            <text x="30" y="140">month closes in 4 days</text>
+            <text x="30" y="180">last event was 23 days ago</text>
+            <text x="30" y="220">a reminder is due tomorrow</text>
+            <text x="30" y="260">Dining is 18% under forecast</text>
+          </g>
+          <g stroke="var(--line-2)" stroke-width="1.2" fill="none">
+            <path d="M 212 56 C 240 56 244 120 262 148"></path>
+            <path d="M 212 96 C 240 96 246 130 262 152"></path>
+            <path d="M 212 136 C 240 136 248 146 262 156"></path>
+            <path d="M 212 176 C 240 176 248 166 262 160"></path>
+            <path d="M 212 216 C 240 216 246 182 262 164"></path>
+            <path d="M 212 256 C 240 256 244 192 262 168"></path>
+          </g>
+          <rect x="268" y="126" width="148" height="64" rx="6" fill="var(--surface)" stroke="var(--line-2)"></rect>
+          <text x="342" y="152" text-anchor="middle" font-size="12.5" font-weight="600" fill="var(--ink)">one feature row</text>
+          <text x="342" y="172" text-anchor="middle" font-size="11.5" fill="var(--muted)">~24 numbers, no text</text>
+          <line x1="416" y1="158" x2="446" y2="158" stroke="var(--ink-2)" stroke-width="1.4" color="var(--ink-2)" marker-end="url(#a6)"></line>
+          <rect x="452" y="120" width="170" height="76" rx="6" fill="var(--surface)" stroke="var(--lane-a)" stroke-width="1.8"></rect>
+          <text x="537" y="146" text-anchor="middle" font-size="12.5" font-weight="600" fill="var(--ink)">ranker over 8 actions</text>
+          <text x="537" y="166" text-anchor="middle" font-size="11.5" fill="var(--muted)">trained on what you</text>
+          <text x="537" y="182" text-anchor="middle" font-size="11.5" fill="var(--muted)">actually did next</text>
+          <line x1="622" y1="158" x2="652" y2="158" stroke="var(--ink-2)" stroke-width="1.4" color="var(--ink-2)" marker-end="url(#a6)"></line>
+
+          <text x="664" y="28" font-size="11" font-family="IBM Plex Mono, ui-monospace, Menlo, monospace" letter-spacing="0.09em" fill="var(--muted)">RANKED CANDIDATES</text>
+          <rect x="664" y="96" width="320" height="44" rx="6" fill="var(--surface)" stroke="var(--lane-a)" stroke-width="1.8"></rect>
+          <text x="682" y="123" font-size="13" font-weight="600" fill="var(--ink)">Plan something for the weekend</text>
+          <text x="966" y="123" text-anchor="end" font-size="12" font-family="IBM Plex Mono, ui-monospace, Menlo, monospace" fill="var(--lane-a)">0.62</text>
+          <rect x="664" y="150" width="320" height="40" rx="6" fill="var(--surface)" stroke="var(--line-2)"></rect>
+          <text x="682" y="175" font-size="13" fill="var(--ink-2)">Post the 3 drafts</text>
+          <text x="966" y="175" text-anchor="end" font-size="12" font-family="IBM Plex Mono, ui-monospace, Menlo, monospace" fill="var(--muted)">0.21</text>
+          <rect x="664" y="200" width="320" height="40" rx="6" fill="var(--surface)" stroke="var(--line-2)"></rect>
+          <text x="682" y="225" font-size="13" fill="var(--ink-2)">Close March</text>
+          <text x="966" y="225" text-anchor="end" font-size="12" font-family="IBM Plex Mono, ui-monospace, Menlo, monospace" fill="var(--muted)">0.09</text>
+          <text x="664" y="266" font-size="11.5" fill="var(--lane-a)">only the top card is shown — a list of eight suggestions is not a suggestion</text>
+        </svg>
+      </div>
+      <figcaption>
+        <b>Schematic values.</b> The mechanism is worth more than the model: the candidate set is
+        small and fixed, the features are all already in the database, and the training label is
+        simply which action the household took within the next hour.
+      </figcaption>
+    </figure>
+
+    <div class="grid">
+      <article class="card">
+        <div class="card-head"><span class="card-id">P1</span><h3>The next-action card</h3><span class="lane lane-a">A</span></div>
+        <p>
+          Eight candidates — scan, post drafts, plan an event, write a memory, close the month,
+          set a reminder, log a mood, send a message. Twenty-four features from the clock, the
+          calendar and the backlog. The label is what actually happened next, harvested from your
+          own request log.
+        </p>
+        <p>
+          <b>Start without a model.</b> Rules will get you to a good card in an afternoon, and
+          they generate the training data for the learned version by giving you accept/dismiss
+          signals.
+        </p>
+        <dl class="spec">
+          <dt>Model</dt><dd>rules → gradient-boosted ranker</dd>
+          <dt>Data</dt><dd>action history; everything else already exists</dd>
+          <dt>Effort</dt><dd><span class="pill pill-mid">days</span></dd>
+        </dl>
+      </article>
+
+      <article class="card" style="--accent: var(--pink);">
+        <div class="card-head"><span class="card-id" style="--accent: var(--pink);">P2</span><h3>Suggest an actual evening</h3><span class="lane lane-a">A</span></div>
+        <p>
+          Not "you should go out" but "the ramen place you went to in the rain last November is
+          open Friday, you have CHF 180 of dining headroom, and you have not planned anything for
+          eleven days". That is <b>retrieval plus a ranker plus one sentence of prose</b> — and
+          only the last part wants an LLM.
+        </p>
+        <p>
+          Candidates come from your own history: merchants seen before with a high moment
+          confidence for <code>date_night</code>, places from past memories, events you repeated.
+          The ranker scores recency, budget headroom, weekday fit and participant availability.
+          The LLM only writes the invitation.
+        </p>
+        <p>
+          <b>This is where an LLM genuinely earns its place</b> — after retrieval has already
+          decided <em>what</em>, to decide <em>how to say it</em>. Ask a model to invent the plan
+          from nothing and it will invent a restaurant that does not exist.
+        </p>
+        <dl class="spec">
+          <dt>Model</dt><dd>retrieval + scoring; LLM for wording only</dd>
+          <dt>Data</dt><dd><span class="mono">Expenses</span>, <span class="mono">Memories</span>, <span class="mono">Events</span>, forecast</dd>
+          <dt>Effort</dt><dd><span class="pill pill-mid">days</span></dd>
+        </dl>
+      </article>
+
+      <article class="card">
+        <div class="card-head"><span class="card-id">P3</span><h3>Dates that come round again</h3><span class="lane lane-a">A</span></div>
+        <p>
+          Anniversaries, birthdays and the yearly repeats of past events are all derivable from
+          rows you have. Combine that with the historical lead time on <code>Gifts</code>
+          spending — if gifts are usually bought nine days before, nudge on day twelve.
+        </p>
+        <p>The surprise mechanics already exist: a suggested event can be created with <code>isSurprise</code> so it stays invisible to everyone but the planner.</p>
+        <dl class="spec">
+          <dt>Model</dt><dd>calendar arithmetic + a lead-time histogram</dd>
+          <dt>Data</dt><dd><span class="mono">Events</span>, <span class="mono">Memories</span>, Gifts spend</dd>
+          <dt>Effort</dt><dd><span class="pill pill-go">a day</span></dd>
+        </dl>
+      </article>
+
+      <article class="card">
+        <div class="card-head"><span class="card-id">P4</span><h3>Category budgets that forecast themselves</h3><span class="lane lane-a">A</span></div>
+        <p>
+          <code>forecast()</code> currently runs over the grand total. Run it per category and
+          you get ten small forecasts with prediction bands, which turns the ledger from a record
+          into a plan: "Groceries will land near CHF 640; Travel has no pattern yet".
+        </p>
+        <p><code>planTrip()</code> already turns those into a monthly instalment; per-category free cash makes its verdict much sharper.</p>
+        <dl class="spec">
+          <dt>Model</dt><dd>existing forecaster, ten series</dd>
+          <dt>Data</dt><dd><span class="mono">monthlyTotals()</span></dd>
+          <dt>Effort</dt><dd><span class="pill pill-go">hours</span></dd>
+        </dl>
+      </article>
+
+      <article class="card">
+        <div class="card-head"><span class="card-id">P5</span><h3>Reminders that learn their lead time</h3><span class="lane lane-a">A</span></div>
+        <p>
+          <code>leadDays</code> defaults to 1 and is almost always wrong. Learn the median gap
+          between when a reminder is actually completed and when its event starts, per kind of
+          event, and default to that.
+        </p>
+        <dl class="spec">
+          <dt>Model</dt><dd>a median, conditioned on event kind</dd>
+          <dt>Data</dt><dd><span class="mono">Reminders.done</span> timestamps</dd>
+          <dt>Effort</dt><dd><span class="pill pill-go">hours</span></dd>
+        </dl>
+      </article>
+
+      <article class="card">
+        <div class="card-head"><span class="card-id">P6</span><h3>"The month looks finished"</h3><span class="lane lane-a">A</span></div>
+        <p>
+          Predict when a period is ready to close: no drafts left, spend flattening against the
+          forecast, the last few days historically quiet. Then offer the payment run instead of
+          waiting to be asked.
+        </p>
+        <p>A small thing that makes the SAP joke land harder — the system proposing its own period close is exactly the right kind of funny.</p>
+        <dl class="spec">
+          <dt>Model</dt><dd>logistic over four features</dd>
+          <dt>Data</dt><dd><span class="mono">Settlements</span> history</dd>
+          <dt>Effort</dt><dd><span class="pill pill-go">hours</span></dd>
+        </dl>
+      </article>
+    </div>
+
+    <!-- ========================================= FAMILY G -->
+    <div>
+      <h3 style="font-size:1.5rem;">G · Generating — pictures and prose made on your own machines</h3>
+      <p class="prose" style="margin-top:0.6rem;">
+        Local image generation is the thing you asked about most directly, and the answer is a
+        clear yes with one architectural condition: <b>it never happens inside an HTTP
+        handler</b>. Thirty to ninety seconds is a wonderful latency for a nightly job and an
+        unacceptable one for a button. Design every generative feature as something that
+        <em>appears</em>, not something you wait for. The full pipeline is in §7.
+      </p>
+    </div>
+
+    <div class="grid">
+      <article class="card" style="--accent: var(--violet);">
+        <div class="card-head"><span class="card-id" style="--accent: var(--violet);">G1</span><h3>Postcards for the timeline</h3><span class="lane lane-c">C</span></div>
+        <p>
+          Every memory already carries the facts a good prompt needs: a place, a date, a kind, a
+          note somebody wrote by hand, and often a photograph whose dominant colours you can
+          sample. Build a prompt from those deterministically, render with FLUX.1-schnell, and
+          attach the result to the memory as an illustration.
+        </p>
+        <p>
+          <b>An illustration, explicitly not a photograph.</b> Pin the style — ink and wash,
+          risograph, gouache — so nothing generated is ever mistaken for a picture of a real
+          evening. That is a design decision and a legal one at once.
+        </p>
+        <dl class="spec">
+          <dt>Model</dt><dd>FLUX.1-schnell via MFLUX, 4-bit</dd>
+          <dt>Data</dt><dd><span class="mono">Memories</span> fields; no training</dd>
+          <dt>Effort</dt><dd><span class="pill pill-mid">~2 days</span></dd>
+        </dl>
+      </article>
+
+      <article class="card">
+        <div class="card-head"><span class="card-id">G2</span><h3>A cover for the Statement of Us</h3><span class="lane lane-c">C</span></div>
+        <p>
+          The yearly statement is already generated prose stored as markdown. Give it a cover
+          drawn from the year's actual shape — the dominant categories, the places travelled to,
+          the busiest month — and the artefact becomes something you would print.
+        </p>
+        <p>Twelve small panels, one per month, tinted by that month's leading category, is a version that needs no diffusion model at all.</p>
+        <dl class="spec">
+          <dt>Model</dt><dd>FLUX, or pure SVG from the aggregates</dd>
+          <dt>Data</dt><dd><span class="mono">StatementFacts</span></dd>
+          <dt>Effort</dt><dd><span class="pill pill-mid">days</span></dd>
+        </dl>
+      </article>
+
+      <article class="card">
+        <div class="card-head"><span class="card-id">G3</span><h3>A poster for a surprise</h3><span class="lane lane-c">C</span><span class="lane lane-d">D</span></div>
+        <p>
+          <code>isSurprise</code> events are hidden from everyone but their planner. A generated
+          poster — the place, the date, a style you chose — turns the reveal into a moment
+          instead of a row appearing in a list.
+        </p>
+        <p>In lane D, Image Playground does this on the phone in seconds, in its own illustrated styles, with no infrastructure whatsoever.</p>
+        <dl class="spec">
+          <dt>Model</dt><dd>FLUX (C) or Image Playground (D)</dd>
+          <dt>Data</dt><dd><span class="mono">Events</span></dd>
+          <dt>Effort</dt><dd><span class="pill pill-go">hours</span> on top of G1</dd>
+        </dl>
+      </article>
+
+      <article class="card">
+        <div class="card-head"><span class="card-id">G4</span><h3>Mood as an ambient picture</h3><span class="lane lane-b">B</span></div>
+        <p>
+          No diffusion model, no download, no waiting: map a month of mood readings onto a
+          generative canvas piece — flow fields, colour temperature from the level, density from
+          how often somebody logged. Renders in a frame, is different every month, and is
+          genuinely beautiful.
+        </p>
+        <p><b>The cheapest generative feature on this list</b>, and the only one that runs on everybody's device.</p>
+        <dl class="spec">
+          <dt>Model</dt><dd>none — canvas and a noise function</dd>
+          <dt>Data</dt><dd><span class="mono">Moods</span></dd>
+          <dt>Effort</dt><dd><span class="pill pill-go">hours</span></dd>
+        </dl>
+      </article>
+
+      <article class="card">
+        <div class="card-head"><span class="card-id">G5</span><h3>An icon set that is yours</h3><span class="lane lane-c">C</span></div>
+        <p>
+          <code>Categories</code> carries an <code>icon</code> and a <code>colour</code> as
+          editable display metadata. Generate a coherent set once, curate it by hand, commit the
+          winners as static assets. A one-off act of design, not a runtime feature.
+        </p>
+        <dl class="spec">
+          <dt>Model</dt><dd>FLUX / SDXL, heavily curated</dd>
+          <dt>Data</dt><dd>none</dd>
+          <dt>Effort</dt><dd><span class="pill pill-go">an afternoon</span></dd>
+        </dl>
+      </article>
+
+      <article class="card">
+        <div class="card-head"><span class="card-id">G6</span><h3>A local LLM as the fifth provider</h3><span class="lane lane-d">D</span><span class="lane lane-c">C</span></div>
+        <p>
+          Your provider chain ends in a deterministic template when no credentials exist. A
+          better last resort: Apple's on-device Foundation Models in lane D, or an MLX-served
+          open model in lane C. Same <code>LlmProvider</code> interface, same
+          <code>describeProvider()</code> line in Settings.
+        </p>
+        <p>
+          <b>Know its ceiling.</b> Four thousand and ninety-six tokens of context, shared between
+          prompt and answer, and roughly three billion parameters. It will write a memory title
+          or a chat reply suggestion beautifully. It will not write a three-page statement, and
+          asking it to reason about your year will disappoint you.
+        </p>
+        <dl class="spec">
+          <dt>Model</dt><dd>Foundation Models (~3B) or MLX Qwen/Llama</dd>
+          <dt>Data</dt><dd>pretrained</dd>
+          <dt>Effort</dt><dd><span class="pill pill-mid">days</span> once a lane exists</dd>
+        </dl>
+      </article>
+
+      <article class="card">
+        <div class="card-head"><span class="card-id">G7</span><h3>A sticker per person</h3><span class="lane lane-d">D</span></div>
+        <p>
+          Genmoji built from each <code>People</code> row, used as the avatar instead of a
+          coloured initial. Small, delightful, on-device, and free — the kind of thing that makes
+          an app feel personal rather than clever.
+        </p>
+        <dl class="spec">
+          <dt>Model</dt><dd>Image Playground / Genmoji</dd>
+          <dt>Data</dt><dd><span class="mono">People</span></dd>
+          <dt>Effort</dt><dd><span class="pill pill-go">hours</span> in lane D</dd>
+        </dl>
+      </article>
+    </div>
+
+    <!-- ========================================= FAMILY S -->
+    <div>
+      <h3 style="font-size:1.5rem;">S · Remembering — making four years of rows findable</h3>
+      <p class="prose" style="margin-top:0.6rem;">
+        The app's whole promise is that it keeps a timeline of memories. A timeline you can only
+        scroll is a worse archive than a shoebox. Embeddings fix this completely, and at this
+        data volume the index is a few hundred kilobytes.
+      </p>
+    </div>
+
+    <div class="grid">
+      <article class="card" style="--accent: var(--blue);">
+        <div class="card-head"><span class="card-id" style="--accent: var(--blue);">S1</span><h3>"That ramen place in the rain"</h3><span class="lane lane-a">A</span><span class="lane lane-b">B</span></div>
+        <p>
+          Embed every memory note, event name, expense note and chat message with a small
+          sentence encoder — MiniLM or bge-small, about 90 MB, or Apple's Natural Language
+          embeddings for free in lane D. Store the vectors as a blob column, compare by cosine in
+          SQL. At a few thousand rows a brute-force scan takes single-digit milliseconds.
+        </p>
+        <p>
+          <b>It changes what the app is for.</b> A ledger becomes searchable by feeling rather
+          than by keyword, and the same index powers "similar to this" and the suggestion
+          retrieval in P2.
+        </p>
+        <dl class="spec">
+          <dt>Model</dt><dd>MiniLM / bge-small, ONNX</dd>
+          <dt>Data</dt><dd>all text in the database</dd>
+          <dt>Effort</dt><dd><span class="pill pill-mid">days</span></dd>
+        </dl>
+      </article>
+
+      <article class="card">
+        <div class="card-head"><span class="card-id">S2</span><h3>Photos that tag themselves</h3><span class="lane lane-b">B</span><span class="lane lane-d">D</span></div>
+        <p>
+          CLIP-style zero-shot classification against your own label list — <em>food, mountains,
+          the sea, a city at night, the two of us</em> — needs no training at all, only a list of
+          candidate captions. Run it once per photo at upload time, in the browser.
+        </p>
+        <p>The tags feed search, the timeline's grouping, and the prompt for G1.</p>
+        <dl class="spec">
+          <dt>Model</dt><dd>CLIP / SigLIP under transformers.js</dd>
+          <dt>Data</dt><dd>your own label vocabulary</dd>
+          <dt>Effort</dt><dd><span class="pill pill-mid">days</span></dd>
+        </dl>
+      </article>
+
+      <article class="card">
+        <div class="card-head"><span class="card-id">S3</span><h3>Which photo leads the memory</h3><span class="lane lane-d">D</span></div>
+        <p>
+          An event with fourteen photos needs one to show on the card. Vision scores image
+          aesthetics and detects faces and saliency; pick the sharpest, best-composed frame that
+          contains a face, and stop making people choose.
+        </p>
+        <dl class="spec">
+          <dt>Model</dt><dd>Vision aesthetics + face detection</dd>
+          <dt>Data</dt><dd><span class="mono">EventPhotos</span>, <span class="mono">Photos</span></dd>
+          <dt>Effort</dt><dd><span class="pill pill-go">hours</span> in lane D</dd>
+        </dl>
+      </article>
+
+      <article class="card">
+        <div class="card-head"><span class="card-id">S4</span><h3>A title, offered not imposed</h3><span class="lane lane-d">D</span><span class="lane lane-a">A</span></div>
+        <p>
+          Most memories are saved without a title because typing one is friction. The photo tags,
+          the place, the date and the linked expense are enough context for a three-word
+          suggestion, and the on-device model in G6 is entirely adequate for it.
+        </p>
+        <p><b>Pre-fill the field, never the row.</b> The person still presses save, and what they typed over is what gets stored.</p>
+        <dl class="spec">
+          <dt>Model</dt><dd>Foundation Models, or a template</dd>
+          <dt>Data</dt><dd><span class="mono">Memories</span> context</dd>
+          <dt>Effort</dt><dd><span class="pill pill-go">hours</span></dd>
+        </dl>
+      </article>
+
+      <article class="card">
+        <div class="card-head"><span class="card-id">S5</span><h3>Things worth resurfacing</h3><span class="lane lane-a">A</span></div>
+        <p>
+          "On this day" is a date lookup. "This evening resembles one you loved in 2024" is a
+          nearest-neighbour query in the S1 index, and it is far more affecting.
+        </p>
+        <p>Rate-limit it hard. A resurfacing that arrives once a month is a gift; one that arrives daily is noise, and one that surfaces a bad memory unasked is a mistake — let people mark memories as not-for-resurfacing.</p>
+        <dl class="spec">
+          <dt>Model</dt><dd>cosine nearest neighbour + a cooldown</dd>
+          <dt>Data</dt><dd>the S1 index</dd>
+          <dt>Effort</dt><dd><span class="pill pill-go">hours</span> after S1</dd>
+        </dl>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section id="loop">
+  <div class="sec-head">
+    <span class="sec-num">§5</span>
+    <h2>The loop every one of these ships through</h2>
+    <p>
+      You already built the hard part. Any new model — mood, payer, personalisation — enters the
+      app through the same seven steps, and the parity test is the gate that makes the whole
+      thing trustworthy rather than merely clever.
+    </p>
+  </div>
+
+  <figure class="fig">
+    <div class="canvas">
+      <svg viewBox="0 0 1000 264" role="img" aria-label="The closed training loop: a human confirmation writes a correction, which is exported to CSV, trained in Python on the Mac, exported to JSON weights, gated by the parity test, deployed, and used to make the next prediction the household sees. A branch trains a per-group residual from the same corrections.">
+        <defs>
+          <marker id="a4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"></path>
+          </marker>
+        </defs>
+        <g fill="var(--surface)" stroke="var(--line-2)">
+          <rect x="30" y="50" width="118" height="54" rx="5"></rect>
+          <rect x="166" y="50" width="118" height="54" rx="5"></rect>
+          <rect x="302" y="50" width="118" height="54" rx="5"></rect>
+          <rect x="438" y="50" width="118" height="54" rx="5"></rect>
+          <rect x="574" y="50" width="118" height="54" rx="5"></rect>
+        </g>
+        <rect x="710" y="50" width="118" height="54" rx="5" fill="var(--surface)" stroke="var(--leaf)" stroke-width="2"></rect>
+        <rect x="846" y="50" width="118" height="54" rx="5" fill="var(--surface)" stroke="var(--line-2)"></rect>
+        <g font-size="12" fill="var(--ink)" text-anchor="middle">
+          <text x="89" y="72">Human</text><text x="89" y="88">overrules</text>
+          <text x="225" y="72">Corrections</text><text x="225" y="88">row written</text>
+          <text x="371" y="72">ml:export-data</text><text x="371" y="88">→ live CSV</text>
+          <text x="497" y="72">train.py</text><text x="497" y="88">on the Mac</text>
+          <text x="633" y="72">export_ts.py</text><text x="633" y="88">→ weights.json</text>
+          <text x="769" y="72">parity test</text><text x="769" y="88">1e-4 or fail</text>
+          <text x="905" y="72">deploy, then</text><text x="905" y="88">classify()</text>
+        </g>
+        <g stroke="var(--ink-2)" stroke-width="1.4" color="var(--ink-2)" marker-end="url(#a4)">
+          <line x1="148" y1="77" x2="160" y2="77"></line>
+          <line x1="284" y1="77" x2="296" y2="77"></line>
+          <line x1="420" y1="77" x2="432" y2="77"></line>
+          <line x1="556" y1="77" x2="568" y2="77"></line>
+          <line x1="692" y1="77" x2="704" y2="77"></line>
+          <line x1="828" y1="77" x2="840" y2="77"></line>
+        </g>
+        <text x="30" y="34" font-size="11" font-family="IBM Plex Mono, ui-monospace, Menlo, monospace" letter-spacing="0.09em" fill="var(--muted)">LANE A — IN THE APP</text>
+        <text x="438" y="34" font-size="11" font-family="IBM Plex Mono, ui-monospace, Menlo, monospace" letter-spacing="0.09em" fill="var(--violet)">LANE C — ON YOUR MAC</text>
+        <text x="770" y="34" font-size="11" font-family="IBM Plex Mono, ui-monospace, Menlo, monospace" letter-spacing="0.09em" fill="var(--leaf)">THE GATE</text>
+
+        <path d="M 905 104 L 905 150 L 89 150 L 89 110" fill="none" stroke="var(--ink-2)" stroke-width="1.4" color="var(--ink-2)" marker-end="url(#a4)"></path>
+        <rect x="316" y="140" width="368" height="20" fill="var(--surface)"></rect>
+        <text x="500" y="155" text-anchor="middle" font-size="12" fill="var(--ink-2)">the next guess the household is shown — and can overrule again</text>
+
+        <rect x="166" y="196" width="340" height="52" rx="5" fill="var(--surface)" stroke="var(--violet)" stroke-width="1.6" stroke-dasharray="5 4"></rect>
+        <text x="336" y="218" text-anchor="middle" font-size="12" font-weight="600" fill="var(--violet)">C3 · the same rows, filtered to one group</text>
+        <text x="336" y="236" text-anchor="middle" font-size="11.5" fill="var(--ink-2)">a small residual added to the base logits</text>
+        <path d="M 225 104 L 225 190" fill="none" stroke="var(--violet)" stroke-width="1.4" stroke-dasharray="5 4" color="var(--violet)" marker-end="url(#a4)"></path>
+        <path d="M 506 222 L 920 222 L 920 110" fill="none" stroke="var(--violet)" stroke-width="1.4" stroke-dasharray="5 4" color="var(--violet)" marker-end="url(#a4)"></path>
+      </svg>
+    </div>
+    <figcaption>
+      <b>The gate is the point.</b> Python fits the model and TypeScript executes it, which is
+      only safe because a fixture proves the two agree to 1e-4. Every new head inherits that
+      guarantee for free — which is why "add a head" is a day of work and "add a new runtime" is
+      a fortnight.
+    </figcaption>
+  </figure>
+
+  <div class="note note--warn" style="margin-top:1.4rem;">
+    <h4>One bug to fix before any of this</h4>
+    <p>
+      <code>npm run ml:retrain</code> chains <code>ml:export-data</code> into <code>ml:train</code>,
+      but <code>ml:train</code> passes no <code>--csv</code>, so the trainer silently falls back to
+      the synthetic corpus and the live data is never used. <code>ml/README.md</code> already
+      documents this. Adding <code>--csv ml/data/live_transactions.csv</code> to that script is a
+      one-line change and it is a prerequisite for every personalisation idea above.
+    </p>
+  </div>
+</section>
+
+<section id="recipes">
+  <div class="sec-head">
+    <span class="sec-num">§6</span>
+    <h2>Three recipes you could start tonight</h2>
+    <p>
+      Concrete enough to follow. Each one names the files it creates, the commands it runs, and
+      the test that proves it works.
+    </p>
+  </div>
+
+  <div class="stack-lg">
+    <div>
+      <h3>6.1 · The on-device mood model, end to end</h3>
+      <p class="prose" style="margin-top:0.6rem;">
+        The flagship recommendation, built entirely inside patterns this repository already has.
+        Nothing here is novel; it is the classifier's pipeline pointed at a different vector.
+      </p>
+      <ol class="plain prose" style="margin-top:0.8rem;">
+        <li>
+          <b>Collect, with consent and in the open.</b> On the mood page, when the camera is
+          open and somebody taps a face, also record the 52 blendshape values for that frame.
+          Store them in a new <code>MoodSamples</code> table with the level they chose. Say
+          plainly in the UI that this is teaching the app, and give it an off switch. Two weeks
+          of ordinary use is enough.
+        </li>
+        <li>
+          <b>Export.</b> A sibling to <code>scripts/export-training-data.ts</code> that writes
+          <code>ml/data/mood_samples.csv</code> — 52 float columns plus <code>level</code>.
+        </li>
+        <li>
+          <b>Fit.</b> <code>ml/train_mood.py</code>: standardise the 52 columns, fit a
+          multinomial logistic regression, print a confusion matrix and a five-fold accuracy.
+          Expect roughly 60–75% exact-level accuracy and near-95% within one level, which is
+          plenty for a picker that pre-selects a face.
+        </li>
+        <li>
+          <b>Export weights.</b> <code>ml/export_mood.py</code> writes
+          <code>ml/model/mood_weights.json</code> (means, scales, coefficients, intercepts,
+          label order) and a parity fixture of 200 rows.
+        </li>
+        <li>
+          <b>Port and gate.</b> <code>app/src/pages/mood/moodModel.ts</code> — standardise,
+          multiply, softmax, argmax. Forty lines. Then
+          <code>test/mood-parity.test.ts</code> asserting agreement to 1e-4, exactly like
+          <code>classifier-parity.test.ts</code>.
+        </li>
+        <li>
+          <b>Wire it up.</b> The camera path calls the local model first and only falls back to
+          <code>detectMood</code> when the local confidence is below threshold and a key exists.
+          The photo never leaves the browser on the local path — which is now the default path.
+        </li>
+      </ol>
+<pre style="margin-top:1rem;"><code><i># the whole loop, once the two Python files exist</i>
+npm run mood:export-data          <i># → ml/data/mood_samples.csv</i>
+ml/.venv/bin/python ml/train_mood.py
+ml/.venv/bin/python ml/export_mood.py
+npx vitest run test/mood-parity.test.ts
+
+<i># the browser side, loaded once and cached by the service worker</i>
+<b>import</b> { FaceLandmarker, FilesetResolver } <b>from</b> '@mediapipe/tasks-vision'
+<b>const</b> lm = <b>await</b> FaceLandmarker.createFromOptions(files, {
+  baseOptions: { modelAssetPath: '/models/face_landmarker.task' },
+  outputFaceBlendshapes: <b>true</b>, runningMode: 'IMAGE',
+})
+<b>const</b> shapes = lm.detect(frame).faceBlendshapes[0].categories  <i>// 52 scores</i>
+<b>const</b> reading = scoreMood(shapes)   <i>// your weights.json, ~20 ms</i></code></pre>
+      <div class="note note--go" style="margin-top:1rem;">
+        <p>
+          <b>Why this is the right first project.</b> It removes a recurring cost, it works
+          offline, it strengthens a privacy stance the code already takes, it needs no new
+          runtime and no native app, and it produces a second worked example of the
+          train-in-Python-score-in-TypeScript pattern — which makes every later model cheaper.
+        </p>
+      </div>
+    </div>
+
+    <hr class="rule">
+
+    <div>
+      <h3>6.2 · Trips, with no training at all</h3>
+      <p class="prose" style="margin-top:0.6rem;">
+        Sixty lines in <code>srv/lib/trips.ts</code>, a nightly <code>node-cron</code> job you
+        already depend on, and a card on the timeline. The only judgement calls are three
+        parameters, and all three have defensible defaults.
+      </p>
+<pre><code><i># the metric: a day is worth about 50 km, so a three-day</i>
+<i># cluster 150 km away is as "tight" as a same-day one 10 km away</i>
+d(a, b) = haversine(a.latlon, b.latlon) + 50 * |a.day - b.day|
+
+<b>eps</b>         = 120 km      <i># neighbourhood radius in that metric</i>
+<b>minPoints</b>   = 3           <i># fewer is a day out, not a trip</i>
+<b>homeRadius</b>  = 15 km       <i># median of all postings = home</i>
+
+<i># keep a cluster when: |cluster| >= minPoints</i>
+<i>#                 and distance(centroid, home) > homeRadius</i>
+<i>#                 and 1 <= span(days) <= 14</i>
+<i>#                 and no expense in it already has an event</i></code></pre>
+      <p class="prose" style="margin-top:0.9rem;">
+        <b>Evaluate it on your own ledger before shipping.</b> Run it over the last two years and
+        read the output yourself: every cluster it proposes should be a trip you remember, and
+        every trip you remember should appear. That is a better test than any metric, and it
+        takes ten minutes.
+      </p>
+      <p class="prose" style="margin-top:0.6rem;">
+        Two failure modes to design against. A long stay abroad becomes one enormous cluster —
+        cap the span. A commute to another city looks like a weekly trip — exclude clusters whose
+        merchants repeat monthly, which the recurrence detector in E2 already identifies.
+      </p>
+    </div>
+
+    <hr class="rule">
+
+    <div>
+      <h3>6.3 · Personalising without a model per household</h3>
+      <p class="prose" style="margin-top:0.6rem;">
+        The tenancy work in <span class="mono">TWM-ADR-002</span> makes this both possible and
+        necessary. The shape below keeps one shared model and adds a small, heavily-regularised
+        correction per group — which is the only thing that works when a group has forty labelled
+        rows.
+      </p>
+<pre><code><i># train.py, unchanged, produces the base:  W_base  (65543 × K)</i>
+<i># then, per group, on that group's Corrections only:</i>
+
+X_g, y_g   = features(group_rows), labels(group_rows)
+base_logit = X_g @ W_base                 <i># frozen, never refitted</i>
+residual   = LogisticRegression(C=<b>0.05</b>,       <i># strong prior toward zero</i>
+                               warm_start=<b>False</b>)
+residual.fit(X_g, y_g, sample_weight=w)   <i># w down-weights old corrections</i>
+
+<i># serving:  softmax(base_logit + λ · residual_logit),  λ = min(1, n_g / 50)</i>
+<i># a brand-new group gets λ = 0 and behaves exactly as today</i></code></pre>
+      <p class="prose" style="margin-top:0.9rem;">
+        <b>The λ ramp is the safety property.</b> A household with three corrections cannot move
+        the model; a household with fifty owns its own vocabulary. And because the residual lives
+        in the same 65 536-bucket feature space, it serialises, loads and scores through code
+        that already exists — <code>loadModel</code> gains a second matrix, nothing else changes.
+      </p>
+      <div class="note" style="margin-top:1rem;">
+        <p>
+          <b>Contract impact:</b> this is a change to <code>docs/CONTRACTS.md</code> §3 and §5 —
+          a new optional block in <code>weights.json</code> and a new field in
+          <code>ClassifyResult</code> naming which residual answered. Change the document first,
+          then the Python, then the TypeScript, then the fixture. That order is what keeps the
+          parity test meaningful.
+        </p>
+      </div>
+    </div>
+
+    <hr class="rule">
+
+    <div>
+      <h3>6.4 · Create ML, in one afternoon</h3>
+      <p class="prose" style="margin-top:0.6rem;">
+        For the image classifiers (R5, S2) the fastest honest path skips Python entirely. Export
+        your stored receipts to folders named after their class, drop the parent folder into the
+        Create ML app, choose <em>Image Classification</em>, press Train. Twenty minutes later you
+        have a 2 MB Core ML model with a held-out accuracy report.
+      </p>
+<pre><code><i># get the training set out of SQLite — one folder per class</i>
+cds-tsx run scripts/export-receipt-images.ts --out ~/twm-receipts
+<i>#   ~/twm-receipts/receipt/*.jpg</i>
+<i>#   ~/twm-receipts/invoice/*.jpg</i>
+<i>#   ~/twm-receipts/not-a-receipt/*.jpg</i>
+
+<i># then, to use it in lane B instead of lane D:</i>
+ml/.venv/bin/python -m coremltools.converters ...   <i># or train in PyTorch</i>
+<i># export ONNX → ship under app/public/models → onnxruntime-web</i></code></pre>
+      <p class="prose" style="margin-top:0.9rem;">
+        <b>The catch worth knowing in advance:</b> Create ML gives you Core ML, and Core ML does
+        not run in a browser or on Linux. If the model has to work for everybody, train it in
+        PyTorch and export ONNX instead — slower to build, portable everywhere. Use Create ML to
+        find out in an afternoon whether the model is even possible, then decide.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section id="images">
+  <div class="sec-head">
+    <span class="sec-num">§7</span>
+    <h2>Generating images locally, in practice</h2>
+    <p>
+      Your M3 Pro with 36 GB of unified memory is a capable image-generation machine. The
+      question was never <em>can it</em> — it is <em>where does the minute of rendering go</em>.
+      The answer is: into a queue.
+    </p>
+  </div>
+
+  <div class="stack-lg">
+    <figure class="fig">
+      <div class="canvas">
+        <svg viewBox="0 0 1000 300" role="img" aria-label="Saving a memory queues an art job and returns immediately. A separate job on the Mac builds a prompt from the row's own facts, renders with FLUX, normalises the image through the existing pipeline and posts it back, where it appears on the timeline.">
+          <defs>
+            <marker id="a7" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"></path>
+            </marker>
+          </defs>
+          <text x="16" y="34" font-size="11" font-family="IBM Plex Mono, ui-monospace, Menlo, monospace" letter-spacing="0.09em" fill="var(--muted)">LANE A — INSIDE THE REQUEST</text>
+          <g fill="var(--surface)" stroke="var(--line-2)">
+            <rect x="30" y="46" width="150" height="52" rx="5"></rect>
+            <rect x="210" y="46" width="170" height="52" rx="5"></rect>
+          </g>
+          <rect x="760" y="46" width="210" height="52" rx="5" fill="var(--surface)" stroke="var(--violet)" stroke-width="1.8"></rect>
+          <g font-size="12" fill="var(--ink)" text-anchor="middle">
+            <text x="105" y="70">A memory is saved</text><text x="105" y="86" font-size="11.5" fill="var(--muted)">200 ms, as today</text>
+            <text x="295" y="70">art job queued: pending</text><text x="295" y="86" font-size="11.5" fill="var(--muted)">one row, no work done</text>
+            <text x="865" y="70">the timeline shows it</text><text x="865" y="86" font-size="11.5" fill="var(--muted)">labelled "illustration, made by a model"</text>
+          </g>
+          <line x1="180" y1="72" x2="204" y2="72" stroke="var(--ink-2)" stroke-width="1.4" color="var(--ink-2)" marker-end="url(#a7)"></line>
+
+          <line x1="16" y1="126" x2="984" y2="126" stroke="var(--violet)" stroke-width="1.5" stroke-dasharray="7 5"></line>
+          <rect x="332" y="116" width="460" height="20" fill="var(--surface)"></rect>
+          <text x="342" y="131" font-size="11.5" font-family="IBM Plex Mono, ui-monospace, Menlo, monospace" fill="var(--violet)">the response already returned — nobody is waiting below this line</text>
+
+          <text x="16" y="160" font-size="11" font-family="IBM Plex Mono, ui-monospace, Menlo, monospace" letter-spacing="0.09em" fill="var(--violet)">LANE C — MINUTES LATER, ON YOUR MAC</text>
+          <g fill="var(--surface)" stroke="var(--line-2)">
+            <rect x="30" y="172" width="150" height="56" rx="5"></rect>
+            <rect x="196" y="172" width="170" height="56" rx="5"></rect>
+            <rect x="588" y="172" width="170" height="56" rx="5"></rect>
+            <rect x="774" y="172" width="196" height="56" rx="5"></rect>
+          </g>
+          <rect x="382" y="172" width="190" height="56" rx="5" fill="var(--surface)" stroke="var(--violet)" stroke-width="1.8"></rect>
+          <g font-size="12" fill="var(--ink)" text-anchor="middle">
+            <text x="105" y="196">the job claims it</text><text x="105" y="212" font-size="11.5" fill="var(--muted)">over the API, as a user</text>
+            <text x="281" y="196">prompt from the row</text><text x="281" y="212" font-size="11.5" fill="var(--muted)">place · season · kind · palette</text>
+            <text x="477" y="196">FLUX.1-schnell, 4-bit</text><text x="477" y="212" font-size="11.5" fill="var(--muted)">1024², about 30 s</text>
+            <text x="673" y="196">images.ts</text><text x="673" y="212" font-size="11.5" fill="var(--muted)">2000 px cap, JPEG q85</text>
+            <text x="872" y="196">stored with provenance</text><text x="872" y="212" font-size="11.5" fill="var(--muted)">model, prompt, seed, date</text>
+          </g>
+          <g stroke="var(--ink-2)" stroke-width="1.4" color="var(--ink-2)" marker-end="url(#a7)">
+            <line x1="180" y1="200" x2="190" y2="200"></line>
+            <line x1="366" y1="200" x2="376" y2="200"></line>
+            <line x1="572" y1="200" x2="582" y2="200"></line>
+            <line x1="758" y1="200" x2="768" y2="200"></line>
+          </g>
+          <path d="M 872 172 L 872 104" fill="none" stroke="var(--violet)" stroke-width="1.6" color="var(--violet)" marker-end="url(#a7)"></path>
+          <text x="30" y="266" font-size="11.5" fill="var(--muted)">If the Mac is closed, the job stays pending and nothing breaks — a missing illustration is not a missing memory.</text>
+        </svg>
+      </div>
+      <figcaption>
+        <b>The dashed line is the whole design.</b> Generation is a queue consumer that
+        authenticates like any other client, so it needs no special access, cannot block a user,
+        and can be turned off by not running it.
+      </figcaption>
+    </figure>
+
+    <div class="scroller">
+      <table>
+        <caption>§7.1 — what to run on an M3 Pro with 36 GB</caption>
+        <thead>
+          <tr><th>Tool</th><th>Model family</th><th>Roughly</th><th>Best for</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><b>MFLUX</b> <span class="mono">(MLX-native, CLI)</span></td><td>FLUX.1-schnell / dev</td><td class="num">~30 s at 4-bit, ~90 s for the larger pipeline</td><td>The scripted, reproducible path. Seeds, batch runs, a job queue. <b>This is the one to build on.</b></td></tr>
+          <tr><td><b>Draw Things</b></td><td>Everything, Metal engine</td><td class="num">seconds to a minute</td><td>Finding the style by hand before you automate it. Not scriptable enough to be the pipeline.</td></tr>
+          <tr><td><b>DiffusionKit</b> / Core ML SD</td><td>SD 3, FLUX, SDXL</td><td class="num">comparable</td><td>Swift integration if you go to lane D and want generation on the phone.</td></tr>
+          <tr><td><b>Image Playground</b></td><td>Apple Intelligence</td><td class="num">seconds, on-device</td><td>Illustrated styles only, on a phone, for free. Perfect for stickers and posters; wrong for a painterly postcard.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-head"><span class="card-id" style="--accent: var(--violet);">§7.2</span><h3>Build the prompt from the row, never from a model</h3></div>
+        <p>
+          The temptation is to ask an LLM to write the image prompt. Don't — it adds a second
+          source of invention on top of one that already invents. Compose it from fields:
+        </p>
+<pre><code>style   = "ink and watercolour wash, muted, no text, no faces"
+subject = memory.place ?? event.place ?? category.name
+season  = seasonOf(memory.occurredOn)
+mood    = paletteFrom(dominantColours(memory.photos[0]))
+prompt  = `${subject}, ${season}, ${mood}, ${style}`
+seed    = hash(memory.ID)     <i>// same memory, same picture, forever</i></code></pre>
+        <p>
+          <b>Seeding from the row's own id</b> is what makes the feature feel designed rather
+          than random: re-running the job produces the same illustration, so nothing silently
+          changes under somebody's memory.
+        </p>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><span class="card-id" style="--accent: var(--violet);">§7.3</span><h3>Provenance is not optional</h3></div>
+        <p>
+          Every generated image needs to be distinguishable from a photograph, in the database
+          and on the screen. That is partly taste — this app is a record of real evenings — and
+          partly the EU AI Act's transparency requirement for synthetic content.
+        </p>
+<pre><code><i>// db/schema.cds — additions to Photos / EventPhotos</i>
+<b>generatedBy</b>     : String(60);   <i>// 'flux.1-schnell'; null = a real photo</i>
+<b>generatedPrompt</b> : LargeString;  <i>// exactly what was asked for</i>
+<b>generatedSeed</b>   : Integer;
+<b>generatedAt</b>     : Timestamp;</code></pre>
+        <p>
+          A non-null <code>generatedBy</code> draws the badge, excludes the image from the
+          "hero photo" chooser in S3, and keeps it out of anything that claims to be a record of
+          what happened.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="never">
+  <div class="sec-head">
+    <span class="sec-num">§8</span>
+    <h2>What not to build</h2>
+    <p>
+      A research document that only says yes is a sales brochure. These are the ideas that look
+      attractive from here and are wrong, with the reason each one fails.
+    </p>
+  </div>
+
+  <div class="grid">
+    <article class="card">
+      <div class="card-head"><h3>Fine-tuning an LLM on your ledger</h3></div>
+      <p>
+        A few hundred rows of transactions and forty memories is not a fine-tuning dataset; it is
+        a prompt. You would spend a weekend to make a model marginally better at a task that
+        retrieval plus a good system prompt already does better, and you would have to redo it
+        every time the data grows. <b>Retrieve, don't train.</b>
+      </p>
+    </article>
+    <article class="card">
+      <div class="card-head"><h3>A relationship score</h3></div>
+      <p>
+        The data would support it arithmetically and it would be a genuinely bad thing to exist.
+        A number that goes down is a number people argue about, and no model here has the
+        validity to make that claim. The app's own premise — <em>nobody owes anybody</em> —
+        already refuses this kind of scoring; keep the refusal.
+      </p>
+    </article>
+    <article class="card">
+      <div class="card-head"><h3>Inferring anything sensitive from purchases</h3></div>
+      <p>
+        Merchant strings leak health, religion, pregnancy and orientation with very little
+        effort. <span class="mono">ADR-002 §6</span> already refuses to store an orientation
+        label; a model that infers one is the same decision made worse. Keep the category
+        vocabulary closed, and never add a head whose classes you would not show the person.
+      </p>
+    </article>
+    <article class="card">
+      <div class="card-head"><h3>Mood logged without a tap</h3></div>
+      <p>
+        Automatic mood capture — from the camera, from message sentiment, from typing speed — is
+        technically easy and turns the app into something that watches. The existing design,
+        where a model fills the picker and a person confirms, is right. It also happens to be
+        what keeps the feature on the correct side of §9.
+      </p>
+    </article>
+    <article class="card">
+      <div class="card-head"><h3>A multi-gigabyte model in the browser</h3></div>
+      <p>
+        WebGPU can run a 7B model in a tab. It will also download two gigabytes over a phone
+        connection, fill the cache, and drain a battery. Keep lane B to models under about
+        100 MB — landmarks, embeddings, small classifiers — and put anything larger in lanes
+        C or D.
+      </p>
+    </article>
+    <article class="card">
+      <div class="card-head"><h3>Anything heavy inside the Fly image</h3></div>
+      <p>
+        The server is a small shared machine holding a SQLite file. An ONNX embedding model is
+        fine; a diffusion pipeline, a transcription model or a second Python runtime are not.
+        The rule of thumb: if it changes the image size by more than a couple of hundred
+        megabytes, it belongs in lane C.
+      </p>
+    </article>
+    <article class="card">
+      <div class="card-head"><h3>Replacing Document AI on a hunch</h3></div>
+      <p>
+        Vision's OCR is excellent and will be worse than Document AI on exactly the receipts that
+        matter — faded thermal paper, folded, photographed at an angle. Run it <em>beside</em>
+        the current path, compare on your stored archive, and only then decide which is the
+        default. The raw extraction is kept verbatim precisely so this comparison is possible.
+      </p>
+    </article>
+    <article class="card">
+      <div class="card-head"><h3>Learning across households</h3></div>
+      <p>
+        The moment the app holds more than one group, a model trained on everybody's corrections
+        is a model that moved one household's data into another's predictions. Either keep base
+        training to your own group's data, or aggregate in a way you can describe in one sentence
+        to the people involved — and then actually describe it.
+      </p>
+    </article>
+  </div>
+</section>
+
+<section id="law">
+  <div class="sec-head">
+    <span class="sec-num">§9</span>
+    <h2>The part that decides whether any of this is allowed</h2>
+    <p>
+      This app is Swiss-flavoured, holds data about identified people, infers something about
+      their emotional state, and — since <span class="mono">TWM-ADR-002</span> — is heading
+      towards holding data about <em>other people's</em> households. That last change is the one
+      that matters legally, and it is worth understanding before the mood model gets better
+      rather than after.
+    </p>
+  </div>
+
+  <div class="stack">
+    <div class="note note--warn">
+      <h4>The change nobody notices: the household exemption stops applying</h4>
+      <p>
+        Data protection law generally leaves purely personal or household activity alone. A
+        two-person ledger you run for yourselves sits comfortably there. <b>A multi-tenant
+        service where other households register, invite each other and store their photos does
+        not.</b> At that point you are a controller, with the ordinary obligations that follow:
+        a lawful basis, information duties, deletion, and a defensible answer to "what does the
+        mood feature do with my face?"
+      </p>
+      <p>
+        None of that is a reason to stop. It <em>is</em> a reason that M1 — the on-device mood
+        model — is the right architecture and not merely the cheap one: the strongest possible
+        answer to that question is "the photograph never reaches us, and here is the code path
+        that proves it".
+      </p>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-head"><h3>Emotion inference, specifically</h3></div>
+        <p>
+          Inferring emotion from a face is <b>not</b> biometric identification, so the strictest
+          category does not automatically apply — but an emotional state can reveal something
+          about health, which is special-category data under both the GDPR and the revised Swiss
+          FADP, and the EU AI Act treats emotion-recognition systems as a transparency-obligated
+          class outside its outright bans (which cover workplaces and schools, not a household
+          diary).
+        </p>
+        <p>
+          <b>What that means concretely, and all of it is cheap:</b> explicit opt-in per person,
+          not per group; a plain sentence saying a model estimates the mood and can be wrong;
+          the ability to delete every reading and every training sample; and no automatic
+          logging. The code already satisfies most of this.
+        </p>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h3>Generated images, specifically</h3></div>
+        <p>
+          Synthetic content carries a transparency expectation: a viewer should be able to tell
+          that a picture was made by a model. In a private timeline this is mostly a design
+          concern, but it becomes a real one the moment an image can be shared out of the app.
+        </p>
+        <p>
+          <b>Do the simple version properly:</b> the <code>generatedBy</code> provenance fields
+          from §7.3, a visible badge on the image, and exclusion from anything that presents
+          itself as a record. Embedded C2PA credentials are the thorough version if you ever add
+          sharing.
+        </p>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <div class="card-head"><h3>The on-device ladder</h3></div>
+        <p>
+          A single rule that decides most of these questions for you, in order: <b>compute it on
+          the device; if not, compute it on your server; if not, send the minimum that answers
+          the question; never send an image where a vector will do.</b>
+        </p>
+        <p>Every proposal in §4 was placed in its lane by walking down this ladder, not by asking what was easiest.</p>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>A model card per model</h3></div>
+        <p>
+          Half a page in <code>docs/</code> for each shipped model: what it predicts, what it was
+          trained on and how many rows, its measured accuracy on held-out data, its known failure
+          modes, and the date. <code>docs/MODEL.md</code> is already exactly this for the
+          classifier — copy its shape.
+        </p>
+        <p>It costs an hour and it is the difference between a model you trust and a model you hope about.</p>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>Deletion has to reach the training set</h3></div>
+        <p>
+          If someone deletes their mood history, the blendshape samples that history produced
+          must go too, and the next retrain must not contain them. That means training data is
+          derived on demand from live tables — as <code>ml:export-data</code> already does —
+          rather than accumulating in a file nobody remembers.
+        </p>
+      </div>
+    </div>
+
+    <p class="prose" style="color: var(--muted); font-size: 14.5px;">
+      This section is an engineering summary, not legal advice. If the app ever takes on
+      households outside your own, the mood feature and the photo storage are the two things
+      worth twenty minutes of a lawyer's time.
+    </p>
+  </div>
+</section>
+
+<section id="roadmap">
+  <div class="sec-head">
+    <span class="sec-num">§10</span>
+    <h2>The order to do it in</h2>
+    <p>
+      Four waves, each one shippable on its own and each one making the next cheaper. The
+      boundary between waves is a <em>runtime</em>, because that is what actually costs you
+      something new.
+    </p>
+  </div>
+
+  <div class="stack-lg">
+    <div class="scroller">
+      <table>
+        <caption>Wave 1 — nothing new to install, everything in code you already run</caption>
+        <thead><tr><th>Do</th><th>Why now</th><th>Lane</th><th>Effort</th></tr></thead>
+        <tbody>
+          <tr><td><b>Fix <span class="mono">ml:retrain</span></b> — add <span class="mono">--csv ml/data/live_transactions.csv</span></td><td>Every personalisation idea depends on it, and today it silently trains on synthetic data.</td><td><span class="lane lane-c">C</span></td><td><span class="pill pill-go">minutes</span></td></tr>
+          <tr><td><b>E1 · trip detection</b></td><td>Highest emotional payoff per line of code in the whole document. No labels, no training, uses geo you already store.</td><td><span class="lane lane-a">A</span></td><td><span class="pill pill-go">a day</span></td></tr>
+          <tr><td><b>E2 · recurrence, E3 · anomalies, E4 · duplicates</b></td><td>Three features out of one afternoon of arithmetic over rows you have; E3 is literally a number the forecaster already computes.</td><td><span class="lane lane-a">A</span></td><td><span class="pill pill-go">a day</span></td></tr>
+          <tr><td><b>C1 · calibration, C2 · active learning</b></td><td>Makes every confidence in the UI mean what it says, and makes the next retrain worth more.</td><td><span class="lane lane-c">C</span> <span class="lane lane-a">A</span></td><td><span class="pill pill-go">hours</span></td></tr>
+          <tr><td><b>R1 · capture coach, R3 · QR-bill</b></td><td>Removes the most common scan failure and removes the cloud entirely from Swiss invoices.</td><td><span class="lane lane-b">B</span></td><td><span class="pill pill-go">a day</span></td></tr>
+          <tr><td><b>P4 · per-category forecasts, P6 · close-the-month</b></td><td>Ten lines around a function you already wrote; makes the payment run feel prescient.</td><td><span class="lane lane-a">A</span></td><td><span class="pill pill-go">hours</span></td></tr>
+          <tr><td><b>G4 · mood canvas art</b></td><td>A generative feature with no model, no download and no server — proof the idea works before you buy into diffusion.</td><td><span class="lane lane-b">B</span></td><td><span class="pill pill-go">hours</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="scroller">
+      <table>
+        <caption>Wave 2 — real models in the browser · gate: a second parity test passes</caption>
+        <thead><tr><th>Do</th><th>Why now</th><th>Lane</th><th>Effort</th></tr></thead>
+        <tbody>
+          <tr><td><b>M1 · mood from blendshapes</b></td><td>The flagship. Kills a paid call, works offline, and the photo stops leaving the device. Recipe in §6.1.</td><td><span class="lane lane-b">B</span></td><td><span class="pill pill-mid">~2 days</span></td></tr>
+          <tr><td><b>S1 · semantic search</b></td><td>Turns a scrollable timeline into a searchable archive, and supplies the retrieval that P2 needs.</td><td><span class="lane lane-a">A</span></td><td><span class="pill pill-mid">days</span></td></tr>
+          <tr><td><b>S2 · photo tags, S5 · resurfacing</b></td><td>Zero-shot, no training, and they make the memories page feel alive.</td><td><span class="lane lane-b">B</span></td><td><span class="pill pill-mid">days</span></td></tr>
+          <tr><td><b>P1 · next-action card, P2 · evening suggester</b></td><td>Now that retrieval exists, the suggestion has something true to say instead of something invented.</td><td><span class="lane lane-a">A</span></td><td><span class="pill pill-mid">days</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="scroller">
+      <table>
+        <caption>Wave 3 — your Mac earns its keep · gate: generated art is provenance-marked everywhere it appears</caption>
+        <thead><tr><th>Do</th><th>Why now</th><th>Lane</th><th>Effort</th></tr></thead>
+        <tbody>
+          <tr><td><b>G1 · memory postcards</b> + the job queue</td><td>The queue is the reusable part; once it exists, G2, G3 and G5 are hours each.</td><td><span class="lane lane-c">C</span></td><td><span class="pill pill-mid">~2 days</span></td></tr>
+          <tr><td><b>C3 · per-household residual</b></td><td>Multi-tenancy makes a single shared model progressively wronger for everybody. Recipe in §6.3.</td><td><span class="lane lane-c">C</span></td><td><span class="pill pill-mid">days</span></td></tr>
+          <tr><td><b>C4 · merchant embeddings, C5 · payer head</b></td><td>Two more heads on a vector that is already built; both remove a field a human types every single time.</td><td><span class="lane lane-c">C</span></td><td><span class="pill pill-mid">days</span></td></tr>
+          <tr><td><b>G2 · statement cover</b></td><td>Makes the yearly artefact something you would print, which is the whole point of it.</td><td><span class="lane lane-c">C</span></td><td><span class="pill pill-go">hours</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="scroller">
+      <table>
+        <caption>Wave 4 — only if you want a native app · gate: every feature degrades to lane A or B</caption>
+        <thead><tr><th>Do</th><th>Why now</th><th>Lane</th><th>Effort</th></tr></thead>
+        <tbody>
+          <tr><td><b>The shell</b> — SwiftUI + WKWebView + one message handler</td><td>Everything below depends on it, and nothing below is possible without it.</td><td><span class="lane lane-d">D</span></td><td><span class="pill pill-hard">a week, plus the release process</span></td></tr>
+          <tr><td><b>R2/R4 · Vision OCR and dewarping</b></td><td>Free, offline, instant receipt reading — measured against Document AI on your own archive first.</td><td><span class="lane lane-d">D</span></td><td><span class="pill pill-mid">days</span></td></tr>
+          <tr><td><b>M3 · voice-note transcription</b></td><td>Lands with chat phase 2 and makes voice notes searchable rather than merely storable.</td><td><span class="lane lane-d">D</span></td><td><span class="pill pill-mid">days</span></td></tr>
+          <tr><td><b>G6 · Foundation Models provider, G7 · stickers, S3 · hero photos</b></td><td>Three small delights that cost almost nothing once the bridge exists.</td><td><span class="lane lane-d">D</span></td><td><span class="pill pill-mid">days</span></td></tr>
+          <tr><td><b>App Intents and a widget</b></td><td>Gives the next-action prediction from P1 a home screen to live on. "Log a coffee for eleven eighty" is the demo that sells the whole app.</td><td><span class="lane lane-d">D</span></td><td><span class="pill pill-mid">days</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note note--go">
+      <h4>The single sentence version</h4>
+      <p>
+        Spend wave 1 on arithmetic you already have the data for, wave 2 on moving the mood model
+        into the browser where it belongs, wave 3 on letting your Mac draw and personalise, and
+        decide about wave 4 only once three lane-D features are genuinely wanted — because a
+        native shell is a permanent second deployment, and everything before it is not.
+      </p>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="wrap">
+  <div class="grid-2">
+    <div>
+      <h3>Where the outside facts came from</h3>
+      <ul>
+        <li><a href="https://developer.apple.com/documentation/technotes/tn3193-managing-the-on-device-foundation-model-s-context-window">TN3193 — managing the on-device foundation model's context window</a> (the 4 096-token figure)</li>
+        <li><a href="https://developer.apple.com/videos/play/wwdc2025/277/">WWDC — advanced speech-to-text with SpeechAnalyzer</a></li>
+        <li><a href="https://developer.apple.com/videos/play/wwdc2026/375/">WWDC — creating images with Image Playground</a>, and <a href="https://www.createwithswift.com/generating-images-programmatically-with-image-playground/">generating them programmatically</a></li>
+        <li><a href="https://github.com/gpuweb/gpuweb/wiki/Implementation-Status">WebGPU implementation status</a> — enabled by default in Safari 26 across macOS, iOS, iPadOS and visionOS</li>
+        <li><a href="https://huggingface.co/docs/transformers.js/en/guides/webgpu">Transformers.js — the WebGPU guide</a></li>
+        <li><a href="https://modelfit.io/guides/local-image-generation-mac/">Local image generation on a Mac in 2026</a> and <a href="https://github.com/argmaxinc/DiffusionKit">DiffusionKit</a> — the M3 Pro timings</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Where the inside facts came from</h3>
+      <ul>
+        <li><code>docs/CONTRACTS.md</code> — the authoritative interface spec; §2–§5 govern every model above</li>
+        <li><code>docs/MODEL.md</code> — the two-head classifier, walked through one receipt</li>
+        <li><code>docs/ARCHITECTURE.md</code> and <span class="mono">TWM-ADR-002</span> — tenancy, chat, and what is deliberately not stored</li>
+        <li><code>ml/README.md</code> — the trainer, its flags, and the <span class="mono">ml:retrain</span> bug</li>
+        <li><code>srv/lib/mood.ts</code>, <code>srv/lib/forecast.ts</code>, <code>srv/lib/classifier/</code> — read in full</li>
+      </ul>
+      <p style="margin-top:1rem;">
+        Nothing in this document has been implemented. It is a map, and §10 is the route.
+      </p>
+    </div>
+  </div>
+</footer>

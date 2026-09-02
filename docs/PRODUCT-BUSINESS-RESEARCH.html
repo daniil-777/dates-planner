@@ -1,0 +1,1641 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Two-Way Match product, market, business, psychology, growth and development dossier.">
+  <title>Two-Way Match | Product &amp; Business Research</title>
+  <style>
+    @font-face {
+      font-family: "72";
+      src: url("../app/public/fonts/72-Regular.woff2") format("woff2");
+      font-weight: 400;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "72";
+      src: url("../app/public/fonts/72-Semibold.woff2") format("woff2");
+      font-weight: 600;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "72";
+      src: url("../app/public/fonts/72-Bold.woff2") format("woff2");
+      font-weight: 700;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "72 Mono";
+      src: url("../app/public/fonts/72Mono-Regular.woff2") format("woff2");
+      font-weight: 400;
+      font-display: swap;
+    }
+
+    :root {
+      --ink: #142235;
+      --muted: #566980;
+      --paper: #f4f7f4;
+      --surface: #ffffff;
+      --line: #d8e0df;
+      --navy: #0a3b5c;
+      --blue: #1268d8;
+      --teal: #087f7c;
+      --coral: #d94f45;
+      --sun: #d99700;
+      --leaf: #24734d;
+      --pink: #b72d79;
+      --violet: #6756c7;
+      --danger: #a72f2a;
+      --shadow: 0 8px 24px rgba(20, 34, 53, 0.08);
+      --radius: 8px;
+      --reading: 1120px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background-color: var(--paper);
+      background-image:
+        linear-gradient(rgba(10, 59, 92, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(10, 59, 92, 0.035) 1px, transparent 1px);
+      background-size: 28px 28px;
+      font: 400 17px/1.58 "72", sans-serif;
+      letter-spacing: 0;
+    }
+    a { color: var(--blue); text-underline-offset: 3px; }
+    a:hover { color: var(--navy); }
+    img { max-width: 100%; }
+    button, input { font: inherit; }
+    button:focus-visible, input:focus-visible, a:focus-visible, summary:focus-visible {
+      outline: 3px solid var(--sun);
+      outline-offset: 3px;
+    }
+    code, .mono { font-family: "72 Mono", monospace; }
+    code {
+      padding: 0.08rem 0.28rem;
+      border-radius: 4px;
+      background: #e9efef;
+      font-size: 0.9em;
+    }
+    h1, h2, h3, h4 { margin: 0; line-height: 1.14; letter-spacing: 0; }
+    h1 { max-width: 900px; font-size: 3rem; }
+    h2 { font-size: 2rem; }
+    h3 { font-size: 1.28rem; }
+    h4 { font-size: 1rem; text-transform: uppercase; color: var(--muted); }
+    p { max-width: 74ch; }
+    strong { font-weight: 700; }
+
+    .scroll-progress {
+      position: fixed;
+      inset: 0 auto auto 0;
+      z-index: 100;
+      width: 0;
+      height: 5px;
+      background: var(--coral);
+    }
+    .skip-link {
+      position: fixed;
+      z-index: 120;
+      top: 10px;
+      left: 10px;
+      transform: translateY(-180%);
+      padding: 0.6rem 0.9rem;
+      border-radius: 4px;
+      background: var(--ink);
+      color: white;
+    }
+    .skip-link:focus { transform: translateY(0); }
+
+    .toolbar {
+      position: sticky;
+      top: 0;
+      z-index: 80;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      min-height: 58px;
+      padding: 0.55rem clamp(1rem, 4vw, 3rem);
+      border-bottom: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(12px);
+    }
+    .toolbar-brand { font-weight: 700; color: var(--navy); }
+    .toolbar-actions { display: flex; flex-wrap: wrap; gap: 0.45rem; }
+    .tool-button {
+      min-height: 40px;
+      padding: 0.45rem 0.72rem;
+      border: 1px solid #b7c6c8;
+      border-radius: 6px;
+      background: white;
+      color: var(--ink);
+      cursor: pointer;
+    }
+    .tool-button[aria-pressed="true"] { background: var(--navy); color: white; border-color: var(--navy); }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      padding: 4.2rem clamp(1rem, 7vw, 7rem) 3.7rem;
+      background: var(--navy);
+      color: white;
+    }
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      opacity: 0.16;
+      background-image:
+        linear-gradient(90deg, transparent 0 24%, #ffffff 24% 24.2%, transparent 24.2% 49%, #ffffff 49% 49.2%, transparent 49.2%),
+        linear-gradient(0deg, transparent 0 69%, #ffffff 69% 69.2%, transparent 69.2%);
+    }
+    .hero-inner { position: relative; max-width: 1180px; margin: 0 auto; }
+    .eyebrow {
+      display: inline-block;
+      margin-bottom: 1rem;
+      color: #ffe2a3;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .hero .lead { max-width: 780px; margin: 1.2rem 0 1.5rem; font-size: 1.28rem; color: #e6f0f4; }
+    .hero-meta { display: flex; flex-wrap: wrap; gap: 0.55rem; }
+    .hero-chip {
+      padding: 0.35rem 0.65rem;
+      border: 1px solid rgba(255, 255, 255, 0.45);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      font-size: 0.9rem;
+    }
+
+    .verdict-band {
+      display: grid;
+      grid-template-columns: 180px 1fr 1fr 1fr;
+      gap: 0;
+      border-bottom: 1px solid var(--line);
+      background: white;
+    }
+    .verdict-label, .verdict-point { padding: 1.25rem clamp(1rem, 3vw, 2rem); }
+    .verdict-label { background: var(--sun); color: #231900; }
+    .verdict-point { border-left: 1px solid var(--line); }
+    .verdict-point span { display: block; color: var(--muted); font-size: 0.9rem; text-transform: uppercase; }
+
+    .report-shell {
+      display: grid;
+      grid-template-columns: 255px minmax(0, 1fr);
+      align-items: start;
+      gap: 2rem;
+      max-width: 1460px;
+      margin: 0 auto;
+      padding: 2rem clamp(1rem, 3vw, 3rem) 5rem;
+    }
+    .toc {
+      position: sticky;
+      top: 78px;
+      max-height: calc(100vh - 96px);
+      overflow-y: auto;
+      padding: 1rem;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.92);
+    }
+    .toc strong { display: block; margin-bottom: 0.65rem; }
+    .toc a {
+      display: block;
+      padding: 0.42rem 0.5rem;
+      border-left: 3px solid transparent;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .toc a:hover, .toc a.active { border-left-color: var(--coral); color: var(--ink); background: #f1f5f4; }
+    main { width: min(100%, var(--reading)); }
+
+    .report-section {
+      scroll-margin-top: 78px;
+      padding: 3rem 0;
+      border-bottom: 1px solid #cbd6d5;
+    }
+    .section-heading {
+      display: grid;
+      grid-template-columns: 58px minmax(0, 1fr);
+      gap: 1rem;
+      align-items: start;
+      margin-bottom: 1.6rem;
+    }
+    .section-number {
+      display: grid;
+      place-items: center;
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: var(--navy);
+      color: white;
+      font-weight: 700;
+    }
+    .section-kicker { color: var(--coral); font-weight: 700; text-transform: uppercase; font-size: 0.82rem; }
+    .section-summary { margin-top: 0.35rem; color: var(--muted); font-size: 1.08rem; }
+
+    .quick-grid, .card-grid, .metric-grid, .screen-grid, .risk-grid, .source-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1rem;
+    }
+    .quick-card, .info-card, .metric, .risk-card, .source-card {
+      min-width: 0;
+      padding: 1.15rem;
+      border: 1px solid var(--line);
+      border-top: 5px solid var(--blue);
+      border-radius: var(--radius);
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+    .quick-card:nth-child(2), .info-card.teal { border-top-color: var(--teal); }
+    .quick-card:nth-child(3), .info-card.coral { border-top-color: var(--coral); }
+    .quick-card h3, .info-card h3 { margin-bottom: 0.55rem; }
+    .quick-card p, .info-card p { margin-bottom: 0; }
+    .metric { border-top-color: var(--sun); box-shadow: none; }
+    .metric-value { display: block; font-size: 2rem; font-weight: 700; color: var(--navy); line-height: 1; }
+    .metric-label { display: block; margin-top: 0.45rem; font-weight: 600; }
+    .metric-note { display: block; margin-top: 0.35rem; color: var(--muted); font-size: 0.85rem; }
+
+    .callout {
+      margin: 1.4rem 0;
+      padding: 1rem 1.15rem;
+      border-left: 6px solid var(--blue);
+      border-radius: 0 var(--radius) var(--radius) 0;
+      background: #eaf3fc;
+    }
+    .callout strong { display: block; margin-bottom: 0.25rem; }
+    .callout.decision { border-color: var(--leaf); background: #e9f5ed; }
+    .callout.warning { border-color: var(--coral); background: #fff0ed; }
+    .callout.question { border-color: var(--sun); background: #fff7dc; }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      padding: 0.22rem 0.48rem;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .status.live { color: #145537; background: #dff4e7; }
+    .status.conditional { color: #724d00; background: #fff0be; }
+    .status.future { color: #114e91; background: #e1efff; }
+    .status.stop { color: #852d28; background: #ffe2df; }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(120px, 1fr));
+      gap: 0.55rem;
+      align-items: stretch;
+      margin: 1.4rem 0;
+      overflow-x: auto;
+      padding-bottom: 0.4rem;
+    }
+    .flow-step {
+      position: relative;
+      min-width: 130px;
+      padding: 1rem;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: white;
+    }
+    .flow-step:not(:last-child)::after {
+      content: ">";
+      position: absolute;
+      z-index: 2;
+      top: 50%;
+      right: -0.46rem;
+      width: 0.9rem;
+      color: var(--coral);
+      font-weight: 700;
+      transform: translateY(-50%);
+    }
+    .flow-step b { display: block; color: var(--navy); }
+    .flow-step small { color: var(--muted); }
+
+    .lane-diagram {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(180px, 1fr));
+      gap: 0.75rem;
+      margin: 1.4rem 0;
+      overflow-x: auto;
+    }
+    .lane {
+      min-width: 190px;
+      padding: 1rem;
+      border: 2px solid var(--line);
+      border-radius: var(--radius);
+      background: white;
+    }
+    .lane.private { border-color: var(--teal); }
+    .lane.bridge { border-color: var(--sun); }
+    .lane.public { border-color: var(--blue); }
+    .lane.commercial { border-color: var(--coral); }
+    .lane h3 { margin-bottom: 0.5rem; }
+    .lane ul { padding-left: 1.15rem; }
+
+    .screen-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    figure {
+      margin: 0;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: white;
+      box-shadow: var(--shadow);
+    }
+    figure a { display: block; background: #eef2f2; }
+    figure img { display: block; width: 100%; aspect-ratio: 16 / 10; object-fit: cover; object-position: top; }
+    figure.tall img { aspect-ratio: 4 / 3; }
+    figcaption { padding: 0.85rem 1rem; color: var(--muted); font-size: 0.88rem; }
+    figcaption strong { display: block; color: var(--ink); }
+
+    .table-wrap {
+      margin: 1.25rem 0;
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: white;
+    }
+    table { width: 100%; border-collapse: collapse; min-width: 760px; }
+    th, td { padding: 0.8rem 0.9rem; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+    th { position: sticky; top: 0; background: #eaf0f0; color: var(--navy); font-size: 0.85rem; text-transform: uppercase; }
+    tr:last-child td { border-bottom: 0; }
+    td.center { text-align: center; }
+    .yes { color: var(--leaf); font-weight: 700; }
+    .some { color: #8a5d00; font-weight: 700; }
+    .no { color: #8b969f; }
+
+    details {
+      margin: 1rem 0;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: white;
+    }
+    summary {
+      cursor: pointer;
+      padding: 0.9rem 1rem;
+      color: var(--navy);
+      font-weight: 700;
+    }
+    .details-body { padding: 0 1rem 1rem; }
+
+    .segment-stack { display: grid; gap: 0.75rem; }
+    .segment {
+      display: grid;
+      grid-template-columns: 90px minmax(0, 1fr) 170px;
+      gap: 1rem;
+      align-items: center;
+      padding: 1rem;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: white;
+    }
+    .segment-rank {
+      display: grid;
+      place-items: center;
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: var(--navy);
+      color: white;
+      font-size: 1.4rem;
+      font-weight: 700;
+    }
+    .segment-score { color: var(--muted); font-size: 0.9rem; }
+    .bar { height: 10px; overflow: hidden; border-radius: 999px; background: #e6eceb; }
+    .bar span { display: block; height: 100%; background: var(--teal); }
+
+    .case-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .case {
+      padding: 1.2rem;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: white;
+    }
+    .case.worked { border-left: 7px solid var(--leaf); }
+    .case.failed { border-left: 7px solid var(--coral); }
+    .case h3 { margin-bottom: 0.6rem; }
+    .case .lesson { margin-bottom: 0; font-weight: 600; color: var(--navy); }
+
+    .principles { counter-reset: principle; display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.8rem; }
+    .principle {
+      position: relative;
+      min-height: 130px;
+      padding: 1rem 1rem 1rem 4rem;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: white;
+    }
+    .principle::before {
+      counter-increment: principle;
+      content: counter(principle);
+      position: absolute;
+      top: 1rem;
+      left: 1rem;
+      display: grid;
+      place-items: center;
+      width: 2.2rem;
+      height: 2.2rem;
+      border-radius: 50%;
+      background: var(--sun);
+      font-weight: 700;
+    }
+
+    .mockups { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+    .phone {
+      min-width: 0;
+      padding: 0.55rem;
+      border: 8px solid #1c2838;
+      border-radius: 28px;
+      background: white;
+      box-shadow: var(--shadow);
+    }
+    .phone-screen { min-height: 465px; overflow: hidden; border-radius: 15px; background: #f5f7f5; }
+    .phone-top { padding: 0.8rem; background: var(--navy); color: white; font-size: 0.86rem; font-weight: 700; }
+    .mock-content { padding: 0.8rem; }
+    .mock-title { font-size: 1.18rem; font-weight: 700; }
+    .mock-sub { color: var(--muted); font-size: 0.82rem; }
+    .place-row, .pulse-row, .ad-row {
+      margin-top: 0.65rem;
+      padding: 0.72rem;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: white;
+    }
+    .place-row b, .pulse-row b { display: block; }
+    .tag-row { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.45rem; }
+    .mini-tag { padding: 0.18rem 0.4rem; border-radius: 999px; background: #dceeee; color: #145d5a; font-size: 0.72rem; }
+    .mock-button { width: 100%; margin-top: 0.7rem; padding: 0.6rem; border: 0; border-radius: 6px; background: var(--blue); color: white; font-weight: 700; }
+    .ad-row { border: 2px solid #f1c761; background: #fff8e7; }
+    .sponsored { color: #785100; font-size: 0.7rem; text-transform: uppercase; }
+
+    .roadmap { display: grid; grid-template-columns: repeat(4, minmax(210px, 1fr)); gap: 0.75rem; overflow-x: auto; }
+    .phase { min-width: 220px; padding: 1rem; border-top: 7px solid var(--blue); border-radius: var(--radius); background: white; }
+    .phase:nth-child(2) { border-top-color: var(--teal); }
+    .phase:nth-child(3) { border-top-color: var(--sun); }
+    .phase:nth-child(4) { border-top-color: var(--coral); }
+    .phase .when { color: var(--muted); font-size: 0.85rem; }
+    .phase ul { padding-left: 1.15rem; }
+
+    .calculator {
+      display: grid;
+      grid-template-columns: 1.35fr 0.65fr;
+      gap: 1rem;
+      margin: 1.4rem 0;
+      padding: 1.2rem;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: white;
+      box-shadow: var(--shadow);
+    }
+    .calc-inputs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; }
+    .field label { display: block; color: var(--muted); font-size: 0.84rem; font-weight: 600; }
+    .field input { width: 100%; min-height: 44px; padding: 0.55rem; border: 1px solid #9fafb2; border-radius: 5px; }
+    .calc-output { display: grid; align-content: center; padding: 1rem; border-radius: 6px; background: var(--navy); color: white; }
+    .calc-output span { color: #cddde5; }
+    .calc-output strong { font-size: 2.2rem; }
+    .calc-breakdown { margin-top: 0.5rem; font-size: 0.85rem; }
+
+    .funnel { display: grid; gap: 0.5rem; max-width: 840px; margin: 1.2rem auto; }
+    .funnel-step { margin: 0 auto; padding: 0.7rem 1rem; border-radius: 5px; background: var(--navy); color: white; text-align: center; }
+    .funnel-step:nth-child(2) { width: 88%; background: #0d6280; }
+    .funnel-step:nth-child(3) { width: 75%; background: var(--teal); }
+    .funnel-step:nth-child(4) { width: 62%; background: var(--leaf); }
+    .funnel-step:nth-child(5) { width: 49%; background: var(--coral); }
+
+    .risk-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .risk-card { border-top-color: var(--coral); box-shadow: none; }
+    .risk-meta { display: flex; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.55rem; }
+    .risk-level { font-size: 0.76rem; color: var(--danger); font-weight: 700; text-transform: uppercase; }
+
+    .source-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .source-card { border-top-color: #7d8b96; box-shadow: none; font-size: 0.88rem; }
+    .source-card:target { border-color: var(--sun); background: #fff9e8; }
+    .source-card p { margin: 0.35rem 0; }
+    .source-ref {
+      display: inline-block;
+      margin-left: 0.15rem;
+      padding: 0.05rem 0.3rem;
+      border-radius: 3px;
+      background: #dce9f8;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-decoration: none;
+      vertical-align: super;
+    }
+
+    .focus-note { display: none; }
+    body.focus-mode .deep { display: none !important; }
+    body.focus-mode .focus-note { display: block; }
+    body.focus-mode main { --reading: 900px; }
+    body.focus-mode .report-section { padding: 2rem 0; }
+
+    .footer {
+      padding: 2.5rem 1rem;
+      background: var(--ink);
+      color: #dae4e8;
+      text-align: center;
+    }
+    .footer p { margin: 0.4rem auto; }
+
+    @media (max-width: 1080px) {
+      .report-shell { grid-template-columns: 210px minmax(0, 1fr); gap: 1rem; }
+      .quick-grid, .card-grid, .metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .mockups { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 820px) {
+      body { font-size: 16px; }
+      h1 { font-size: 2.25rem; }
+      h2 { font-size: 1.65rem; }
+      .toolbar { position: relative; align-items: flex-start; }
+      .toolbar-actions { justify-content: flex-end; }
+      .hero { padding-top: 3rem; }
+      .verdict-band { grid-template-columns: 1fr; }
+      .verdict-point { border-left: 0; border-top: 1px solid var(--line); }
+      .report-shell { display: block; padding: 1rem; }
+      .toc { position: relative; top: 0; display: flex; gap: 0.35rem; max-height: none; margin-bottom: 1rem; overflow-x: auto; }
+      .toc strong { display: none; }
+      .toc a { flex: 0 0 auto; border: 1px solid var(--line); border-radius: 999px; }
+      .section-heading { grid-template-columns: 44px 1fr; }
+      .section-number { width: 40px; height: 40px; }
+      .quick-grid, .card-grid, .metric-grid, .screen-grid, .risk-grid, .source-grid, .case-grid, .principles, .mockups { grid-template-columns: 1fr; }
+      .segment { grid-template-columns: 64px 1fr; }
+      .segment-score { grid-column: 2; }
+      .calculator { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 520px) {
+      .toolbar-brand { display: none; }
+      .toolbar { justify-content: flex-end; }
+      .tool-button { min-height: 44px; }
+      .hero .lead { font-size: 1.08rem; }
+      .quick-grid, .metric-grid, .calc-inputs { grid-template-columns: 1fr; }
+      .section-heading { display: block; }
+      .section-number { margin-bottom: 0.8rem; }
+      .phone { max-width: 340px; margin: 0 auto; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+    }
+    @media print {
+      body { background: white; color: black; font-size: 11pt; }
+      .toolbar, .toc, .scroll-progress, .deep-toggle { display: none !important; }
+      .hero { padding: 1.5rem; background: white; color: black; border-bottom: 4px solid black; }
+      .hero .lead { color: #333; }
+      .hero-chip { border-color: #555; }
+      .report-shell { display: block; max-width: none; padding: 0; }
+      main { width: 100%; }
+      .report-section { break-inside: avoid; padding: 1rem 0; }
+      figure, .quick-card, .info-card, .metric, .risk-card { box-shadow: none; break-inside: avoid; }
+      a { color: black; }
+    }
+  </style>
+</head>
+<body>
+  <div class="scroll-progress" id="scroll-progress" aria-hidden="true"></div>
+  <a class="skip-link" href="#main-report">Skip to report</a>
+
+  <div class="toolbar" aria-label="Report controls">
+    <div class="toolbar-brand">Two-Way Match research dossier</div>
+    <div class="toolbar-actions">
+      <button class="tool-button" id="focus-toggle" type="button" aria-pressed="false" title="Hide detailed evidence and show only decisions">Focus view</button>
+      <button class="tool-button deep-toggle" id="expand-all" type="button" title="Open all evidence sections">Expand evidence</button>
+      <button class="tool-button deep-toggle" id="collapse-all" type="button" title="Close all evidence sections">Collapse evidence</button>
+      <button class="tool-button" id="print-report" type="button" title="Print or save this report as PDF">Print</button>
+    </div>
+  </div>
+
+  <header class="hero" id="top">
+    <div class="hero-inner">
+      <span class="eyebrow">Product, market &amp; growth dossier</span>
+      <h1>Make good time together happen &mdash; and remember why it mattered.</h1>
+      <p class="lead">
+        A critical plan for evolving Two-Way Match from a private household ledger into a
+        shared-life operating system for couples and close circles, followed by a trusted place
+        discovery and merchant marketplace.
+      </p>
+      <div class="hero-meta">
+        <span class="hero-chip">Decision: conditional go</span>
+        <span class="hero-chip">Initial wedge: couples + close friends</span>
+        <span class="hero-chip">Launch geography: one city</span>
+        <span class="hero-chip">Research current to 2 Sep 2026</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="verdict-band" aria-label="Executive verdict">
+    <div class="verdict-label"><strong>Conditional go</strong><br>Worth testing, not yet proven.</div>
+    <div class="verdict-point"><span>Lead with</span><strong>Time, plans and memories</strong></div>
+    <div class="verdict-point"><span>Monetize first</span><strong>Circle subscription</strong></div>
+    <div class="verdict-point"><span>Do not do</span><strong>Target ads from mood or intimacy</strong></div>
+  </div>
+
+  <div class="report-shell">
+    <nav class="toc" aria-label="Report contents">
+      <strong>Jump to</strong>
+      <a href="#brief">1. 60-second brief</a>
+      <a href="#thesis">2. Product thesis</a>
+      <a href="#baseline">3. What exists</a>
+      <a href="#market">4. Market evidence</a>
+      <a href="#competition">5. Competition</a>
+      <a href="#lessons">6. What worked</a>
+      <a href="#customers">7. Customers</a>
+      <a href="#psychology">8. Psychology</a>
+      <a href="#experience">9. Product design</a>
+      <a href="#places">10. Places &amp; ads</a>
+      <a href="#roadmap">11. Roadmap</a>
+      <a href="#business">12. Business plan</a>
+      <a href="#growth">13. Go to market</a>
+      <a href="#metrics">14. Metrics</a>
+      <a href="#technical">15. Technical plan</a>
+      <a href="#trust">16. Trust &amp; safety</a>
+      <a href="#risks">17. Risks</a>
+      <a href="#ninety-days">18. 90-day plan</a>
+      <a href="#sources">19. Sources</a>
+    </nav>
+
+    <main id="main-report">
+      <p class="focus-note callout question">
+        <strong>Focus view is on.</strong>
+        Detailed matrices, screenshots, implementation inventories and source cards are hidden.
+      </p>
+
+      <section class="report-section" id="brief">
+        <div class="section-heading">
+          <div class="section-number">1</div>
+          <div>
+            <div class="section-kicker">Read this first</div>
+            <h2>The 60-second brief</h2>
+            <div class="section-summary">The idea is promising only if it stays focused and earns trust before it sells attention.</div>
+          </div>
+        </div>
+
+        <div class="quick-grid">
+          <article class="quick-card">
+            <h3>The opportunity</h3>
+            <p>People already use separate apps to find a date, coordinate a group, track a mood, save a restaurant, split a cost and keep photos. The unclaimed loop is <strong>plan &rarr; experience &rarr; reflect &rarr; remember &rarr; choose better next time</strong>.</p>
+          </article>
+          <article class="quick-card">
+            <h3>The trap</h3>
+            <p>Building a calendar, journal, review network, expense tool and ad platform at once produces five weak products. A public feed also changes a trusted private app into a surveillance concern overnight.</p>
+          </article>
+          <article class="quick-card">
+            <h3>The recommendation</h3>
+            <p>Start with people already dating or partnered, plus close friend circles, in one city. This is date management, not matchmaking. Deliver a useful private plan-to-memory loop with no public audience. Add opt-in place publishing only after repeated use is proven.</p>
+          </article>
+        </div>
+
+        <div class="callout decision">
+          <strong>North-star promise</strong>
+          &ldquo;Make a plan your people can agree on, then keep the part worth remembering.&rdquo;
+        </div>
+
+        <div class="flow" aria-label="Recommended core product loop">
+          <div class="flow-step"><b>Find time</b><small>Availability and poll</small></div>
+          <div class="flow-step"><b>Choose place</b><small>Three trusted options</small></div>
+          <div class="flow-step"><b>Be together</b><small>Reminders, logistics</small></div>
+          <div class="flow-step"><b>Private pulse</b><small>Mood and &ldquo;again?&rdquo;</small></div>
+          <div class="flow-step"><b>Keep memory</b><small>Photos, note, cost</small></div>
+          <div class="flow-step"><b>Recommend better</b><small>Circle taste improves</small></div>
+        </div>
+      </section>
+
+      <section class="report-section" id="thesis">
+        <div class="section-heading">
+          <div class="section-number">2</div>
+          <div>
+            <div class="section-kicker">Strategic reframing</div>
+            <h2>It is about shared time, not shared accounting</h2>
+            <div class="section-summary">Money is useful context. It should not define the consumer brand.</div>
+          </div>
+        </div>
+
+        <div class="card-grid">
+          <article class="info-card">
+            <h3>Before</h3>
+            <p>Scan expenses, attribute who paid, group them into events, close a month, and turn selected spending into memories.</p>
+          </article>
+          <article class="info-card teal">
+            <h3>After</h3>
+            <p>Help a trusted circle decide <strong>when</strong>, choose <strong>where</strong>, notice <strong>how it felt</strong>, and build a shared history.</p>
+          </article>
+          <article class="info-card coral">
+            <h3>Commercial edge</h3>
+            <p>Recommend places from observed circle taste and explicit ratings; let merchants buy transparent reach without buying rank or private data.</p>
+          </article>
+        </div>
+
+        <div class="callout warning">
+          <strong>Brand warning</strong>
+          &ldquo;Two-Way Match&rdquo; can sound like dating acquisition or accounting reconciliation. The SAP vocabulary is a charming private joke, but &ldquo;payment run&rdquo; is not a mass-market emotional promise. Test the current name and a plain descriptor such as <strong>Make time together</strong> before investing in acquisition. Run trademark and domain checks before any rename.
+        </div>
+
+        <div class="lane-diagram" aria-label="Recommended trust zones">
+          <div class="lane private">
+            <h3>Private vault</h3>
+            <ul><li>Moods</li><li>Availability</li><li>Expenses</li><li>Private memories</li></ul>
+          </div>
+          <div class="lane bridge">
+            <h3>Consent bridge</h3>
+            <ul><li>Explicit preview</li><li>Choose audience</li><li>Redact companion and cost</li><li>Revoke later</li></ul>
+          </div>
+          <div class="lane public">
+            <h3>Place graph</h3>
+            <ul><li>Published ratings</li><li>Lists</li><li>Occasion fit</li><li>Verified visit badge</li></ul>
+          </div>
+          <div class="lane commercial">
+            <h3>Merchant layer</h3>
+            <ul><li>Claimed profile</li><li>Offers</li><li>Sponsored placement</li><li>Aggregate analytics</li></ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="report-section" id="baseline">
+        <div class="section-heading">
+          <div class="section-number">3</div>
+          <div>
+            <div class="section-kicker">Product baseline</div>
+            <h2>What the app already contains</h2>
+            <div class="section-summary">A substantial private-life foundation exists; public circles, ratings and merchant tools do not.</div>
+          </div>
+        </div>
+
+        <div class="metric-grid">
+          <div class="metric"><span class="metric-value">11</span><span class="metric-label">user routes</span><span class="metric-note">Home through settings and explanation</span></div>
+          <div class="metric"><span class="metric-value">15</span><span class="metric-label">exposed entities</span><span class="metric-note">Ledger domain including people, events and moods</span></div>
+          <div class="metric"><span class="metric-value">17</span><span class="metric-label">ledger operations</span><span class="metric-note">Actions/functions beyond CRUD</span></div>
+          <div class="metric"><span class="metric-value">3</span><span class="metric-label">languages</span><span class="metric-note">English, German and Russian; coverage is partial</span></div>
+          <div class="metric"><span class="metric-value">4</span><span class="metric-label">LLM paths</span><span class="metric-note">Anthropic, compatible endpoint, SAP hub, template</span></div>
+          <div class="metric"><span class="metric-value">1</span><span class="metric-label">household tenant</span><span class="metric-note">Critical limit before multi-circle launch</span></div>
+        </div>
+
+        <div class="callout question">
+          <strong>Platform foundation observed in progress</strong>
+          The workspace now contains TWM-ADR-002 Phase 0: modeled <code>Groups</code>, <code>Users</code>, <code>Memberships</code>, <code>Conversations</code>, <code>Messages</code> and nullable tenant links, plus seeded group columns.<a class="source-ref" href="#s29">S29</a> They are not projected by the current services or rendered by the current React app, so they are excluded from the live feature counts above. The ADR correctly puts group isolation before chat.
+        </div>
+
+        <div class="screen-grid deep" aria-label="Current product screenshots">
+          <figure>
+            <a href="product-research-assets/current-home.png"><img src="product-research-assets/current-home.png" alt="Current Two-Way Match home launcher with scan, mood, expenses, events, calendar and memories tiles"></a>
+            <figcaption><strong>Current home</strong>The strongest existing signal: time, mood, events, memories and money already meet in one launcher.</figcaption>
+          </figure>
+          <figure>
+            <a href="product-research-assets/current-calendar.png"><img src="product-research-assets/current-calendar.png" alt="Current calendar with month grid and upcoming reminder"></a>
+            <figcaption><strong>Current calendar</strong>Events, reminders, month/list modes and an upcoming strip provide a credible planning base.</figcaption>
+          </figure>
+          <figure class="tall">
+            <a href="product-research-assets/current-events.png"><img src="product-research-assets/current-events.png" alt="Current events page with future and past shared events"></a>
+            <figcaption><strong>Current events</strong>Participants, totals, place, date range, photos, reminders and surprise visibility are implemented.</figcaption>
+          </figure>
+          <figure class="tall">
+            <a href="product-research-assets/current-settings.png"><img src="product-research-assets/current-settings.png" alt="Current settings with people, pre-spend planner, bank import, language and system controls"></a>
+            <figcaption><strong>Current planner and administration</strong>People of any group size, forecast-style planning, imports and export are already present.</figcaption>
+          </figure>
+          <figure>
+            <a href="product-research-assets/current-ledger.png"><img src="product-research-assets/current-ledger.png" alt="Current monthly ledger with totals by person, category chart, trend chart, filters and one posting"></a>
+            <figcaption><strong>Current ledger</strong>Exact totals, payer proportions, trends, filters and a period-close payment run support the existing money workflow.</figcaption>
+          </figure>
+          <figure>
+            <a href="product-research-assets/current-memories.png"><img src="product-research-assets/current-memories.png" alt="Current memories timeline with detected moments, anniversary, pinned memory and dated entries"></a>
+            <figcaption><strong>Current memories</strong>Expense-detected moments, anniversaries, pinned stories and a timeline already turn transactions into shared history.</figcaption>
+          </figure>
+          <figure>
+            <a href="product-research-assets/current-mood.png"><img src="product-research-assets/current-mood.png" alt="Current manual mood check-in with five choices, optional note and camera estimate action"></a>
+            <figcaption><strong>Current mood check-in</strong>The manual five-level pulse remained available; recent-history loading returned HTTP 500 during this capture and is recorded below.</figcaption>
+          </figure>
+        </div>
+
+        <details class="deep" open>
+          <summary>Complete implemented feature inventory</summary>
+          <div class="details-body table-wrap">
+            <table>
+              <thead><tr><th>Capability</th><th>Implemented behavior</th><th>Readiness</th><th>Strategic use</th></tr></thead>
+              <tbody>
+                <tr><td>Home</td><td>Live tiles for scan queue, mood, month spend, events, next calendar item, memories, statement and people.</td><td><span class="status live">Live</span></td><td>Can become the circle &ldquo;Today&rdquo; hub.</td></tr>
+                <tr><td>Receipt scan</td><td>Camera/library input, image normalization, OCR extraction, two-head classification, human review, draft creation, duplicate warning and optional memory.</td><td><span class="status live">Live</span></td><td>Useful verification signal for visits; keep private.</td></tr>
+                <tr><td>Ledger</td><td>Monthly navigation, status/payer/category/event filters, exact totals, trends, edit, confirm, delete, duplicate detection and payment run.</td><td><span class="status live">Live</span></td><td>Optional cost context, not the lead proposition.</td></tr>
+                <tr><td>Events</td><td>Create/edit/delete, dates, place, note, participants, payer totals, expenses, photos, reminders and surprise reveal.</td><td><span class="status live">Live</span></td><td>Closest existing object to the future Plan.</td></tr>
+                <tr><td>Calendar</td><td>Month/list views, multi-day events, day detail, reminders, completion and next-up strip.</td><td><span class="status live">Live</span></td><td>Add availability polls and external calendar sync.</td></tr>
+                <tr><td>Memories</td><td>Manual and expense-detected timeline, editor, photos, pinned items, anniversaries, map and Document #1.</td><td><span class="status live">Live</span></td><td>Retention and emotional differentiation.</td></tr>
+                <tr><td>Mood</td><td>Five-level manual check-in, optional 280-character note, history, and optional face estimate whose photo is discarded.</td><td><span class="status conditional">500 observed</span></td><td>Use as private reflection, never relationship scoring.</td></tr>
+                <tr><td>Annual statement</td><td>Confirmed-year aggregation, trips, date-night streaks, places, top merchants and stored Markdown narrative with deterministic fallback.</td><td><span class="status live">Live</span></td><td>Turn into an opt-in circle yearbook.</td></tr>
+                <tr><td>People</td><td>Create/edit/delete household members, colors and emails; no assumption of exactly two.</td><td><span class="status live">Live</span></td><td>Must evolve into accounts, circles, roles and invitations.</td></tr>
+                <tr><td>Pre-spend planner</td><td>Target/date, equal or observed shares, historical discretionary run-rate and affordability verdict.</td><td><span class="status live">Live</span></td><td>Later trip/date budget context.</td></tr>
+                <tr><td>Bank import</td><td>CSV mapping, date-order and sign controls, preview, progress and error report.</td><td><span class="status live">Live</span></td><td>Keep optional; bank plumbing is not the growth wedge.</td></tr>
+                <tr><td>System</td><td>Theme, language, session, version/update state, model/provider status, onboarding replay and JSON/CSV/Markdown export.</td><td><span class="status live">Live</span></td><td>Strong trust and portability foundation.</td></tr>
+                <tr><td>PWA</td><td>Installable shell, prompt updates, cached static assets and network-first ledger reads.</td><td><span class="status live">Live</span></td><td>Fast pilot path without native apps.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </details>
+
+        <details class="deep">
+          <summary>Backend, AI, security and operations inventory</summary>
+          <div class="details-body">
+            <div class="card-grid">
+              <article class="info-card"><h3>Domain</h3><p>People, categories, events, participants, event photos, reminders, expenses, receipts, moods, memories, photos, settlements, statements and classifier corrections.</p></article>
+              <article class="info-card teal"><h3>Intelligence</h3><p>SAP Document AI or fixtures; local or remote category/moment classifier; provider-chain statements; optional camera mood estimate.</p></article>
+              <article class="info-card coral"><h3>Trust</h3><p>Bcrypt auth, signed sessions, same-origin CSP, action rate limits, upload guards, EXIF removal, export, backup and restore scripts.</p></article>
+            </div>
+            <p>Authoritative implementation surfaces: <a href="../db/schema.cds">domain schema</a>, <a href="../srv/ledger-service.cds">service contract</a>, <a href="../srv/ledger-service.ts">handlers</a>, <a href="../app/src/App.tsx">route map</a>, and <a href="CONTRACTS.md">cross-system contracts</a>.</p>
+          </div>
+        </details>
+
+        <div class="callout warning">
+          <strong>Observed during this research session</strong>
+          At 390px, Mood and Memories overflowed horizontally; the initial <code>/api/auth/me</code> call did not resolve until the screenshot browser used a development-only route response; mood history returned HTTP 500; and React warned that the parent events route lacks a trailing <code>*</code>. Treat these as reproducible investigation items, not final diagnoses. The Fly/Docker deployment and scheduled remote backup also remain operationally unverified in repository documentation.
+        </div>
+      </section>
+
+      <section class="report-section" id="market">
+        <div class="section-heading">
+          <div class="section-number">4</div>
+          <div>
+            <div class="section-kicker">Current market</div>
+            <h2>Demand is proven in pieces, not in the combination</h2>
+            <div class="section-summary">The market is crowded horizontally and still open vertically around trusted circles and meaningful time.</div>
+          </div>
+        </div>
+
+        <div class="metric-grid">
+          <div class="metric"><span class="metric-value">70M</span><span class="metric-label">TimeTree users claimed</span><span class="metric-note">Shared calendars; Nov 2025 first-party claim <a class="source-ref" href="#s5">S5</a></span></div>
+          <div class="metric"><span class="metric-value">4M</span><span class="metric-label">Howbout users</span><span class="metric-note">Plus about 2M events/week; Sep 2024 <a class="source-ref" href="#s7">S7</a></span></div>
+          <div class="metric"><span class="metric-value">500K</span><span class="metric-label">Partiful Q1 MAU estimate</span><span class="metric-note">Up 400% YoY per Sensor Tower <a class="source-ref" href="#s9">S9</a></span></div>
+          <div class="metric"><span class="metric-value">20M+</span><span class="metric-label">Daylio users claimed</span><span class="metric-note">Two-tap mood journaling <a class="source-ref" href="#s12">S12</a></span></div>
+          <div class="metric"><span class="metric-value">4M</span><span class="metric-label">Paired couples claimed</span><span class="metric-note">Five-minute relationship ritual <a class="source-ref" href="#s10">S10</a></span></div>
+          <div class="metric"><span class="metric-value">74M+</span><span class="metric-label">monthly Yelp visitors</span><span class="metric-note">2025 Comscore claim on Yelp business site <a class="source-ref" href="#s19">S19</a></span></div>
+        </div>
+
+        <div class="callout question">
+          <strong>Interpretation, not proof</strong>
+          These numbers show that scheduling, relationship rituals, mood logging and local intent can each sustain large audiences. They do <em>not</em> show that users want all four in one product. Only cohort behavior in a real pilot can establish that.
+        </div>
+
+        <div class="table-wrap deep">
+          <table>
+            <thead><tr><th>Market</th><th>Job users hire it for</th><th>Incumbent strength</th><th>Remaining opening</th></tr></thead>
+            <tbody>
+              <tr><td>Shared calendars</td><td>Know when family or friends are free.</td><td>Deep calendar sync, habit and network.</td><td>Move from logistics into place choice and reflection.</td></tr>
+              <tr><td>Event invitations</td><td>Get a group out of a chat and into a room.</td><td>Viral host-to-guest distribution, RSVP, style.</td><td>Ongoing circle history after the event ends.</td></tr>
+              <tr><td>Relationship apps</td><td>Create a small ritual and better conversation.</td><td>Expert content, subscriptions, daily cadence.</td><td>Connect conversation to actual plans and shared places.</td></tr>
+              <tr><td>Mood journals</td><td>Notice patterns with almost no writing.</td><td>Fast capture, privacy, charts, customization.</td><td>Private event-level pulse without clinical claims.</td></tr>
+              <tr><td>Expense sharing</td><td>Remove awkwardness from group money.</td><td>Balances, integrations, currencies, trust.</td><td>Use cost as context without debt or reconciliation.</td></tr>
+              <tr><td>Place discovery</td><td>Decide where to go and what to trust.</td><td>Huge inventory, reviews, maps, intent traffic.</td><td>Occasion fit and recommendations from people whose taste is known.</td></tr>
+              <tr><td>Local advertising</td><td>Buy measurable access to nearby intent.</td><td>Scale, auctions, attribution and sales teams.</td><td>Small, transparent, high-fit placements after local density exists.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>Switzerland is a sensible proving ground, not because the whole country is the immediate market, but because the current product is Swiss-shaped. The FSO reports about 4.1 million private households at the end of 2024: 37% one-person, 27% couples without children and 28% households with a child under 25.<a class="source-ref" href="#s25">S25</a> Do not call the remaining households the TAM: friendship circles overlap households, and many households will never buy.</p>
+      </section>
+
+      <section class="report-section" id="competition">
+        <div class="section-heading">
+          <div class="section-number">5</div>
+          <div>
+            <div class="section-kicker">Competitive landscape</div>
+            <h2>No empty market, but a defensible intersection</h2>
+            <div class="section-summary">Compete on the complete trusted-circle loop, not on generic calendars, maps or reviews.</div>
+          </div>
+        </div>
+
+        <div class="table-wrap deep">
+          <table>
+            <thead><tr><th>Product</th><th>Time / plans</th><th>Private reflection</th><th>Money</th><th>Place graph</th><th>Model</th><th>Lesson</th></tr></thead>
+            <tbody>
+              <tr><td><strong>TimeTree</strong></td><td class="yes">Strong</td><td class="no">Limited</td><td class="no">No</td><td class="some">Public calendars</td><td>Ads + $44.99/year premium</td><td>Shared utility can scale broadly.<a class="source-ref" href="#s5">S5</a><a class="source-ref" href="#s6">S6</a></td></tr>
+              <tr><td><strong>Howbout</strong></td><td class="yes">Strong social calendar</td><td class="some">Social context</td><td class="no">No</td><td class="no">No</td><td>Venture-funded; monetization unclear</td><td>&ldquo;Social around time&rdquo; is already an explicit thesis.<a class="source-ref" href="#s7">S7</a></td></tr>
+              <tr><td><strong>Partiful</strong></td><td class="yes">Strong event flow</td><td class="some">Photo album</td><td class="some">Payments/tickets</td><td class="some">Event discovery</td><td>Free; tickets emerging</td><td>One-click host flow creates distribution.<a class="source-ref" href="#s8">S8</a><a class="source-ref" href="#s9">S9</a></td></tr>
+              <tr><td><strong>Paired</strong></td><td class="no">No scheduling</td><td class="yes">Strong couple ritual</td><td class="some">Content topic</td><td class="no">No</td><td>CHF 80/year per pair</td><td>One payer covering the pair is elegant.<a class="source-ref" href="#s10">S10</a><a class="source-ref" href="#s11">S11</a></td></tr>
+              <tr><td><strong>Daylio</strong></td><td class="no">No group plans</td><td class="yes">Strong private mood log</td><td class="no">No</td><td class="no">No</td><td>Freemium</td><td>Two taps, local privacy and useful review loops.<a class="source-ref" href="#s12">S12</a></td></tr>
+              <tr><td><strong>Splitwise</strong></td><td class="some">Trip groups</td><td class="no">No</td><td class="yes">Strong debt ledger</td><td class="no">No</td><td>Ads + Pro</td><td>Money solves pain but frames relationships as balances.<a class="source-ref" href="#s14">S14</a></td></tr>
+              <tr><td><strong>Honeydue</strong></td><td class="some">Bill reminders</td><td class="some">Transaction chat</td><td class="yes">Couple finance</td><td class="no">No</td><td>Free + optional tips</td><td>Usage does not automatically become durable revenue.<a class="source-ref" href="#s15">S15</a><a class="source-ref" href="#s16">S16</a></td></tr>
+              <tr><td><strong>Beli</strong></td><td class="no">No scheduling</td><td class="some">Personal lists</td><td class="no">No</td><td class="yes">Friend restaurant graph</td><td>Not disclosed</td><td>Taste and friends can beat anonymous averages.<a class="source-ref" href="#s18">S18</a></td></tr>
+              <tr><td><strong>Yelp</strong></td><td class="no">No circle plans</td><td class="no">No</td><td class="no">No</td><td class="yes">Mass local graph</td><td>Ads, SaaS, transactions, data</td><td>Ads require intent and scale; restaurants are difficult.<a class="source-ref" href="#s20">S20</a></td></tr>
+              <tr><td><strong>Two-Way Match now</strong></td><td class="some">Events/calendar</td><td class="yes">Mood/memories</td><td class="yes">Sums, no debt</td><td class="some">Private map</td><td>None</td><td>Most components exist, but identity and permission architecture do not.</td></tr>
+              <tr><td><strong>Proposed product</strong></td><td class="yes">Circle planning</td><td class="yes">Private pulse/history</td><td class="some">Optional context</td><td class="yes">Consent-based taste</td><td>Subscription, then merchant</td><td>The intersection is the differentiation.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout decision">
+          <strong>Position against the alternatives, not just apps</strong>
+          The real competitors are WhatsApp polls, shared iCloud/Google calendars, Instagram saves, Notes lists, Google Maps, Splitwise and &ldquo;we should do something soon.&rdquo; The product must beat that stack in under three minutes.
+        </div>
+      </section>
+
+      <section class="report-section" id="lessons">
+        <div class="section-heading">
+          <div class="section-number">6</div>
+          <div>
+            <div class="section-kicker">Pattern analysis</div>
+            <h2>What worked, what failed, what to copy carefully</h2>
+            <div class="section-summary">Copy mechanisms, not feature lists.</div>
+          </div>
+        </div>
+
+        <div class="case-grid">
+          <article class="case worked">
+            <h3>Worked: one sharp social job</h3>
+            <p>Partiful focused on making an invite and wrangling guests easy across platforms. CNBC reported over 60% of active app users checked weekly; the product says it remains free and supports polls, blasts, payments and shared photos.<a class="source-ref" href="#s8">S8</a><a class="source-ref" href="#s9">S9</a></p>
+            <p class="lesson">Copy: guest access without forcing an app install; every plan becomes distribution.</p>
+          </article>
+          <article class="case worked">
+            <h3>Worked: tiny repeatable ritual</h3>
+            <p>Daylio makes a mood entry possible in two taps; Paired promises five minutes a day. Both make the first action smaller than the benefit users receive later.<a class="source-ref" href="#s10">S10</a><a class="source-ref" href="#s12">S12</a></p>
+            <p class="lesson">Copy: a post-event pulse should take seconds, with writing optional.</p>
+          </article>
+          <article class="case worked">
+            <h3>Worked: private value before network value</h3>
+            <p>A TimeTree calendar, Daylio diary or Beli personal list is useful even before a large network arrives. This avoids an empty-feed cold start.<a class="source-ref" href="#s5">S5</a><a class="source-ref" href="#s12">S12</a><a class="source-ref" href="#s18">S18</a></p>
+            <p class="lesson">Copy: the circle must benefit when every review is private.</p>
+          </article>
+          <article class="case failed">
+            <h3>Warning: broad discovery is not durable by itself</h3>
+            <p>Foursquare sunset City Guide on 15 December 2024 and its web version on 28 April 2025, while directing users to Swarm for check-ins and a personal lifelog.<a class="source-ref" href="#s21">S21</a></p>
+            <p class="lesson">Lesson: personal history can be stickier than another horizontal city guide.</p>
+          </article>
+          <article class="case failed">
+            <h3>Warning: acquisition can erase product continuity</h3>
+            <p>Acorns acquired Zeta assets and hired its cofounders in June 2025 to accelerate a broader family strategy; existing Zeta customers were invited to Acorns.<a class="source-ref" href="#s17">S17</a></p>
+            <p class="lesson">Lesson: export, portability and a viable standalone model are part of trust.</p>
+          </article>
+          <article class="case failed">
+            <h3>Warning: restaurants are a hard ad category</h3>
+            <p>Yelp earned $1.46B net revenue in 2025, yet restaurant/retail/other ad revenue fell 6% to $444M and total paying ad locations fell 3%. Services drove growth instead.<a class="source-ref" href="#s20">S20</a></p>
+            <p class="lesson">Lesson: &ldquo;restaurants will pay&rdquo; is not a plan; prove incremental visits and low sales cost.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="report-section" id="customers">
+        <div class="section-heading">
+          <div class="section-number">7</div>
+          <div>
+            <div class="section-kicker">Segmentation</div>
+            <h2>Choose one wedge, support flexible circles</h2>
+            <div class="section-summary">The model can serve many relationships; the launch message cannot.</div>
+          </div>
+        </div>
+
+        <div class="segment-stack">
+          <article class="segment">
+            <div class="segment-rank">1</div>
+            <div><h3>Urban dating pairs and couples, 25-45</h3><p>They already chose each other; this is not partner discovery. They want intentional time but coordination is fragmented, save places across several apps and repeat &ldquo;what should we do?&rdquo; conversations.</p></div>
+            <div class="segment-score"><strong>Start here: 86/100</strong><div class="bar"><span style="width:86%"></span></div>High emotional value, simple two-person permissions.</div>
+          </article>
+          <article class="segment">
+            <div class="segment-rank">2</div>
+            <div><h3>Close friend circles, 3-8</h3><p>They struggle to leave the group chat, choose a date, agree on a place and collect the pictures afterward.</p></div>
+            <div class="segment-score"><strong>Next: 81/100</strong><div class="bar"><span style="width:81%"></span></div>Strong invite loop, harder consensus.</div>
+          </article>
+          <article class="segment">
+            <div class="segment-rank">3</div>
+            <div><h3>Families</h3><p>They need school calendars, chores, custody, child privacy and role controls. The need is real, but the product expectations and safety burden are much larger.</p></div>
+            <div class="segment-score"><strong>Later: 62/100</strong><div class="bar"><span style="width:62%"></span></div>Crowded and operationally complex.</div>
+          </article>
+          <article class="segment">
+            <div class="segment-rank">4</div>
+            <div><h3>Meetups and public groups</h3><p>They need discovery, organizer tools, RSVP capacity, ticketing, spam defense and moderation more than intimacy or a shared memory.</p></div>
+            <div class="segment-score"><strong>Do not lead: 45/100</strong><div class="bar"><span style="width:45%"></span></div>Different product and business.</div>
+          </article>
+        </div>
+
+        <details class="deep">
+          <summary>Jobs to be done and interview prompts</summary>
+          <div class="details-body table-wrap">
+            <table>
+              <thead><tr><th>Moment</th><th>Job</th><th>Current workaround</th><th>Interview prompt</th></tr></thead>
+              <tbody>
+                <tr><td>Planning</td><td>Help us find a real slot before enthusiasm disappears.</td><td>Chat messages, calendar screenshots, polls.</td><td>&ldquo;Show me the last plan that took too long to arrange.&rdquo;</td></tr>
+                <tr><td>Choosing</td><td>Give us a few places that fit this occasion and this group.</td><td>Instagram saves, Maps tabs, one opinionated friend.</td><td>&ldquo;How did you choose the last restaurant? What made you trust it?&rdquo;</td></tr>
+                <tr><td>During</td><td>Keep logistics available without turning the event into admin.</td><td>Pinned chat message.</td><td>&ldquo;What information did someone ask twice?&rdquo;</td></tr>
+                <tr><td>After</td><td>Keep the photo, place and feeling with almost no work.</td><td>Camera roll, chat archive, nothing.</td><td>&ldquo;How would you find the name of a place from a good night last year?&rdquo;</td></tr>
+                <tr><td>Next time</td><td>Remember what this particular group actually enjoys.</td><td>Memory, generic star ratings.</td><td>&ldquo;Whose restaurant advice do you trust, and why?&rdquo;</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </details>
+      </section>
+
+      <section class="report-section" id="psychology">
+        <div class="section-heading">
+          <div class="section-number">8</div>
+          <div>
+            <div class="section-kicker">Behavior &amp; wellbeing</div>
+            <h2>Design for connection, not compulsion</h2>
+            <div class="section-summary">The app should create good offline behavior and then get out of the way.</div>
+          </div>
+        </div>
+
+        <div class="principles">
+          <article class="principle"><h3>Make action tiny</h3><p>A mood or &ldquo;would return&rdquo; pulse should take two taps. Notes, photos and rich ratings remain optional.</p></article>
+          <article class="principle"><h3>Preserve autonomy</h3><p>Every reminder is dismissible; streaks never punish; sharing is never preselected. A missed ritual is not framed as failing the relationship.</p></article>
+          <article class="principle"><h3>Encourage novelty gently</h3><p>Research across surveys and lab experiments linked shared novel/arousing activities with higher experienced relationship quality, but it does not justify promising relationship improvement from an app.<a class="source-ref" href="#s26">S26</a></p></article>
+          <article class="principle"><h3>Make responsiveness possible</h3><p>Ask &ldquo;Do you want company, help, or space?&rdquo; only when a person chooses to share a mood. Do not expose a raw score and expect a partner to interpret it.</p></article>
+          <article class="principle"><h3>Offer three choices</h3><p>Choice-overload effects depend on context, but large sets are riskier when preferences are uncertain and decisions are difficult. Curate three fit-for-purpose places, then offer &ldquo;show more.&rdquo;<a class="source-ref" href="#s27">S27</a></p></article>
+          <article class="principle"><h3>Celebrate, do not rank</h3><p>Use recaps, anniversaries and &ldquo;things we loved&rdquo;; avoid couple scores, mood leaderboards, public attendance streaks and comparisons with other relationships.</p></article>
+        </div>
+
+        <div class="callout warning">
+          <strong>Mood is especially sensitive</strong>
+          Mood tracking can support reflection, but it can also invite rumination, misinterpretation or coercion. Keep it private by default, let users delete entries, avoid diagnosis, never infer relationship quality, and place crisis/help resources where relevant. Camera-based mood inference is high-risk and low-value for a mainstream launch; manual self-report is more respectful and should remain primary.
+        </div>
+
+        <details class="deep">
+          <summary>Healthy engagement rules</summary>
+          <div class="details-body table-wrap">
+            <table>
+              <thead><tr><th>Use</th><th>Avoid</th><th>Reason</th></tr></thead>
+              <tbody>
+                <tr><td>Weekly &ldquo;time we made&rdquo; recap</td><td>Daily guilt notifications</td><td>Reward lived experience, not app opening.</td></tr>
+                <tr><td>Private check-in with chosen sharing</td><td>Automatic partner mood feed</td><td>Prevents emotional surveillance.</td></tr>
+                <tr><td>Flexible cadence</td><td>Fragile streaks</td><td>Real relationships include illness, travel and conflict.</td></tr>
+                <tr><td>&ldquo;Worth repeating?&rdquo;</td><td>Score the date or the partner</td><td>Rate the experience/place, not the person.</td></tr>
+                <tr><td>Endless-feed-free planning</td><td>Engagement-maximized content feed</td><td>The success event happens offline.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </details>
+      </section>
+
+      <section class="report-section" id="experience">
+        <div class="section-heading">
+          <div class="section-number">9</div>
+          <div>
+            <div class="section-kicker">Future experience</div>
+            <h2>Three screens should carry the new product</h2>
+            <div class="section-summary">Today, Plan and Place are primary. Memory is the long-term reward.</div>
+          </div>
+        </div>
+
+        <div class="mockups deep" aria-label="Conceptual future product screens">
+          <article class="phone" aria-label="Plan screen concept">
+            <div class="phone-screen">
+              <div class="phone-top">SATURDAY PLAN</div>
+              <div class="mock-content">
+                <div class="mock-title">Dinner with the Lisbon crew</div>
+                <div class="mock-sub">4 of 5 can do 19:30</div>
+                <div class="pulse-row"><b>Best time</b>Sat 12 Sep, 19:30<div class="tag-row"><span class="mini-tag">4 yes</span><span class="mini-tag">1 maybe</span></div></div>
+                <div class="place-row"><b>Three places fit</b><div class="mock-sub">Quiet enough to talk &middot; CHF 40-60</div></div>
+                <button class="mock-button" type="button">Choose together</button>
+              </div>
+            </div>
+          </article>
+          <article class="phone" aria-label="Post-event pulse concept">
+            <div class="phone-screen">
+              <div class="phone-top">PRIVATE PULSE</div>
+              <div class="mock-content">
+                <div class="mock-title">How did the evening feel?</div>
+                <div class="mock-sub">Only you see this unless you choose to share.</div>
+                <div class="pulse-row"><b>Energy afterward</b>Low &nbsp; Okay &nbsp; Good</div>
+                <div class="pulse-row"><b>Would you do this again?</b>No &nbsp; Maybe &nbsp; Yes</div>
+                <div class="pulse-row"><b>Keep one thing</b><span class="mock-sub">Photo or sentence, optional</span></div>
+                <button class="mock-button" type="button">Save privately</button>
+              </div>
+            </div>
+          </article>
+          <article class="phone" aria-label="Place recommendation concept">
+            <div class="phone-screen">
+              <div class="phone-top">PLACES FOR THIS GROUP</div>
+              <div class="mock-content">
+                <div class="mock-title">Good for a long conversation</div>
+                <div class="place-row"><b>Bar Lento</b><div class="mock-sub">3 friends would return</div><div class="tag-row"><span class="mini-tag">quiet</span><span class="mini-tag">late</span><span class="mini-tag">vegetarian</span></div></div>
+                <div class="ad-row"><span class="sponsored">Sponsored &middot; why this?</span><b>Casa Verde</b><div class="mock-sub">Free dessert for groups of 4+</div></div>
+                <div class="place-row"><b>Rosa Dining</b><div class="mock-sub">Taste match 87% &middot; verified visits</div></div>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <div class="card-grid">
+          <article class="info-card"><h3>Today</h3><p>Next plan, two pending decisions, one gentle reminder and quick-add. No dashboard of everything.</p></article>
+          <article class="info-card teal"><h3>Places</h3><p>Saved, tried and suggested for a specific circle and occasion. Search is secondary to a short recommendation set.</p></article>
+          <article class="info-card coral"><h3>History</h3><p>A chronological shared memory, with private layers visible only to their owner and public ratings shown separately.</p></article>
+        </div>
+      </section>
+
+      <section class="report-section" id="places">
+        <div class="section-heading">
+          <div class="section-number">10</div>
+          <div>
+            <div class="section-kicker">Ratings &amp; advertising</div>
+            <h2>Build a taste graph, not another five-star average</h2>
+            <div class="section-summary">Public value comes from context and trusted people. Revenue must not corrupt the ranking.</div>
+          </div>
+        </div>
+
+        <div class="flow" aria-label="Place data pipeline">
+          <div class="flow-step"><b>Visit</b><small>Plan or private receipt</small></div>
+          <div class="flow-step"><b>Private pulse</b><small>Would return?</small></div>
+          <div class="flow-step"><b>Occasion tags</b><small>Talk, kids, group, date</small></div>
+          <div class="flow-step"><b>Publish?</b><small>Explicit audience preview</small></div>
+          <div class="flow-step"><b>Taste match</b><small>People + context</small></div>
+          <div class="flow-step"><b>Merchant action</b><small>Book, offer, directions</small></div>
+        </div>
+
+        <div class="card-grid">
+          <article class="info-card">
+            <h3>Rating input</h3>
+            <p><strong>Would return?</strong> yes/maybe/no; optional relative ranking; occasion tags; price band; noise; dietary/accessibility facts; short note and photos.</p>
+          </article>
+          <article class="info-card teal">
+            <h3>Ranking output</h3>
+            <p>Show circle endorsements, taste similarity, recency, verified-visit confidence and occasion fit. Never reduce everything to one universal number.</p>
+          </article>
+          <article class="info-card coral">
+            <h3>Verification</h3>
+            <p>A receipt can issue an opaque &ldquo;visited&rdquo; proof. Never publish amount, exact time, companions, mood, receipt image or raw merchant data.</p>
+          </article>
+        </div>
+
+        <div class="callout decision">
+          <strong>Recommended monetization order</strong>
+          1) consumer subscription, 2) booking/affiliate commission, 3) merchant profile and offers, 4) clearly labelled sponsored placement. Display ads and off-platform behavioral targeting are not recommended.
+        </div>
+
+        <div class="table-wrap deep">
+          <table>
+            <thead><tr><th>Merchant product</th><th>When to launch</th><th>Proposed pilot price</th><th>Guardrail</th></tr></thead>
+            <tbody>
+              <tr><td>Claimed profile</td><td>Once place pages receive real organic views</td><td>Free</td><td>Merchant cannot edit user ratings.</td></tr>
+              <tr><td>Offer / occasion package</td><td>At 5,000+ monthly local place-intent sessions</td><td>CHF 49-99/month</td><td>Offer shown by explicit context, never mood.</td></tr>
+              <tr><td>Sponsored placement</td><td>Only after organic recommendations satisfy users</td><td>CPC/CPA pilot with cap</td><td>Label &ldquo;Sponsored&rdquo;; never alter organic rank.</td></tr>
+              <tr><td>Booking referral</td><td>When a licensed partner and attribution exist</td><td>Negotiated commission</td><td>Show partner and price; no hidden redirect.</td></tr>
+              <tr><td>Aggregate insights</td><td>After privacy review and meaningful sample sizes</td><td>CHF 149+/month</td><td>No individual or small-cohort mood/relationship data.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout warning">
+          <strong>Reviews become a regulated trust system</strong>
+          The FTC rule prohibits fake reviews, buying sentiment-conditioned reviews, undisclosed insider reviews, review suppression and misrepresenting a company-controlled review site as independent.<a class="source-ref" href="#s22">S22</a> Build verified experience, disclosure, moderation, merchant replies, appeals and an immutable sponsorship label before selling the first placement.
+        </div>
+      </section>
+
+      <section class="report-section" id="roadmap">
+        <div class="section-heading">
+          <div class="section-number">11</div>
+          <div>
+            <div class="section-kicker">Product sequencing</div>
+            <h2>Earn the right to add each layer</h2>
+            <div class="section-summary">Every phase has a gate. Missing the gate means learn or stop, not add more features.</div>
+          </div>
+        </div>
+
+        <div class="roadmap">
+          <article class="phase"><span class="when">0-3 months</span><h3>Private wedge</h3><ul><li>Real accounts and circles</li><li>Invite link</li><li>Availability poll</li><li>Plan with place</li><li>Two-tap private pulse</li></ul><strong>Gate:</strong> 35%+ week-4 circle retention.</article>
+          <article class="phase"><span class="when">3-6 months</span><h3>Memory loop</h3><ul><li>Shared album</li><li>Circle recap</li><li>Place saves</li><li>&ldquo;Worth repeating&rdquo;</li><li>Calendar sync</li></ul><strong>Gate:</strong> 30%+ plans receive a pulse.</article>
+          <article class="phase"><span class="when">6-9 months</span><h3>Trusted discovery</h3><ul><li>Publish preview</li><li>Audience controls</li><li>Occasion ratings</li><li>Taste matching</li><li>Moderation tools</li></ul><strong>Gate:</strong> 20%+ place decisions use recommendations.</article>
+          <article class="phase"><span class="when">9-12+ months</span><h3>Merchant pilot</h3><ul><li>Claim profile</li><li>Offer creation</li><li>Sponsored label</li><li>Visit attribution</li><li>Aggregate dashboard</li></ul><strong>Gate:</strong> 10 of 30 pilots pay after trial.</article>
+        </div>
+
+        <details class="deep">
+          <summary>Feature priority: build, test, postpone, avoid</summary>
+          <div class="details-body table-wrap">
+            <table>
+              <thead><tr><th>Priority</th><th>Features</th><th>Reason</th></tr></thead>
+              <tbody>
+                <tr><td><span class="status live">Build next</span></td><td>Accounts, circle membership, invitation, availability poll, plan proposal, RSVP, private post-event pulse, permission center.</td><td>Forms the smallest complete shared-time loop.</td></tr>
+                <tr><td><span class="status conditional">Test first</span></td><td>External calendar sync, three-place recommendation, shared albums, premium recaps, expense context.</td><td>Likely useful, but cost and demand must be measured.</td></tr>
+                <tr><td><span class="status future">Later</span></td><td>Public profiles, follows, merchant claims, sponsored placements, booking, family/child roles, public meetups.</td><td>Requires density, moderation, permissions and compliance.</td></tr>
+                <tr><td><span class="status stop">Avoid</span></td><td>Relationship score, mood leaderboard, automatic mood sharing, ads triggered by low mood, pay-to-rank reviews, endless feed, autonomous camera emotion diagnosis.</td><td>Harms trust or optimizes the wrong behavior.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </details>
+      </section>
+
+      <section class="report-section" id="business">
+        <div class="section-heading">
+          <div class="section-number">12</div>
+          <div>
+            <div class="section-kicker">Business model</div>
+            <h2>Subscription first, marketplace second</h2>
+            <div class="section-summary">A private product should be paid by the people it serves before it is paid by advertisers.</div>
+          </div>
+        </div>
+
+        <div class="card-grid">
+          <article class="info-card"><h3>Free</h3><p>One circle, planning, RSVP, basic private history, place saves and export. Enough to create an invite loop and real utility.</p></article>
+          <article class="info-card teal"><h3>Plus: CHF 59/year per circle</h3><p>Unlimited history, premium recaps, calendar sync, richer albums, advanced place lists and travel planning. One payer covers the circle.</p></article>
+          <article class="info-card coral"><h3>Merchant: later</h3><p>Free claimed page; paid offers, sponsored intent placement and aggregate performance only after local demand density is measurable.</p></article>
+        </div>
+
+        <div class="calculator" aria-labelledby="calculator-title">
+          <div>
+            <h3 id="calculator-title">Assumption calculator</h3>
+            <p>Change the inputs. This is a planning model, not a forecast.</p>
+            <div class="calc-inputs">
+              <div class="field"><label for="active-circles">Active circles</label><input id="active-circles" type="number" min="0" step="100" value="15000"></div>
+              <div class="field"><label for="paid-rate">Paid conversion (%)</label><input id="paid-rate" type="number" min="0" max="100" step="0.5" value="12"></div>
+              <div class="field"><label for="circle-price">Annual circle price (CHF)</label><input id="circle-price" type="number" min="0" step="1" value="59"></div>
+              <div class="field"><label for="merchant-count">Paying merchants</label><input id="merchant-count" type="number" min="0" step="10" value="50"></div>
+              <div class="field"><label for="merchant-price">Merchant monthly fee (CHF)</label><input id="merchant-price" type="number" min="0" step="1" value="99"></div>
+              <div class="field"><label for="annual-referrals">Annual referral revenue (CHF)</label><input id="annual-referrals" type="number" min="0" step="1000" value="10000"></div>
+            </div>
+          </div>
+          <div class="calc-output" aria-live="polite">
+            <span>Illustrative annual revenue</span>
+            <strong id="annual-revenue">CHF 175'600</strong>
+            <div class="calc-breakdown" id="revenue-breakdown">Consumer CHF 106'200 &middot; merchant CHF 59'400 &middot; referral CHF 10'000</div>
+          </div>
+        </div>
+
+        <div class="table-wrap deep">
+          <table>
+            <thead><tr><th>Scenario</th><th>Active circles</th><th>Paid circles</th><th>Merchants</th><th>Illustrative annual revenue</th><th>Meaning</th></tr></thead>
+            <tbody>
+              <tr><td>Proof</td><td>2,000</td><td>160 at CHF 59</td><td>0</td><td>CHF 9,440</td><td>Demand signal, not a company.</td></tr>
+              <tr><td>City foothold</td><td>15,000</td><td>1,800 at CHF 59</td><td>50 at CHF 99/month</td><td>CHF 165,600 before referrals</td><td>Supports a lean operation, not a large team.</td></tr>
+              <tr><td>Multi-city</td><td>60,000</td><td>9,000 at CHF 69</td><td>250 at CHF 149/month</td><td>CHF 1.07M before referrals</td><td>Potential small company if retention and margins hold.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout warning">
+          <strong>Unit-economics target</strong>
+          At CHF 59/year, contribution after payment fees, support, storage and AI may be roughly CHF 40-45 per paid circle. Keep blended acquisition cost below CHF 25 and annual paid retention above 70% before scaling ads. Validate actual costs; image storage, map/place APIs, calendar integrations, moderation and LLM usage can erase the margin.
+        </div>
+
+        <details class="deep">
+          <summary>Business model canvas</summary>
+          <div class="details-body card-grid">
+            <article class="info-card"><h3>Value</h3><p>Less coordination friction, better-fit places, a meaningful shared history and private control.</p></article>
+            <article class="info-card"><h3>Customers</h3><p>Urban dating pairs and couples first; close friend circles next; merchants only after user density.</p></article>
+            <article class="info-card"><h3>Channels</h3><p>Invites, local creators, search content, referrals, venue partnerships and app stores later.</p></article>
+            <article class="info-card"><h3>Revenue</h3><p>Circle subscription, booking/referral, merchant tools, transparent sponsorship.</p></article>
+            <article class="info-card"><h3>Costs</h3><p>Engineering, moderation, place data, maps, storage, AI, support, compliance and local sales.</p></article>
+            <article class="info-card"><h3>Moat</h3><p>Longitudinal circle taste and history with trusted permissions, not generic AI or a calendar UI.</p></article>
+          </div>
+        </details>
+      </section>
+
+      <section class="report-section" id="growth">
+        <div class="section-heading">
+          <div class="section-number">13</div>
+          <div>
+            <div class="section-kicker">Marketing &amp; distribution</div>
+            <h2>Grow through plans, not an attention feed</h2>
+            <div class="section-summary">Every successful plan can invite a person; every good memory can retain a circle.</div>
+          </div>
+        </div>
+
+        <div class="funnel" aria-label="Growth funnel">
+          <div class="funnel-step" style="width:100%"><strong>See:</strong> &ldquo;Get the plan out of the group chat.&rdquo;</div>
+          <div class="funnel-step"><strong>Try:</strong> create a plan without installing</div>
+          <div class="funnel-step"><strong>Activate:</strong> invite accepted + time chosen</div>
+          <div class="funnel-step"><strong>Retain:</strong> private pulse + memory kept</div>
+          <div class="funnel-step"><strong>Pay:</strong> unlock circle history and planning power</div>
+        </div>
+
+        <div class="card-grid">
+          <article class="info-card"><h3>Invite loop</h3><p>The host sends a web link; guests vote without registration. Account creation follows value, not before it.</p></article>
+          <article class="info-card teal"><h3>Memory loop</h3><p>A weekly or monthly recap brings people back to something they lived, not content the app manufactured.</p></article>
+          <article class="info-card coral"><h3>Place loop</h3><p>A useful private rating improves the next choice; optional public cards attract people with similar taste.</p></article>
+        </div>
+
+        <div class="table-wrap deep">
+          <table>
+            <thead><tr><th>Channel</th><th>Message</th><th>Asset</th><th>Success test</th></tr></thead>
+            <tbody>
+              <tr><td>Invite links</td><td>&ldquo;Vote on Saturday &mdash; no app required.&rdquo;</td><td>Fast responsive plan page</td><td>50%+ invite acceptance.</td></tr>
+              <tr><td>Instagram / TikTok creators</td><td>&ldquo;We stopped losing date ideas in our saved posts.&rdquo;</td><td>Real 20-second workflow demo</td><td>Activated circles, not views.</td></tr>
+              <tr><td>Local search</td><td>&ldquo;Three quiet Zurich restaurants for a long conversation.&rdquo;</td><td>Useful occasion guides with methodology</td><td>Save-to-plan conversion.</td></tr>
+              <tr><td>Venue cards / QR</td><td>&ldquo;Would your group come back? Save it privately.&rdquo;</td><td>Neutral post-visit prompt</td><td>Completed, non-incentivized ratings.</td></tr>
+              <tr><td>Referral</td><td>&ldquo;Give another circle three months of Plus.&rdquo;</td><td>Gift link after a successful recap</td><td>Referred circle W4 retention.</td></tr>
+              <tr><td>PR</td><td>&ldquo;A social app measured by time spent together, not screen time.&rdquo;</td><td>Founder story + transparent metrics</td><td>Qualified waitlist and partners.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout decision">
+          <strong>Campaign territory</strong>
+          Use concrete friction and emotional payoff: <strong>&ldquo;For plans that leave the group chat.&rdquo;</strong> <strong>&ldquo;Less what-should-we-do, more nights worth remembering.&rdquo;</strong> <strong>&ldquo;Three places your people would actually revisit.&rdquo;</strong> Avoid therapy claims, &ldquo;AI soulmate&rdquo; language and vague &ldquo;all-in-one life&rdquo; positioning.
+        </div>
+      </section>
+
+      <section class="report-section" id="metrics">
+        <div class="section-heading">
+          <div class="section-number">14</div>
+          <div>
+            <div class="section-kicker">Evidence plan</div>
+            <h2>Measure offline success and circle retention</h2>
+            <div class="section-summary">Do not optimize time in app. Optimize plans completed and memories worth keeping.</div>
+          </div>
+        </div>
+
+        <div class="card-grid">
+          <article class="info-card"><h3>North star</h3><p><strong>Meaningful plans completed per retained circle per month.</strong> A plan counts when two or more members confirm it happened.</p></article>
+          <article class="info-card teal"><h3>Activation</h3><p>Circle created, another member joins, and a time or place decision is completed within 72 hours.</p></article>
+          <article class="info-card coral"><h3>Trust health</h3><p>Share reversals, privacy complaints, blocks, review appeals, ad hides, report rate and deletion completion time.</p></article>
+        </div>
+
+        <div class="table-wrap deep">
+          <table>
+            <thead><tr><th>Stage</th><th>Metric</th><th>Continue threshold</th><th>What failure means</th></tr></thead>
+            <tbody>
+              <tr><td>Invite</td><td>Invite acceptance</td><td>&ge; 50%</td><td>Friction, weak context or low trust.</td></tr>
+              <tr><td>Activation</td><td>Activated new circles</td><td>&ge; 60%</td><td>The first job is not clear or urgent.</td></tr>
+              <tr><td>Retention</td><td>Week-4 retained circles</td><td>&ge; 35%</td><td>Utility is episodic or memory loop is weak.</td></tr>
+              <tr><td>Reflection</td><td>Completed post-event pulse</td><td>&ge; 30% of completed plans</td><td>Prompt is intrusive or value arrives too late.</td></tr>
+              <tr><td>Discovery</td><td>Recommended place selected</td><td>&ge; 20% of place decisions</td><td>Inventory, trust or relevance is insufficient.</td></tr>
+              <tr><td>Product-market signal</td><td>&ldquo;Very disappointed&rdquo; without product</td><td>&ge; 40% of retained core users</td><td>Useful, but not yet indispensable.</td></tr>
+              <tr><td>Paid</td><td>Annual conversion</td><td>8-12% test range</td><td>Package or value is wrong; do not add ads as a shortcut.</td></tr>
+              <tr><td>Merchant</td><td>Pilot renewal</td><td>&ge; 10 of 30</td><td>No provable ROI or price too high.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <details class="deep">
+          <summary>First six product experiments</summary>
+          <div class="details-body">
+            <ol>
+              <li><strong>Concierge plan test:</strong> manually help 20 couples and 10 friend circles arrange one event; measure where coordination actually breaks.</li>
+              <li><strong>Invite test:</strong> guest web vote versus mandatory account; measure acceptance and completion.</li>
+              <li><strong>Recommendation test:</strong> three context-matched places versus a searchable list; measure decision time and confidence.</li>
+              <li><strong>Pulse test:</strong> &ldquo;would repeat?&rdquo; only versus mood + repeat + note; measure completion and discomfort.</li>
+              <li><strong>Memory test:</strong> automatic recap versus user-curated card; measure revisit and sharing without exposing private details.</li>
+              <li><strong>Price test:</strong> CHF 39, 59 and 79 annual circle plans on a real checkout waitlist; measure purchase intent, not survey approval.</li>
+            </ol>
+          </div>
+        </details>
+      </section>
+
+      <section class="report-section" id="technical">
+        <div class="section-heading">
+          <div class="section-number">15</div>
+          <div>
+            <div class="section-kicker">Development blueprint</div>
+            <h2>Separate the private product from the public marketplace</h2>
+            <div class="section-summary">The current single-household model cannot safely become a public social network by adding a visibility flag.</div>
+          </div>
+        </div>
+
+        <div class="lane-diagram">
+          <div class="lane private"><h3>PrivateLifeService</h3><p>Circles, members, plans, availability, RSVPs, moods, expenses, memories and private visits.</p></div>
+          <div class="lane bridge"><h3>PublishingService</h3><p>Explicit projection that strips private fields, records consent and supports revoke/delete.</p></div>
+          <div class="lane public"><h3>DiscoveryService</h3><p>Places, published reviews, lists, follows, search, recommendations and moderation.</p></div>
+          <div class="lane commercial"><h3>MerchantService</h3><p>Claims, offers, campaigns, sponsorship disclosure, impressions, clicks and attribution.</p></div>
+        </div>
+
+        <div class="callout warning">
+          <strong>Challenge the full-chat sequence</strong>
+          TWM-ADR-002 currently puts text, image and voice chat in Phase 2.<a class="source-ref" href="#s29">S29</a> That duplicates mature group chats, adds media storage, notification, abuse and moderation work, and does not prove the core promise. Start with comments and host announcements attached to a Plan. Build full chat only if interviews and retained cohorts show that leaving WhatsApp is necessary.
+        </div>
+
+        <div class="table-wrap deep">
+          <table>
+            <thead><tr><th>New domain object</th><th>Essential fields / rules</th><th>Migration relationship</th></tr></thead>
+            <tbody>
+              <tr><td>User <span class="status conditional">Modeled</span></td><td>Verified identity, locale, age band and deletion state; separate from a group&rsquo;s Person row.</td><td>Extend the ADR&rsquo;s <code>Users</code>; map existing People only after explicit claim.</td></tr>
+              <tr><td>Group + Membership <span class="status conditional">Modeled</span></td><td>Kind, role, invitation, membership status, permissions and per-feature privacy defaults.</td><td>Extend the ADR&rsquo;s entities; existing household becomes the seeded default group.</td></tr>
+              <tr><td>Plan</td><td>Creator, circle, candidate times, chosen time, place, status, RSVP and visibility.</td><td>Extend or migrate Events after contract review.</td></tr>
+              <tr><td>AvailabilityVote</td><td>Candidate slot, member response, optional confidence; never public.</td><td>New composition under Plan.</td></tr>
+              <tr><td>Place</td><td>Licensed provider IDs, canonical name/address/category, source and refresh terms.</td><td>Normalize free-text <code>place</code> gradually.</td></tr>
+              <tr><td>Visit</td><td>Circle, plan, place, occurred date, optional opaque verification proof.</td><td>Derived from Event/Expense without exposing receipt.</td></tr>
+              <tr><td>PlaceReview</td><td>Author, visit, wouldReturn, occasion tags, facts, note, audience, publication state.</td><td>New; mood remains separate.</td></tr>
+              <tr><td>ConsentRecord</td><td>Actor, object, audience, field preview, timestamp, version and revocation.</td><td>Mandatory bridge record.</td></tr>
+              <tr><td>MerchantClaim</td><td>Place, verified business, role, evidence and status.</td><td>New public/commercial boundary.</td></tr>
+              <tr><td>Campaign + Offer</td><td>Budget, geography, query context, disclosure, dates, caps and creative.</td><td>No access path to moods or private circles.</td></tr>
+              <tr><td>ModerationCase</td><td>Report reason, evidence, decision, appeal, audit timestamps.</td><td>Required before public UGC.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <details class="deep">
+          <summary>Recommended engineering epics</summary>
+          <div class="details-body">
+            <ol>
+              <li><strong>Identity and tenancy:</strong> complete ADR phases 0-1 with real authentication, Group boundary, invitation tokens, role checks and a two-group isolation suite.</li>
+              <li><strong>Plan workflow:</strong> candidate times, votes, RSVP, place choice, reminders, external calendar export and idempotent notifications.</li>
+              <li><strong>Private pulse:</strong> manual self-report, per-entry privacy, sharing request/acceptance, export and deletion.</li>
+              <li><strong>Place foundation:</strong> licensed provider selection, canonical IDs, caching policy, geocoding, dedupe and source attribution.</li>
+              <li><strong>Publication bridge:</strong> preview/redaction, consent receipt, public projection, revoke, block and audit log.</li>
+              <li><strong>Recommendation v1:</strong> deterministic circle/occasion ranking with explainable factors before machine learning.</li>
+              <li><strong>Trust operations:</strong> reporting, moderation queue, appeals, merchant replies, fake-review signals and rate limits.</li>
+              <li><strong>Merchant pilot:</strong> claims, offers, sponsorship separation, billing, frequency caps and aggregate attribution.</li>
+            </ol>
+          </div>
+        </details>
+
+        <div class="callout warning">
+          <strong>Place data is a product dependency</strong>
+          Do not scrape Google Maps, Yelp or restaurant sites. Select a licensed place provider and design around its storage, attribution, refresh and display terms. Keep your own user-generated ratings and opaque provider IDs so switching providers remains possible.
+        </div>
+      </section>
+
+      <section class="report-section" id="trust">
+        <div class="section-heading">
+          <div class="section-number">16</div>
+          <div>
+            <div class="section-kicker">Privacy, safety &amp; regulation</div>
+            <h2>Trust is the product architecture</h2>
+            <div class="section-summary">Intimate data and advertising must be technically separated, not merely separated in a policy.</div>
+          </div>
+        </div>
+
+        <div class="principles">
+          <article class="principle"><h3>Private by default</h3><p>Mood, availability, expenses, companions and memories start private. Public is a separate action with an audience preview.</p></article>
+          <article class="principle"><h3>Purpose isolation</h3><p>Commercial ranking receives query, coarse area, occasion and aggregate popularity; it cannot query moods or private relationship history.</p></article>
+          <article class="principle"><h3>Reversible sharing</h3><p>People can inspect, revoke and delete published material. Cached public projections must be invalidated quickly.</p></article>
+          <article class="principle"><h3>Explain every recommendation</h3><p>&ldquo;Three friends would return&rdquo; is understandable. &ldquo;AI picked this&rdquo; is not an explanation.</p></article>
+          <article class="principle"><h3>Protect minors later</h3><p>Do not launch child accounts until guardian roles, age assurance, direct-message limits, location controls and ad bans are designed and reviewed.</p></article>
+          <article class="principle"><h3>Portable history</h3><p>Export plans, memories, ratings and media in durable formats. The current app already demonstrates this philosophy.</p></article>
+        </div>
+
+        <div class="callout warning">
+          <strong>Regulatory baseline, not legal advice</strong>
+          The EU DSA requires ads to be clearly labelled, to identify who placed them and why they are shown; it bans targeted ads to children and ads based on sensitive data.<a class="source-ref" href="#s24">S24</a> The FTC&rsquo;s updated Health Breach Notification Rule explicitly covers many health apps outside HIPAA and treats some unauthorized disclosures as breaches.<a class="source-ref" href="#s23">S23</a> Whether this product&rsquo;s mood data qualifies in a jurisdiction depends on actual processing and positioning. Obtain Swiss/EU/US counsel before public launch.
+        </div>
+
+        <details class="deep">
+          <summary>Data-use matrix</summary>
+          <div class="details-body table-wrap">
+            <table>
+              <thead><tr><th>Data</th><th>Private use</th><th>Recommendation use</th><th>Advertising use</th><th>Public use</th></tr></thead>
+              <tbody>
+                <tr><td>Mood / note</td><td class="yes">User reflection</td><td class="no">No</td><td class="no">Never</td><td class="no">Only user-authored explicit share, preferably not supported at launch</td></tr>
+                <tr><td>Availability</td><td class="yes">Circle scheduling</td><td class="no">No</td><td class="no">Never</td><td class="no">No</td></tr>
+                <tr><td>Expense / receipt</td><td class="yes">Cost context</td><td class="some">Opaque visit proof only</td><td class="no">Never</td><td class="no">No amount/image/companions</td></tr>
+                <tr><td>Private place rating</td><td class="yes">Circle taste</td><td class="yes">Within chosen circles</td><td class="no">No individual targeting</td><td class="some">Only after publish action</td></tr>
+                <tr><td>Published review</td><td class="yes">History</td><td class="yes">Public taste graph</td><td class="some">Contextual adjacency only</td><td class="yes">Chosen audience</td></tr>
+                <tr><td>Current search context</td><td class="yes">Results</td><td class="yes">Ranking</td><td class="some">Coarse contextual sponsorship</td><td class="no">Not published</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </details>
+      </section>
+
+      <section class="report-section" id="risks">
+        <div class="section-heading">
+          <div class="section-number">17</div>
+          <div>
+            <div class="section-kicker">Pre-mortem</div>
+            <h2>Assume it failed; these are the likely reasons</h2>
+            <div class="section-summary">A credible plan names what would kill the business and what evidence would change course.</div>
+          </div>
+        </div>
+
+        <div class="risk-grid">
+          <article class="risk-card"><div class="risk-meta"><h3>Feature sprawl</h3><span class="risk-level">High / immediate</span></div><p><strong>Failure:</strong> every category is mediocre. <strong>Mitigation:</strong> ship one complete plan-to-pulse loop; freeze public and merchant work until retention gate.</p></article>
+          <article class="risk-card"><div class="risk-meta"><h3>Empty place network</h3><span class="risk-level">High</span></div><p><strong>Failure:</strong> recommendations have no local coverage. <strong>Mitigation:</strong> private saves + licensed inventory + one-city concierge curation before public UGC.</p></article>
+          <article class="risk-card"><div class="risk-meta"><h3>Trust betrayal</h3><span class="risk-level">Critical</span></div><p><strong>Failure:</strong> a mood, companion or cost leaks. <strong>Mitigation:</strong> service isolation, threat model, field-level publication tests, security review and incident plan.</p></article>
+          <article class="risk-card"><div class="risk-meta"><h3>Ratings manipulation</h3><span class="risk-level">High</span></div><p><strong>Failure:</strong> paid/fake reviews destroy credibility. <strong>Mitigation:</strong> verified experience signals, anomaly detection, disclosure, appeals and no pay-to-rank.</p></article>
+          <article class="risk-card"><div class="risk-meta"><h3>Relationship harm</h3><span class="risk-level">High</span></div><p><strong>Failure:</strong> mood scores become pressure or monitoring. <strong>Mitigation:</strong> private default, no score, consented sharing and user research with diverse relationship structures.</p></article>
+          <article class="risk-card"><div class="risk-meta"><h3>Weak willingness to pay</h3><span class="risk-level">Medium-high</span></div><p><strong>Failure:</strong> users like it but expect free. <strong>Mitigation:</strong> paid checkout tests by week six; do not use future ads to excuse failed subscription value.</p></article>
+          <article class="risk-card"><div class="risk-meta"><h3>Merchant sales cost</h3><span class="risk-level">High</span></div><p><strong>Failure:</strong> CHF 99 revenue requires hours of selling/support. <strong>Mitigation:</strong> self-serve only after organic inbound; concierge pilot measures true acquisition effort.</p></article>
+          <article class="risk-card"><div class="risk-meta"><h3>Architecture mismatch</h3><span class="risk-level">Critical / current</span></div><p><strong>Failure:</strong> single-household authorization is stretched into multi-tenancy. <strong>Mitigation:</strong> identity and circle boundaries before invitations or public data.</p></article>
+        </div>
+
+        <div class="callout question">
+          <strong>Kill or pivot conditions</strong>
+          After two focused iterations, stop expanding if week-4 circle retention stays below 25%, fewer than 15% of completed plans receive any pulse, or users consistently prefer their existing chat/calendar stack. Pivot toward the strongest observed component instead of preserving the original bundle.
+        </div>
+      </section>
+
+      <section class="report-section" id="ninety-days">
+        <div class="section-heading">
+          <div class="section-number">18</div>
+          <div>
+            <div class="section-kicker">Execution</div>
+            <h2>The first 90 days</h2>
+            <div class="section-summary">Research and reliability first; marketplace code last.</div>
+          </div>
+        </div>
+
+        <div class="roadmap">
+          <article class="phase"><span class="when">Days 1-14</span><h3>Stabilize</h3><ul><li>Reproduce auth hang</li><li>Fix mood 500</li><li>Fix 390px overflow</li><li>Fix events route</li><li>Run full tests/build</li></ul><strong>Output:</strong> trustworthy pilot build.</article>
+          <article class="phase"><span class="when">Days 8-28</span><h3>Discover</h3><ul><li>30 interviews</li><li>10 planning diaries</li><li>Competitor walkthroughs</li><li>Name/message test</li><li>Price landing test</li></ul><strong>Output:</strong> one primary job and segment.</article>
+          <article class="phase"><span class="when">Days 22-55</span><h3>Prototype</h3><ul><li>Circle invite prototype</li><li>Time poll</li><li>Three place choices</li><li>Private pulse</li><li>Memory recap</li></ul><strong>Output:</strong> concierge test with 30 circles.</article>
+          <article class="phase"><span class="when">Days 50-90</span><h3>Instrument beta</h3><ul><li>Identity + Circle</li><li>Plan v1</li><li>Consent telemetry</li><li>50-100 circles</li><li>Weekly cohort review</li></ul><strong>Output:</strong> continue/pivot/stop decision.</article>
+        </div>
+
+        <div class="callout decision">
+          <strong>Founder operating rule</strong>
+          Every Friday answer three questions with evidence: Did more circles complete a real plan? Did they return without being chased? Did anyone feel watched, pressured or confused about what was shared? Features are secondary to those answers.
+        </div>
+      </section>
+
+      <section class="report-section" id="sources">
+        <div class="section-heading">
+          <div class="section-number">19</div>
+          <div>
+            <div class="section-kicker">Evidence ledger</div>
+            <h2>Sources, confidence and limitations</h2>
+            <div class="section-summary">Facts are linked; recommendations and assumptions are labelled as such.</div>
+          </div>
+        </div>
+
+        <div class="callout question">
+          <strong>Research limitations</strong>
+          This is desk research plus source-code inspection, not customer discovery. Competitor user counts are often self-reported; Partiful MAU is a third-party estimate; prices can vary by region; no proprietary retention, acquisition or merchant data was available. Financial figures in this report are explicit planning assumptions. Legal notes are not legal advice.
+        </div>
+
+        <div class="source-grid deep">
+          <article class="source-card" id="s1"><strong>S1 &middot; Current product charter</strong><p><a href="../CLAUDE.md">Repository CLAUDE.md</a></p><p>Product intent, stack, commands and &ldquo;no debt&rdquo; philosophy. Primary internal source.</p></article>
+          <article class="source-card" id="s2"><strong>S2 &middot; Current release</strong><p><a href="../CHANGELOG.md">Repository CHANGELOG.md</a></p><p>Implemented v1.0.0 features, security and operational caveats. Primary internal source.</p></article>
+          <article class="source-card" id="s3"><strong>S3 &middot; Service surface</strong><p><a href="../srv/ledger-service.cds">LedgerService contract</a></p><p>15 entity projections and 17 actions/functions. Primary internal source.</p></article>
+          <article class="source-card" id="s4"><strong>S4 &middot; Domain model</strong><p><a href="../db/schema.cds">CDS schema</a></p><p>Current live entities plus the in-progress Phase 0 platform models, enums, associations and privacy comments. Primary internal source.</p></article>
+          <article class="source-card" id="s5"><strong>S5 &middot; TimeTree</strong><p><a href="https://timetreeapp.com/">Official product site</a></p><p>Group calendars and first-party claim of 70M users/14B events reported in Nov 2025 search materials. Accessed 2 Sep 2026.</p></article>
+          <article class="source-card" id="s6"><strong>S6 &middot; TimeTree Premium</strong><p><a href="https://timetreeapp.com/intl/en/premium">Official pricing</a></p><p>USD 4.49/month or 44.99/year, no ads, attachments and enhanced views. Accessed 2 Sep 2026.</p></article>
+          <article class="source-card" id="s7"><strong>S7 &middot; Howbout</strong><p><a href="https://howbout.app/blog/howbout-moments/we-raised-8m-in-funding-led-by-goodwater-/">Official Series A announcement</a></p><p>4M users, 50M events, around 2M weekly events and $8M raise; first-party, 19 Sep 2024.</p></article>
+          <article class="source-card" id="s8"><strong>S8 &middot; Partiful</strong><p><a href="https://partiful.com/">Official product site</a></p><p>Free invites, polls, guest questions, text blasts, payments/tickets and shared albums. Accessed 2 Sep 2026.</p></article>
+          <article class="source-card" id="s9"><strong>S9 &middot; Partiful traction</strong><p><a href="https://www.cnbc.com/2025/04/19/meet-partiful-the-gen-z-party-planning-staple-thats-taking-on-apple.html">CNBC, 19 Apr 2025</a></p><p>500K estimated Q1 MAU, +400% YoY, 2M new users claimed, 60%+ weekly active use claimed. Company claims and Sensor Tower estimates are distinguished.</p></article>
+          <article class="source-card" id="s10"><strong>S10 &middot; Paired</strong><p><a href="https://www.paired.com/">Official product site</a></p><p>Five-minute check-ins, expert activities and first-party claim of 4M couples. Accessed 2 Sep 2026.</p></article>
+          <article class="source-card" id="s11"><strong>S11 &middot; Paired pricing</strong><p><a href="https://www.paired.com/premium">Official pricing</a></p><p>Swiss page showed CHF 80/year or CHF 15/month for both partners. Accessed 2 Sep 2026; regional pricing varies.</p></article>
+          <article class="source-card" id="s12"><strong>S12 &middot; Daylio</strong><p><a href="https://daylio.net/">Official product site</a></p><p>Two-tap mood/activity entry, private local storage, charts, goals and first-party 20M+ user claim. Accessed 2 Sep 2026.</p></article>
+          <article class="source-card" id="s13"><strong>S13 &middot; How We Feel</strong><p><a href="https://howwefeel.org/">Official nonprofit site</a></p><p>Emotion vocabulary, patterns and regulation tools; nonprofit/donation model with Yale Center involvement. Accessed 2 Sep 2026.</p></article>
+          <article class="source-card" id="s14"><strong>S14 &middot; Splitwise</strong><p><a href="https://www.splitwise.com/">Official product site</a> and <a href="https://www.splitwise.com/pro">Pro features</a></p><p>Groups, balances, settlement, currencies, receipt scan, import, itemization and ads/Pro model. Accessed 2 Sep 2026.</p></article>
+          <article class="source-card" id="s15"><strong>S15 &middot; Honeydue</strong><p><a href="https://www.honeydue.com/how-it-works">Official product site</a></p><p>Couple finance, account aggregation, bill reminders and transaction chat. Accessed 2 Sep 2026.</p></article>
+          <article class="source-card" id="s16"><strong>S16 &middot; Honeydue monetization</strong><p><a href="https://support.honeydue.com/en/articles/3179714-how-does-honeydue-earn-money">Official support article</a></p><p>Free product with optional $1-10 monthly tips; article dated 24 Aug 2019, so current model should be revalidated.</p></article>
+          <article class="source-card" id="s17"><strong>S17 &middot; Zeta / Acorns</strong><p><a href="https://www.acorns.com/learn/acorns-zeta-acquisition/">Acorns announcement, 24 Jun 2025</a></p><p>Asset acquisition, cofounder hires and invitation for existing Zeta customers to use Acorns. Primary acquirer source.</p></article>
+          <article class="source-card" id="s18"><strong>S18 &middot; Beli</strong><p><a href="https://beliapp.com/">Official product site</a></p><p>Personal restaurant maps/lists, friend activity and personalized recommendations. Scale and monetization were not reliably disclosed in reviewed first-party material.</p></article>
+          <article class="source-card" id="s19"><strong>S19 &middot; Yelp audience and merchant product</strong><p><a href="https://business.yelp.com/">Yelp for Business</a></p><p>74M+ monthly visitors (2025 Comscore), free listings, ads and restaurant SaaS. Vendor claims are not independent outcome evidence.</p></article>
+          <article class="source-card" id="s20"><strong>S20 &middot; Yelp economics</strong><p><a href="https://www.sec.gov/Archives/edgar/data/1345016/000134501626000011/yelpq4-25ex991pressrelease.htm">SEC-filed 2025 results, 12 Feb 2026</a></p><p>$1.465B net revenue; $948M services ads; $444M restaurant/retail/other ads (-6%); 330M cumulative reviews.</p></article>
+          <article class="source-card" id="s21"><strong>S21 &middot; Foursquare City Guide sunset</strong><p><a href="https://foursquare.com/city-guide-sunset/">Official sunset page</a></p><p>Mobile sunset 15 Dec 2024, web 28 Apr 2025; Swarm retained check-ins and personal lifelog. Primary source.</p></article>
+          <article class="source-card" id="s22"><strong>S22 &middot; Fake review rule</strong><p><a href="https://www.ftc.gov/news-events/news/press-releases/2024/08/federal-trade-commission-announces-final-rule-banning-fake-reviews-testimonials">FTC, 14 Aug 2024</a></p><p>Official summary of prohibited fake/paid/insider reviews, suppression and controlled review sites.</p></article>
+          <article class="source-card" id="s23"><strong>S23 &middot; Health app breach rule</strong><p><a href="https://www.ftc.gov/news-events/news/press-releases/2024/04/ftc-finalizes-changes-health-breach-notification-rule">FTC, 26 Apr 2024</a></p><p>Clarifies application to health apps outside HIPAA and notification duties for identifiable health data breaches.</p></article>
+          <article class="source-card" id="s24"><strong>S24 &middot; Digital Services Act</strong><p><a href="https://digital-strategy.ec.europa.eu/en/policies/digital-services-act-package">European Commission DSA overview</a></p><p>Ad labels and explanations, sensitive-data targeting restriction, child targeted-ad ban, dark-pattern and moderation duties. Updated 10 Aug 2026.</p></article>
+          <article class="source-card" id="s25"><strong>S25 &middot; Swiss households</strong><p><a href="https://www.bfs.admin.ch/bfs/en/home/statistics/population/families/households.html">Swiss Federal Statistical Office</a></p><p>About 4.1M private households at end-2024; 37% one-person, 27% couples without children, 28% with child under 25.</p></article>
+          <article class="source-card" id="s26"><strong>S26 &middot; Shared novel activities</strong><p><a href="https://pubmed.ncbi.nlm.nih.gov/10707334/">Aron et al., Journal of Personality and Social Psychology, 2000</a></p><p>Questionnaires, survey and three lab experiments associated shared novel/arousing activity with experienced relationship quality. This does not validate an app intervention.</p></article>
+          <article class="source-card" id="s27"><strong>S27 &middot; Choice overload</strong><p><a href="https://www.sciencedirect.com/science/article/pii/S1057740814000916">Chernev, Bockenholt &amp; Goodman, 2015</a></p><p>Meta-analysis of 99 observations (N=7,202) found important moderators; &ldquo;fewer is always better&rdquo; would overstate the evidence.</p></article>
+          <article class="source-card" id="s28"><strong>S28 &middot; Operations caveats</strong><p><a href="DEPLOY.md">Fly deployment guide</a> and <a href="../GO-LIVE.md">go-live checklist</a></p><p>Local verification, Docker/Fly gaps, backup rehearsal and container retraining limitation. Primary internal sources.</p></article>
+          <article class="source-card" id="s29"><strong>S29 &middot; Group and chat architecture in progress</strong><p><a href="ARCHITECTURE.md">TWM-ADR-002 summary</a>, <a href="CONTRACTS.md#12-groups-accounts-and-chat-twm-adr-002">contract section</a> and <a href="FRONTEND-CONTRACT.md#10-chat">frontend plan</a></p><p>Phase 0 models Groups, Users, Memberships, Conversations, Messages and tenant links; later phases specify isolation, registration, chat and polish. These workspace changes were not service- or UI-complete when reviewed.</p></article>
+        </div>
+
+        <p><strong>Confidence key:</strong> internal code and official filings/rules are high-confidence descriptions of their own scope; first-party user counts and vendor outcomes are medium-confidence; recommendations, thresholds, pricing and financial scenarios are hypotheses to test.</p>
+      </section>
+    </main>
+  </div>
+
+  <footer class="footer">
+    <p><strong>Two-Way Match product &amp; business research</strong></p>
+    <p>Prepared from the implemented repository and public evidence available on 2 September 2026.</p>
+    <p>This report supports a decision; it does not guarantee market success or replace legal, clinical, financial or security advice.</p>
+  </footer>
+
+  <script>
+    const focusToggle = document.getElementById('focus-toggle')
+    const details = Array.from(document.querySelectorAll('details'))
+
+    focusToggle.addEventListener('click', () => {
+      const active = document.body.classList.toggle('focus-mode')
+      focusToggle.setAttribute('aria-pressed', String(active))
+      focusToggle.textContent = active ? 'Full report' : 'Focus view'
+    })
+
+    document.getElementById('expand-all').addEventListener('click', () => {
+      details.forEach(item => { item.open = true })
+    })
+    document.getElementById('collapse-all').addEventListener('click', () => {
+      details.forEach(item => { item.open = false })
+    })
+    document.getElementById('print-report').addEventListener('click', () => window.print())
+
+    const progress = document.getElementById('scroll-progress')
+    const updateProgress = () => {
+      const available = document.documentElement.scrollHeight - window.innerHeight
+      const ratio = available > 0 ? window.scrollY / available : 0
+      progress.style.width = `${Math.min(1, Math.max(0, ratio)) * 100}%`
+    }
+    document.addEventListener('scroll', updateProgress, { passive: true })
+    updateProgress()
+
+    const navLinks = Array.from(document.querySelectorAll('.toc a'))
+    const sections = navLinks.map(link => document.querySelector(link.getAttribute('href'))).filter(Boolean)
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return
+        navLinks.forEach(link => link.classList.toggle('active', link.getAttribute('href') === `#${entry.target.id}`))
+      })
+    }, { rootMargin: '-20% 0px -70% 0px' })
+    sections.forEach(section => observer.observe(section))
+
+    const money = value => {
+      const rounded = Math.round(Number(value) || 0)
+      const sign = rounded < 0 ? '-' : ''
+      const digits = String(Math.abs(rounded)).replace(/\B(?=(\d{3})+(?!\d))/g, "'")
+      return `${sign}CHF ${digits}`
+    }
+
+    const calculatorFields = ['active-circles', 'paid-rate', 'circle-price', 'merchant-count', 'merchant-price', 'annual-referrals']
+    const recalculate = () => {
+      const read = id => Number(document.getElementById(id).value) || 0
+      const consumer = read('active-circles') * (read('paid-rate') / 100) * read('circle-price')
+      const merchant = read('merchant-count') * read('merchant-price') * 12
+      const referral = read('annual-referrals')
+      document.getElementById('annual-revenue').textContent = money(consumer + merchant + referral)
+      document.getElementById('revenue-breakdown').textContent = `Consumer ${money(consumer)} · merchant ${money(merchant)} · referral ${money(referral)}`
+    }
+    calculatorFields.forEach(id => document.getElementById(id).addEventListener('input', recalculate))
+    recalculate()
+  </script>
+</body>
+</html>
