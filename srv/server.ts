@@ -78,6 +78,7 @@ import {
   verifySessionToken,
 } from './lib/auth'
 import { describeProvider } from './lib/llm'
+import { migrate } from './lib/migrate'
 import { readBuildStamp, type BuildStamp } from './lib/build-stamp'
 import { getDocAiClient } from './lib/documentai'
 // Relative rather than '#cds-models/twowaymatch': package.json carries no "imports"
@@ -1317,6 +1318,25 @@ if (isProduction() && credentials !== null) {
     )
   }
 }
+
+/**
+ * Bring the database up to the current model before a single request is served.
+ *
+ * `cds deploy` creates a database from scratch and is right for development; the volume
+ * in production holds real data and must be altered in place instead. Shipping phase 0
+ * without this took the live API down with `no such column: group_ID` -- the image knew
+ * about a column the volume had never been told about. `migrate()` is additive and
+ * idempotent, so this costs a boot nothing once it has run.
+ *
+ * `served` rather than `bootstrap`: the database is connected by then. A failure here is
+ * fatal on purpose -- serving requests against a database of the wrong shape is worse
+ * than not starting.
+ */
+cds.on('served', async () => {
+  const database = cds.db as unknown as { run(query: string): Promise<unknown> } | undefined
+  if (database === undefined) return
+  await migrate(database)
+})
 
 cds.on('bootstrap', configureApp)
 cds.on('served', verifyLoginMapping)
