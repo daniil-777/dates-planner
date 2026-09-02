@@ -137,6 +137,15 @@ entity Groups : cuid, managed {
     other;
   } default 'couple';
   currency        : String(3) default 'CHF';
+  /**
+   * The household this instance falls back to when a request names none — a session
+   * minted before phase 1, or development with the door open.
+   *
+   * A marker rather than a rule: "the oldest group" and "the first group by id" both
+   * look reasonable and are both wrong the moment a second household exists, because
+   * a new group can sort ahead of the seeded one. Exactly one row should carry this.
+   */
+  isDefault       : Boolean default false;
   /** Eight characters, shown once, single use, rotated by an owner on demand. */
   inviteCode      : String(12);
   inviteExpiresAt : Timestamp null;

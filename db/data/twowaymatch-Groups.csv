@@ -1,2 +1,2 @@
-ID,name,kind,currency,inviteCode,inviteExpiresAt
-g0000000-0000-4000-8000-000000000001,Our household,couple,CHF,,
+ID,name,kind,currency,isDefault,inviteCode,inviteExpiresAt
+g0000000-0000-4000-8000-000000000001,Our household,couple,CHF,true,,

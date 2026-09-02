@@ -54,6 +54,22 @@ export interface Session {
   username: string
   /** Epoch milliseconds. Always in the future for a session that verified. */
   expiresAt: number
+  /**
+   * The group this session is looking at, and the account it belongs to.
+   *
+   * Both are optional because a token issued before TWM-ADR-002 phase 1 carries
+   * neither, and invalidating every signed-in phone to add a claim would be a poor
+   * trade. A session without a group falls back to the caller's only membership, or
+   * to the default group in development — see `LedgerService.scope`.
+   */
+  groupId: string | null
+  userId: string | null
+}
+
+/** The claims a caller may pin onto a new token. */
+export interface SessionClaims {
+  groupId?: string | null
+  userId?: string | null
 }
 
 interface StoredAccount extends AuthAccount {
@@ -241,11 +257,18 @@ export function sessionSecretConfigured(): boolean {
  * `issuedAt` is a parameter rather than an implicit `Date.now()` so that a test can mint an
  * already-expired token without waiting a week or stubbing the clock.
  */
-export function issueSessionToken(username: string, issuedAt: number = Date.now()): string {
-  const payload = Buffer.from(
-    JSON.stringify({ u: username, exp: issuedAt + SESSION_TTL_MS }),
-    'utf8',
-  ).toString('base64url')
+export function issueSessionToken(
+  username: string,
+  issuedAt: number = Date.now(),
+  claims: SessionClaims = {},
+): string {
+  // Short keys because the whole thing rides in a cookie on every request. Absent
+  // claims are omitted rather than written as null, so a token for a single-group
+  // account stays the size it always was.
+  const body: Record<string, unknown> = { u: username, exp: issuedAt + SESSION_TTL_MS }
+  if (typeof claims.groupId === 'string' && claims.groupId !== '') body.g = claims.groupId
+  if (typeof claims.userId === 'string' && claims.userId !== '') body.uid = claims.userId
+  const payload = Buffer.from(JSON.stringify(body), 'utf8').toString('base64url')
   return `${payload}.${sign(payload)}`
 }
 
@@ -281,10 +304,20 @@ export function verifySessionToken(
   }
   if (typeof parsed !== 'object' || parsed === null) return null
 
-  const { u, exp } = parsed as { u?: unknown; exp?: unknown }
+  const { u, exp, g, uid } = parsed as {
+    u?: unknown
+    exp?: unknown
+    g?: unknown
+    uid?: unknown
+  }
   if (typeof u !== 'string' || u === '') return null
   if (typeof exp !== 'number' || !Number.isFinite(exp) || exp <= now) return null
-  return { username: u, expiresAt: exp }
+  return {
+    username: u,
+    expiresAt: exp,
+    groupId: typeof g === 'string' && g !== '' ? g : null,
+    userId: typeof uid === 'string' && uid !== '' ? uid : null,
+  }
 }
 
 /* ------------------------------------------------------------------ *

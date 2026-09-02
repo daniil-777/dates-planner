@@ -58,6 +58,13 @@ const EVENT_PHOTOS = 'LedgerService.EventPhotos'
 const REMINDERS = 'LedgerService.Reminders'
 
 const PARTNER_A = 'a0000000-0000-4000-8000-000000000001'
+/**
+ * The seeded household. Fixtures that insert straight into the database have to name
+ * it: the service stamps `group_ID` on everything it writes (TWM-ADR-002 phase 1), so
+ * a row without one is a row no scoped read can see -- which is a state production
+ * cannot reach, and only a fixture can.
+ */
+const DEFAULT_GROUP = 'g0000000-0000-4000-8000-000000000001'
 const PARTNER_B = 'b0000000-0000-4000-8000-000000000002'
 
 /** Four people, three postings, one long weekend. In the past. */
@@ -278,6 +285,7 @@ async function planSurprise(
   await db.run(
     INSERT.into(EVENTS).entries({
       ID,
+      group_ID: DEFAULT_GROUP,
       name: options.name ?? 'Something on a Thursday',
       startsOn: addDays(todayISO(), options.daysAway ?? 30),
       place: 'Undisclosed',

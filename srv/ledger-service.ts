@@ -38,6 +38,7 @@
  */
 import cds from '@sap/cds'
 import type { Request } from '@sap/cds'
+import { readSessionToken, verifySessionToken } from './lib/auth'
 import type {
   Correction,
   Event,
@@ -126,6 +127,11 @@ interface FilteredQuery {
  * `$count` counting rows the caller never receives, and `$top` returning short
  * pages.
  */
+/** `cds.context` with the marker {@link LedgerService.narrowDbRead} reads. */
+interface ScopedContext {
+  twmGroupId?: string
+}
+
 interface NarrowableQuery {
   where(filter: Record<string, unknown>): unknown
 }
@@ -193,6 +199,30 @@ const EVENT_PHOTOS = 'LedgerService.EventPhotos'
 const REMINDERS = 'LedgerService.Reminders'
 
 /** The `twowaymatch` table behind `EVENTS`, as the statement's own CQN names it. */
+/**
+ * Every entity that belongs to one household.
+ *
+ * `Categories` is absent on purpose: the ten codes are shared vocabulary, not data.
+ * So are `Groups`, `Users` and `Memberships`, which are the platform's own tables and
+ * are not exposed through this service at all.
+ */
+const TENANT_ENTITIES = [
+  'Expenses',
+  'Receipts',
+  'People',
+  'Events',
+  'EventParticipants',
+  'EventPhotos',
+  'Reminders',
+  'Memories',
+  'Photos',
+  'Moods',
+  'Settlements',
+  'Statements',
+  'Corrections',
+] as const
+
+const MEMBERSHIPS = 'twowaymatch.Memberships'
 const EVENTS_TABLE = 'twowaymatch.Events'
 
 const PERIOD_PATTERN = /^\d{4}-(?:0[1-9]|1[0-2])$/
@@ -451,6 +481,35 @@ export default class LedgerService extends cds.ApplicationService {
     this.before(['CREATE', 'UPDATE'], 'Events', req => this.validateEventWrite(req))
     this.before('CREATE', 'EventParticipants', req => this.validateParticipantWrite(req))
     this.before(['CREATE', 'UPDATE'], 'EventPhotos', req => this.guardRawPhotoWrite(req))
+
+    /* ------------------------------------------------- group isolation */
+
+    // Resolve the caller's household once, before any handler runs...
+    this.before('*', req => this.rememberScope(req))
+
+    // ...then enforce it on every read that reaches the database, whether it arrived as
+    // a request or was written inside a handler. See `narrowDbRead` for why the
+    // request-level hook alone was not enough.
+    //
+    // `cds.db` rather than `await cds.connect.to('db')`: with an in-memory SQLite the
+    // connect call opens a *second*, empty database and repoints `cds.db` at it, and
+    // every table then reads as missing. The database is already connected by the time
+    // a service initialises, so take the one that exists.
+    const database = cds.db as unknown as
+      | {
+          before(event: string, entity: string, handler: (dbReq: { query?: unknown }) => void): void
+        }
+      | undefined
+    if (database !== undefined) {
+      for (const table of LedgerService.TENANT_TABLES) {
+        database.before('READ', table, dbReq => this.narrowDbRead(dbReq))
+      }
+    }
+
+    // Writes still stamp at the request level, where the payload is.
+    for (const entity of TENANT_ENTITIES) {
+      this.before(['CREATE', 'UPDATE'], entity, req => this.scopeWrite(req))
+    }
 
     /* -------------------------------------------------- surprises (§11.3) */
 
@@ -939,7 +998,10 @@ export default class LedgerService extends cds.ApplicationService {
         .where({ expense_ID: id })) as Correction[]
       const seen = new Set(logged.map(correctionKey))
       const unlogged = corrections.filter(row => !seen.has(correctionKey(row)))
-      if (unlogged.length > 0) await INSERT.into(CORRECTIONS).entries(unlogged)
+      if (unlogged.length > 0) {
+        const stamp = await this.groupStamp(req)
+        await INSERT.into(CORRECTIONS).entries(unlogged.map(row => ({ ...row, ...stamp })))
+      }
     }
 
     return (await SELECT.one.from(EXPENSES).where({ ID: id })) as Expense
@@ -1060,6 +1122,7 @@ export default class LedgerService extends cds.ApplicationService {
     )
     const ID = cds.utils.uuid()
     await INSERT.into(SETTLEMENTS).entries({
+      ...(await this.groupStamp(req)),
       ID,
       period,
       grandTotal: totals.grandTotal,
@@ -1247,6 +1310,7 @@ export default class LedgerService extends cds.ApplicationService {
 
     const receiptID = cds.utils.uuid()
     await INSERT.into(RECEIPTS).entries({
+      ...(await this.groupStamp(req)),
       ID: receiptID,
       image: processed.buffer,
       mediaType: 'image/jpeg',
@@ -1292,6 +1356,7 @@ export default class LedgerService extends cds.ApplicationService {
 
     const expenseID = cds.utils.uuid()
     await INSERT.into(EXPENSES).entries({
+      ...(await this.groupStamp(req)),
       ID: expenseID,
       date: extracted.date,
       time: extracted.time === null ? null : `${extracted.time}:00`,
@@ -1430,6 +1495,7 @@ export default class LedgerService extends cds.ApplicationService {
         .where({ ID })
     } else {
       await INSERT.into(STATEMENTS).entries({
+        ...(await this.groupStamp(req)),
         ID,
         year,
         contentMarkdown: markdown,
@@ -1495,6 +1561,7 @@ export default class LedgerService extends cds.ApplicationService {
 
     const ID = cds.utils.uuid()
     await INSERT.into(EVENT_PHOTOS).entries({
+      ...(await this.groupStamp(req)),
       ID,
       event_ID: String(event.ID),
       image: processed.buffer,
@@ -1579,6 +1646,7 @@ export default class LedgerService extends cds.ApplicationService {
 
     const ID = cds.utils.uuid()
     await INSERT.into(REMINDERS).entries({
+      ...(await this.groupStamp(req)),
       ID,
       event_ID: String(event.ID),
       leadDays,
@@ -1874,6 +1942,10 @@ export default class LedgerService extends cds.ApplicationService {
    * {@link isHiddenFrom} then fails closed.
    */
   private async viewer(req: Request): Promise<RosterEntry | null> {
+    // Reading the projection is safe even though the narrowing hooks it: this runs
+    // while `cds.context.twmGroupId` is still unset, so the roster comes back whole --
+    // which it must, because working out which household the caller belongs to is
+    // exactly what this read is for.
     const people = (await SELECT.from(PEOPLE).columns(
       'ID',
       'name',
@@ -1981,5 +2053,182 @@ export default class LedgerService extends cds.ApplicationService {
       return Buffer.from(value.data as number[])
     }
     return req.reject(400, missing)
+  }
+  /* ------------------------------------------------------------------ *
+   *  Group isolation  (TWM-ADR-002 phase 1, CONTRACTS section 12.1)
+   * ------------------------------------------------------------------ */
+
+  /**
+   * Which household is this request about?
+   *
+   * Resolution order, and each step exists for a reason:
+   *  1. the `g` claim on the session cookie, set when the account signed in or
+   *     switched groups;
+   *  2. the caller's only membership, when they have exactly one. A token minted
+   *     before phase 1 carries no claim, and re-issuing one is not worth signing
+   *     every phone out;
+   *  3. the default group, which is what development and every existing deployment
+   *     have. `AUTH_ALLOW_ANY` lands here: open-door mode is one household, not none.
+   *
+   * Returns `null` only when the database holds no groups at all, which is a fresh
+   * install before the seed has run. Callers read that as "narrow to nothing".
+   */
+  private async scope(req: Request): Promise<string | null> {
+    const cookie = req.headers?.cookie
+    const claimed = verifySessionToken(
+      readSessionToken(typeof cookie === 'string' ? cookie : undefined),
+    )
+    if (claimed?.groupId) return claimed.groupId
+
+    if (claimed?.userId) {
+      const mine = (await SELECT.from(MEMBERSHIPS)
+        .columns('group_ID')
+        .where({ user_ID: claimed.userId })) as Array<{ group_ID?: string | null }>
+      if (mine.length === 1 && mine[0]?.group_ID) return String(mine[0].group_ID)
+    }
+
+    // Fall back to the household of the person making the request.
+    //
+    // This deliberately does *not* look for a group flagged as the default. Asking
+    // "which group is the default one" is the wrong question: it is global state that
+    // has nothing to do with the caller, and the obvious cheap answers -- the oldest
+    // group, the first by id -- both hand every unclaimed request to whichever
+    // household happens to sort first. `test/isolation.test.ts` plants a group whose
+    // id sorts ahead of the seeded one, and that is what it is guarding.
+    //
+    // `viewer()` already resolves a request to one roster row, by name then email then
+    // the first seeded person, and every roster row carries its household. So the
+    // question becomes "whose ledger is this?", which is the one worth asking, and it
+    // costs a read of a table this service reads anyway.
+    const me = await this.viewer(req)
+    if (me === null) return null
+    const person = (await SELECT.one.from(PEOPLE).columns('group_ID').where({ ID: me.ID })) as {
+      group_ID?: string | null
+    } | null
+    return person?.group_ID ? String(person.group_ID) : null
+  }
+
+  /**
+   * Stamp the caller's group onto a write, and refuse one that names another.
+   *
+   * The refusal is a 400 rather than a 403 because it describes a malformed payload:
+   * a client has no business sending `group_ID` at all. Reading another household's
+   * row by id is the case that must not leak, and that is answered by
+   * {@link scopeRead} as a 404.
+   */
+  /**
+   * The group stamp for a row an action inserts directly.
+   *
+   * {@link scopeWrite} covers writes that arrive as OData CREATE/UPDATE requests, but
+   * the action handlers below build their rows with `INSERT.into(...)`, which never
+   * passes through an entity's CREATE handler. An unstamped row would be written and
+   * then be invisible to every later read -- scan a receipt and watch the expense
+   * disappear. So every direct insert carries this explicitly.
+   *
+   * `test/isolation.test.ts` asserts that each action's row comes back afterwards,
+   * which is what catches a future insert that forgets it.
+   */
+  private async groupStamp(req: Request): Promise<{ group_ID?: string }> {
+    const group = await this.scope(req)
+    return group === null ? {} : { group_ID: group }
+  }
+
+  private async scopeWrite(req: Request): Promise<void> {
+    const group = await this.scope(req)
+    if (group === null) return
+    for (const data of payloadRows(req.data)) this.stampGroup(data, group, req)
+  }
+
+  /**
+   * Stamp one payload row and everything composed beneath it.
+   *
+   * The recursion is the point. A deep create -- an event arriving with its guest list,
+   * a memory with its photographs -- is one request carrying rows for two entities, and
+   * `payloadRows` only yields the outer one. Stamping just that wrote a correctly
+   * grouped event whose participants had no group at all, and the narrowing then hid
+   * them: the event saved, and its guests silently vanished. Every composition target
+   * in this model is itself a household entity, so descending into any nested array of
+   * rows is both safe and necessary.
+   */
+  private stampGroup(row: Record<string, unknown>, group: string, req: Request): void {
+    if (isSet(row.group_ID) && String(row.group_ID) !== group) {
+      req.reject(400, 'group_ID cannot be set from a request.')
+    }
+    row.group_ID = group
+    for (const value of Object.values(row)) {
+      if (!Array.isArray(value)) continue
+      for (const nested of value) {
+        if (typeof nested === 'object' && nested !== null && !Array.isArray(nested)) {
+          this.stampGroup(nested as Record<string, unknown>, group, req)
+        }
+      }
+    }
+  }
+
+  /**
+   * The entities the database-level narrowing is registered on.
+   *
+   * The service's own connection carries the `LedgerService_*` projections, which is
+   * what every `SELECT.from(...)` inside a handler resolves to, so these are the names
+   * the narrowing has to hook. (`twowaymatch.*` is a different database in tests and
+   * simply is not there.)
+   */
+  private static readonly TENANT_TABLES = [
+    'LedgerService.Expenses',
+    'LedgerService.Receipts',
+    'LedgerService.People',
+    'LedgerService.Events',
+    'LedgerService.EventParticipants',
+    'LedgerService.EventPhotos',
+    'LedgerService.Reminders',
+    'LedgerService.Memories',
+    'LedgerService.Photos',
+    'LedgerService.Moods',
+    'LedgerService.Settlements',
+    'LedgerService.Statements',
+    'LedgerService.Corrections',
+  ] as const
+
+  /**
+   * Narrow *every* read of household data, not just the ones that arrive as requests.
+   *
+   * `this.before('READ', entity)` only fires for queries dispatched to the service. It
+   * does not fire for the twenty-three `SELECT.from(...)` calls inside the handlers
+   * themselves — which is where `periodTotals`, `monthlyTotals`, `eventTotals`,
+   * `duplicates` and `upcoming` get their numbers. Left to the request-level hook
+   * alone, a household's list of expenses was correctly filtered while the total
+   * printed above it silently included every other household's spending. That is the
+   * worst shape a bug can take here: not an error, just a number that is too big.
+   *
+   * So the enforcement lives one layer down, on the database service, where every read
+   * passes regardless of who wrote it. The group is resolved once per request by
+   * {@link rememberScope} and carried on `cds.context`, which CAP propagates through
+   * the async call chain, so a handler ten frames deep is still narrowed.
+   *
+   * Two things make this safe rather than circular:
+   *  - during resolution the marker is not yet set, so `viewer()`'s own read of the
+   *    roster is not narrowed by the answer it is about to produce;
+   *  - a read outside any LedgerService request (a test fixture, a migration) has no
+   *    marker and is left alone, which is what makes the intruder in
+   *    `test/isolation.test.ts` plantable at all.
+   */
+  private narrowDbRead(dbReq: { query?: unknown }): void {
+    const group = (cds.context as ScopedContext | undefined)?.twmGroupId
+    if (typeof group !== 'string' || group === '') return
+    const query = dbReq.query as NarrowableQuery | undefined
+    if (typeof query?.where !== 'function') return
+    query.where({ group_ID: group })
+  }
+
+  /**
+   * Resolve the caller's group once and hang it on the request context.
+   *
+   * Registered as a `before('*')` so it runs ahead of every handler, including the
+   * actions, and costs one roster read per request rather than one per query.
+   */
+  private async rememberScope(req: Request): Promise<void> {
+    const context = cds.context as ScopedContext | undefined
+    if (context === undefined) return
+    context.twmGroupId = (await this.scope(req)) ?? undefined
   }
 }
