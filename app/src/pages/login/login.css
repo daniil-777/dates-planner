@@ -362,3 +362,179 @@
     font-size: 1.5rem;
   }
 }
+
+/* ------------------------------------------------------------------ *
+ *  Onboarding: create an account, start or join a household
+ *  (TWM-ADR-002 phase 1)
+ * ------------------------------------------------------------------ */
+
+.onboard__title {
+  margin: 0 0 0.25rem;
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--login-fg);
+}
+
+.onboard__lede {
+  margin: 0 0 1rem;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: var(--login-muted);
+}
+
+/* The code is read aloud, so it is set large, spaced, and in a face where a
+   letter cannot be mistaken for a digit. */
+.onboard__code {
+  margin: 0.25rem 0 1.25rem;
+  font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: clamp(1.75rem, 9vw, 2.4rem);
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-align: center;
+  color: var(--login-blue);
+  background: var(--login-field);
+  border: 1px solid var(--login-border);
+  border-radius: 10px;
+  padding: 0.85rem 0.5rem;
+  /* The trailing letter-spacing would otherwise push the text off-centre. */
+  text-indent: 0.22em;
+}
+
+.onboard__switch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.35rem;
+  padding: 0.3rem;
+  margin-bottom: 0.35rem;
+  background: var(--login-field);
+  border: 1px solid var(--login-border);
+  border-radius: 12px;
+}
+
+.onboard__tab {
+  min-height: 2.5rem;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.92rem;
+  color: var(--login-muted);
+  cursor: pointer;
+  transition:
+    background 140ms ease,
+    color 140ms ease;
+}
+
+.onboard__tab--on {
+  background: var(--login-surface);
+  color: var(--login-blue);
+  box-shadow: 0 1px 3px var(--login-glow-blue);
+}
+
+.onboard__tab:focus-visible {
+  outline: 2px solid var(--login-blue);
+  outline-offset: 2px;
+}
+
+.onboard__kinds {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0.2rem 0 0.1rem;
+  padding: 0;
+  border: 0;
+}
+
+/* Each preset is a whole tappable row, not a radio with a label beside it:
+   the hit target is the card, which is what a thumb expects. */
+.onboard__kind {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-areas: 'radio label' 'radio hint';
+  align-items: center;
+  gap: 0 0.6rem;
+  min-height: 2.9rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--login-border);
+  border-radius: 10px;
+  cursor: pointer;
+  transition:
+    border-color 140ms ease,
+    background 140ms ease;
+}
+
+.onboard__kind--on {
+  border-color: var(--login-blue);
+  background: color-mix(in srgb, var(--login-blue) 7%, transparent);
+}
+
+.onboard__kind input {
+  grid-area: radio;
+  accent-color: var(--login-blue);
+  width: 1.05rem;
+  height: 1.05rem;
+}
+
+.onboard__kindLabel {
+  grid-area: label;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--login-fg);
+}
+
+.onboard__kindHint {
+  grid-area: hint;
+  font-size: 0.82rem;
+  color: var(--login-muted);
+}
+
+.onboard__kind:focus-within {
+  outline: 2px solid var(--login-blue);
+  outline-offset: 2px;
+}
+
+.onboard__codeInput {
+  font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 1.1rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.onboard__link {
+  margin-top: 0.15rem;
+  min-height: 2.5rem;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 0.9rem;
+  color: var(--login-blue);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.onboard__link:focus-visible {
+  outline: 2px solid var(--login-blue);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .onboard__tab,
+  .onboard__kind {
+    transition: none;
+  }
+}
+
+/* The way from the sign-in form into creating an account. */
+.login__switch {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  margin: 0.1rem 0 0;
+  font-size: 0.9rem;
+  color: var(--login-muted);
+}

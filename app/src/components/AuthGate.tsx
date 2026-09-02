@@ -19,7 +19,9 @@
  */
 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
-import { AuthError, me } from '@/api/auth'
+import { AuthError, session } from '@/api/auth'
+import { Onboarding } from '@/pages/login/Onboarding'
+import { BrandMark } from '@/pages/login/BrandMark'
 import { LoginPage } from '@/pages/LoginPage'
 import { WelcomeFireworks } from '@/components/WelcomeFireworks'
 import '@/pages/login/login.css'
@@ -30,7 +32,12 @@ export interface AuthGateProps {
   fallback?: ReactNode
 }
 
-type Phase = 'checking' | 'authenticated' | 'anonymous'
+/**
+ * `homeless` is signed in with no household yet — the state registration leaves you in,
+ * and the only one where the app itself has nothing to show. Without it the ledger renders
+ * empty and looks broken rather than unfinished.
+ */
+type Phase = 'checking' | 'authenticated' | 'homeless' | 'anonymous'
 
 /** The centred spinner. Static under `prefers-reduced-motion` — see `login.css`. */
 function Deciding() {
@@ -58,9 +65,18 @@ export function AuthGate({ children, fallback }: AuthGateProps) {
   const check = useCallback(async (): Promise<void> => {
     setPhase('checking')
     try {
-      const found = await me()
+      const found = await session()
       setNotice(null)
-      setPhase(found === null ? 'anonymous' : 'authenticated')
+      if (!found.authenticated) {
+        setPhase('anonymous')
+      } else if (found.userId !== null && found.groupId === null) {
+        // An account exists but belongs to nowhere. A session from the configured AUTH_*
+        // logins has no `userId` at all and is not caught here — it has always meant the
+        // seeded household, and still does.
+        setPhase('homeless')
+      } else {
+        setPhase('authenticated')
+      }
     } catch (cause) {
       // Unreachable or broken: show the card, and say why rather than pretending.
       setNotice(
@@ -84,6 +100,21 @@ export function AuthGate({ children, fallback }: AuthGateProps) {
   }, [check])
 
   if (phase === 'checking') return <>{fallback ?? <Deciding />}</>
+
+  if (phase === 'homeless') {
+    return (
+      <div className="login">
+        <main className="login__card">
+          <header className="login__head">
+            <BrandMark className="login__mark" />
+            <h1 className="login__title">One more thing</h1>
+            <p className="login__tagline">A ledger needs a household to belong to.</p>
+          </header>
+          <Onboarding step="household" onReady={() => void check()} />
+        </main>
+      </div>
+    )
+  }
 
   // The app renders underneath from the first frame, so the three seconds are spent on a
   // loaded page rather than in front of one. The overlay takes no pointer events, so a tap

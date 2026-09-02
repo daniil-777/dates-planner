@@ -19,6 +19,8 @@
  */
 
 import { useEffect, useId, useRef, useState, type FormEvent } from 'react'
+
+import { Onboarding, type OnboardingStep } from './login/Onboarding'
 import { useI18n } from '@/i18n'
 import { AuthError, login, type AuthUser } from '@/api/auth'
 import { BrandMark } from './login/BrandMark'
@@ -26,8 +28,12 @@ import { AlertIcon, EyeIcon, EyeOffIcon, ShieldIcon } from './login/icons'
 import './login/login.css'
 
 export interface LoginPageProps {
-  /** Called once the cookie is set. `AuthGate` re-checks the session from here. */
-  onAuthenticated?: (user: AuthUser) => void
+  /**
+   * Called once the cookie is set. `AuthGate` re-checks the session from here, so the
+   * user is advisory: the sign-in form has one to pass, the onboarding steps do not, and
+   * the gate ignores it either way.
+   */
+  onAuthenticated?: (user?: AuthUser) => void
   /**
    * A message the gate already knows about — "the server could not be reached", say —
    * shown until the person tries a sign-in of their own.
@@ -45,6 +51,14 @@ export function LoginPage({ onAuthenticated, notice = null }: LoginPageProps) {
   const [revealed, setRevealed] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  /**
+   * `signin` is the form below; anything else hands over to `Onboarding`.
+   *
+   * Held here rather than routed, because none of these are places you should be able to
+   * arrive at with a URL: they are steps in one conversation, and a half-finished account
+   * is not a page worth linking to.
+   */
+  const [mode, setMode] = useState<'signin' | OnboardingStep>('signin')
 
   const usernameRef = useRef<HTMLInputElement>(null)
   const passwordRef = useRef<HTMLInputElement>(null)
@@ -87,6 +101,26 @@ export function LoginPage({ onAuthenticated, notice = null }: LoginPageProps) {
     } finally {
       setBusy(false)
     }
+  }
+
+  if (mode !== 'signin') {
+    return (
+      <div className="login">
+        <main className="login__card">
+          <header className="login__head">
+            <BrandMark className="login__mark" />
+            <h1 className="login__title">Two-Way Match</h1>
+            <p className="login__tagline">{t('login.tagline', 'Date management for two')}</p>
+          </header>
+          <Onboarding
+            step={mode}
+            onReady={() => onAuthenticated?.()}
+            onCancel={mode === 'account' ? () => setMode('signin') : undefined}
+          />
+        </main>
+        <p className="login__footer">Two-Way Match · a joint venture, audited internally</p>
+      </div>
+    )
   }
 
   return (
@@ -169,6 +203,13 @@ export function LoginPage({ onAuthenticated, notice = null }: LoginPageProps) {
             {busy && <span className="login__spin" aria-hidden="true" />}
             {busy ? t('login.working', 'Signing in…') : t('login.submit', 'Sign in')}
           </button>
+
+          <p className="login__switch">
+            <span>New here?</span>
+            <button type="button" className="onboard__link" onClick={() => setMode('account')}>
+              Create an account
+            </button>
+          </p>
 
           <p className="login__note">
             <ShieldIcon />

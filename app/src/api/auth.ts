@@ -193,3 +193,139 @@ export async function me(): Promise<AuthUser | null> {
 
   return parseUser(await readJson(response))
 }
+
+/* ------------------------------------------------------------------ *
+ *  Accounts and households  (TWM-ADR-002 phase 1)
+ * ------------------------------------------------------------------ */
+
+/** One household this account belongs to, as `/api/auth/me` reports it. */
+export interface Membership {
+  groupId: string
+  groupName: string
+  role: 'owner' | 'member'
+  personName: string
+}
+
+/** Everything the sign-in screen needs to decide what to show next. */
+export interface Session {
+  authenticated: boolean
+  userId: string | null
+  groupId: string | null
+  groupName: string | null
+  role: 'owner' | 'member' | null
+  personName: string | null
+  memberships: Membership[]
+}
+
+export type GroupKind = 'couple' | 'household' | 'friends' | 'family' | 'other'
+
+/**
+ * The whole session, not just the name.
+ *
+ * `me()` above answers the older question — "is anybody signed in" — and the gate still
+ * uses it. This answers "and do they have a household yet", which is what decides between
+ * the app, the create-a-household step, and the sign-in form.
+ */
+export async function session(): Promise<Session> {
+  const response = await call('/me', { method: 'GET' }, 'sign in')
+  if (!response.ok) throw new AuthError(response.status, messageFor(response.status, 'sign in'))
+  const body = await readJson(response)
+  const record = isRecord(body) ? body : {}
+  return {
+    authenticated: record.authenticated === true,
+    userId: text(record.userId),
+    groupId: text(record.groupId),
+    groupName: text(record.groupName),
+    role: record.role === 'owner' || record.role === 'member' ? record.role : null,
+    personName: text(record.personName),
+    memberships: Array.isArray(record.memberships)
+      ? record.memberships.filter(isRecord).map(row => ({
+          groupId: String(row.groupId ?? ''),
+          groupName: String(row.groupName ?? ''),
+          role: row.role === 'owner' ? 'owner' : 'member',
+          personName: String(row.personName ?? ''),
+        }))
+      : [],
+  }
+}
+
+/** A non-empty string, or null. The API sends `null` for "not yet". */
+function text(value: unknown): string | null {
+  return typeof value === 'string' && value !== '' ? value : null
+}
+
+/**
+ * POST to one of the account routes and surface the server's message.
+ *
+ * Unlike sign-in, these failures are worth repeating verbatim: "there is already an account
+ * for that address" and "that invitation code is not valid" are written for the person
+ * reading them, and replacing them with a generic line would lose the only useful part.
+ */
+async function post(path: string, payload: Record<string, unknown>): Promise<unknown> {
+  // `path` is absolute from /api, not relative to /api/auth: these live under
+  // /api/groups, and spelling that out beats resolving `..` at every call site.
+  let response: Response
+  try {
+    response = await fetch(`/api${path}`, {
+      credentials: 'include',
+      headers: JSON_HEADERS,
+      method: 'POST',
+      body: JSON.stringify(payload),
+    })
+  } catch {
+    throw new AuthError(0, messageFor(0, 'sign in'))
+  }
+  const body = await readJson(response)
+  if (!response.ok) {
+    const record = isRecord(body) && isRecord(body.error) ? body.error : null
+    const message = typeof record?.message === 'string' ? record.message : null
+    throw new AuthError(response.status, message ?? messageFor(response.status, 'sign in'))
+  }
+  return body
+}
+
+/** Create an account. Signs in immediately — the next screen is the one that matters. */
+export async function registerAccount(input: {
+  email: string
+  password: string
+  displayName: string
+}): Promise<void> {
+  await post('/auth/register', { ...input })
+}
+
+/** Sign in with an email and password, as opposed to a configured `AUTH_*` login. */
+export async function loginAccount(email: string, password: string): Promise<void> {
+  await post('/auth/login-account', { email, password })
+}
+
+/** Start a household. The caller becomes its owner and its first person. */
+export async function createHousehold(input: {
+  name: string
+  kind: GroupKind
+}): Promise<{ inviteCode: string; groupName: string }> {
+  const body = await post('/groups/create', { ...input })
+  const group = isRecord(body) && isRecord(body.group) ? body.group : {}
+  return {
+    inviteCode: String(group.inviteCode ?? ''),
+    groupName: String(group.groupName ?? input.name),
+  }
+}
+
+/** Join one with the code its owner was shown. */
+export async function joinHousehold(code: string): Promise<{ groupName: string }> {
+  const body = await post('/groups/join', { code })
+  const group = isRecord(body) && isRecord(body.group) ? body.group : {}
+  return { groupName: String(group.groupName ?? '') }
+}
+
+/** Look at a different household this account belongs to. */
+export async function switchHousehold(groupId: string): Promise<void> {
+  await post('/groups/switch', { groupId })
+}
+
+/** The current invitation, or a fresh one. Owners only; the server enforces that. */
+export async function invitation(rotate = false): Promise<{ code: string; expiresAt: string }> {
+  const body = await post('/groups/invite', { rotate })
+  const invite = isRecord(body) && isRecord(body.invite) ? body.invite : {}
+  return { code: String(invite.code ?? ''), expiresAt: String(invite.expiresAt ?? '') }
+}

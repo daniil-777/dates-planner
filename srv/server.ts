@@ -855,6 +855,14 @@ async function identify(
   if (session !== null) {
     const account = accounts.find(entry => entry.username === session.username)
     if (account !== undefined) return account
+    // A registered account (TWM-ADR-002 phase 1). Its username is an email address that
+    // will never appear in AUTH_*, so matching against the configured logins can only
+    // ever fail -- which meant somebody could register, create a household, and be
+    // bounced straight back to the sign-in form. The `uid` claim is what distinguishes
+    // it, and the signature already proves this deployment minted the token.
+    if (session.userId != null && session.userId !== '') {
+      return openDoorAccount(session.username)
+    }
     // The token's signature already proves this deployment minted it, so in open-door mode
     // the name it carries is simply the name this browser signed in as.
     if (openDoor) return openDoorAccount(session.username)

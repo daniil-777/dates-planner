@@ -13,11 +13,18 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { AuthGate } from '@/components/AuthGate'
-import { AuthError, parseUser, type AuthUser } from '@/api/auth'
+import { AuthError, parseUser, type AuthUser, type Session } from '@/api/auth'
 import { LoginPage } from './LoginPage'
 
 const login = vi.fn<(username: string, password: string) => Promise<AuthUser>>()
 const me = vi.fn<() => Promise<AuthUser | null>>()
+/**
+ * `AuthGate` asks `session()` rather than `me()` since TWM-ADR-002 phase 1: it has to
+ * distinguish "signed in" from "signed in but belonging to no household yet". This
+ * derives the richer answer from whatever `me` is set to return, so every existing test
+ * keeps saying what it always said.
+ */
+const sessionOf = vi.fn<() => Promise<Session>>()
 
 vi.mock('@/api/auth', async importOriginal => {
   const actual = await importOriginal<typeof import('@/api/auth')>()
@@ -26,10 +33,26 @@ vi.mock('@/api/auth', async importOriginal => {
     login: (username: string, password: string) => login(username, password),
     logout: () => Promise.resolve(),
     me: () => me(),
+    session: () => sessionOf(),
   }
 })
 
 const ADA: AuthUser = { username: 'ada', displayName: 'Ada' }
+
+/** The session shape the gate now reads, for a user that has a household. */
+function sessionFrom(user: AuthUser | null): Session {
+  return {
+    authenticated: user !== null,
+    // A configured AUTH_* login carries no account id, which is exactly the case these
+    // tests cover, and is why none of them land in the "no household yet" branch.
+    userId: null,
+    groupId: user === null ? null : 'g-1',
+    groupName: user === null ? null : 'Our household',
+    role: user === null ? null : 'owner',
+    personName: user?.displayName ?? null,
+    memberships: [],
+  }
+}
 
 /** Fills both fields and presses Enter, which is how anybody actually signs in. */
 function signIn(username = 'ada', password = 'correct horse'): void {
@@ -41,6 +64,9 @@ function signIn(username = 'ada', password = 'correct horse'): void {
 beforeEach(() => {
   login.mockReset()
   me.mockReset()
+  // Reset with the others, or its call count accumulates across tests and an assertion
+  // about "how many times did the gate ask" quietly counts the previous test's asks too.
+  sessionOf.mockReset()
 })
 
 afterEach(() => {
@@ -137,6 +163,7 @@ describe('LoginPage', () => {
 describe('AuthGate', () => {
   it('renders the app once the session names somebody', async () => {
     me.mockResolvedValue(ADA)
+    sessionOf.mockResolvedValue(sessionFrom(ADA))
 
     render(
       <AuthGate>
@@ -146,11 +173,12 @@ describe('AuthGate', () => {
 
     expect(screen.getByRole('status')).toHaveTextContent('Checking your session…')
     expect(await screen.findByText('the ledger')).toBeInTheDocument()
-    expect(me).toHaveBeenCalledTimes(1)
+    expect(sessionOf).toHaveBeenCalledTimes(1)
   })
 
   it('shows the login page, not the app, when nobody is signed in', async () => {
     me.mockResolvedValue(null)
+    sessionOf.mockResolvedValue(sessionFrom(null))
 
     render(
       <AuthGate>
@@ -164,6 +192,12 @@ describe('AuthGate', () => {
 
   it('re-checks the session after a successful sign-in and then shows the app', async () => {
     me.mockResolvedValueOnce(null).mockResolvedValueOnce(ADA)
+    // Signed out on the first ask, signed in on every one after: the sequence the gate
+    // walks. A standing default matters as well as the queued first answer — without one
+    // a third call would resolve `undefined` and send the gate down its error path,
+    // which is a failure about the mock rather than about the gate.
+    sessionOf.mockResolvedValue(sessionFrom(ADA))
+    sessionOf.mockResolvedValueOnce(sessionFrom(null))
     login.mockResolvedValue(ADA)
 
     render(
@@ -176,11 +210,15 @@ describe('AuthGate', () => {
     signIn()
 
     expect(await screen.findByText('the ledger')).toBeInTheDocument()
-    expect(me).toHaveBeenCalledTimes(2)
+    // Once on mount, once after signing in: the gate re-checks rather than trusting
+    // the form's word for it.
+    expect(sessionOf).toHaveBeenCalledTimes(2)
   })
 
   it('carries a server failure into the card instead of asking silently', async () => {
-    me.mockRejectedValue(new AuthError(503, 'The server could not sign in right now.'))
+    const unreachable = new AuthError(503, 'The server could not sign in right now.')
+    me.mockRejectedValue(unreachable)
+    sessionOf.mockRejectedValue(unreachable)
 
     render(
       <AuthGate>
