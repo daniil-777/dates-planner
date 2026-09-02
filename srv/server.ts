@@ -78,7 +78,7 @@ import {
   verifySessionToken,
 } from './lib/auth'
 import { describeProvider } from './lib/llm'
-import { migrate } from './lib/migrate'
+import { migrate, refreshViews } from './lib/migrate'
 import { readBuildStamp, type BuildStamp } from './lib/build-stamp'
 import { getDocAiClient } from './lib/documentai'
 // Relative rather than '#cds-models/twowaymatch': package.json carries no "imports"
@@ -1336,6 +1336,11 @@ cds.on('served', async () => {
   const database = cds.db as unknown as { run(query: string): Promise<unknown> } | undefined
   if (database === undefined) return
   await migrate(database)
+  // After the tables are right, make the views describe them. A projection is a SQL
+  // view whose columns are fixed at creation, so altering a table underneath one leaves
+  // it describing the old shape -- which is what kept the API answering 500 even once
+  // `group_ID` existed.
+  await refreshViews(database)
 })
 
 cds.on('bootstrap', configureApp)

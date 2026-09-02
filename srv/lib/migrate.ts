@@ -252,3 +252,63 @@ export async function migrate(db: MigrationDb): Promise<string[]> {
   else for (const note of notes) LOG.info(note)
   return notes
 }
+
+/**
+ * Rebuild the service views so they match the model that is running.
+ *
+ * A CAP service projection becomes a SQL view, and a view's column list is frozen when
+ * it is created. Adding `group_ID` to the base tables therefore fixed nothing on its
+ * own: every query goes through `LedgerService_*`, and those still described the old
+ * shape, so the API kept answering `no such column: $P.group_ID` while the column sat
+ * there in the table underneath.
+ *
+ * Views hold no data, so dropping and recreating them costs nothing and cannot lose
+ * anything. The DDL is generated from `cds.model` rather than written down here, which
+ * means it cannot drift: whatever the running build's projections are, that is what the
+ * database gets. Cheap enough to do on every boot, and self-healing if a deployment ever
+ * lands with a model the volume has not seen.
+ */
+export async function refreshViews(db: MigrationDb): Promise<number> {
+  const compiler = cds.compile as unknown as {
+    to: { sql(model: unknown): string | string[] }
+  }
+  let produced: string | string[]
+  try {
+    // The *source* model, not `cds.model`. The runtime model has already had its
+    // associations flattened into foreign keys, and asking the SQL backend to flatten
+    // it again fails with "generated foreign key element group_ID conflicts with
+    // existing element". Loading the .cds files gives the compiler what it expects --
+    // and the image ships them, at /app/db and /app/srv.
+    produced = compiler.to.sql(await cds.load(['db', 'srv']))
+  } catch (error) {
+    LOG.warn('could not generate view DDL; leaving the views alone', describe(error))
+    return 0
+  }
+
+  const statements = (Array.isArray(produced) ? produced : String(produced).split(';'))
+    .map(statement => String(statement).trim())
+    .filter(statement => /^CREATE VIEW/i.test(statement))
+
+  let rebuilt = 0
+  for (const create of statements) {
+    const named = /^CREATE VIEW\s+("?[\w.]+"?)/i.exec(create)
+    if (named === null) continue
+    const view = named[1]
+    try {
+      await db.run(`DROP VIEW IF EXISTS ${view}`)
+      await db.run(create)
+      rebuilt += 1
+    } catch (error) {
+      // One bad view must not stop the rest, and must not stop the server: the base
+      // tables are correct by this point, and a stale view fails loudly per request.
+      LOG.warn(`could not rebuild ${view}`, describe(error))
+    }
+  }
+  if (rebuilt > 0) LOG.info(`rebuilt ${rebuilt} service views to match the running model`)
+  return rebuilt
+}
+
+/** An unknown throwable, reduced to one safe line. */
+function describe(error: unknown): string {
+  return error instanceof Error ? error.message : String(error)
+}
