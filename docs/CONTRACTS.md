@@ -53,7 +53,7 @@ everyday  date_night  trip  gift
 ### 1.4 Constants
 
 - CDS namespace: `twowaymatch`
-- Service: `LedgerService`, path `/ledger`
+- Service: `LedgerService`, path `/api/ledger` (the SPA owns `/ledger`; the API lives under `/api`)
 - Default currency: `CHF`
 - Confidence review threshold: **0.6** (`NEEDS_REVIEW_THRESHOLD`)
 - Seed CSV naming: `db/data/twowaymatch-<Entity>.csv`
@@ -496,3 +496,63 @@ Rules, in priority order:
 
 Identity in dev comes from CAP's mocked user; map it to a `People` row by name and fall
 back to the first `isDefault` person so the app never breaks when the mapping misses.
+
+
+---
+
+## 12. Groups, accounts, and chat (TWM-ADR-002)
+
+Normative for the platform change. The full reasoning is in `docs/ARCHITECTURE.md`
+(the ADR); this section is the part code is held to.
+
+### 12.1 Tenancy
+
+- Every household entity carries `group : Association to Groups` via the `tenant` aspect.
+  `Categories` is the one shared vocabulary and has no group.
+- **Phase 0 (shipped with this section):** the column is nullable and every seeded row
+  is backfilled to the default group `g0000000-0000-4000-8000-000000000001`.
+- **Phase 1:** the session carries `groupId`; `LedgerService` registers ONE handler,
+  `scopeToGroup`, on every tenant entity and action:
+  - `before READ`  → `query.where({ group_ID: g })` (narrow the query; never sieve rows)
+  - `before CREATE/UPDATE/DELETE` → stamp `group_ID = g`; refuse a payload naming another group
+  - an id that belongs to another group answers **404**, never 403
+- Composite index `(group_ID, date)` on `Expenses`; `(group_ID, startsOn)` on `Events`.
+
+### 12.2 Identity
+
+```
+Users        email, passwordHash (bcrypt), displayName, gender (optional free text)
+Memberships  user → group → person, role: owner | member
+Groups       name, kind: couple|household|friends|family|other, currency, inviteCode
+```
+
+- `Users` ≠ `People`. A User is a login; a Person is a seat in one group's roster.
+- Session cookie payload gains `groupId` and `userId`. `/api/auth/me` returns
+  `{ authenticated, userId, groupId, groupName, personId, personName, role }`.
+- Registration: `POST /api/auth/register {email, password, displayName}` → User.
+  `POST /api/groups/create {name, kind}` → Group + owner Membership + Person.
+  `POST /api/groups/join {code}` → member Membership + Person. Codes: 8 chars, 72 h, single use.
+- Dev with `AUTH_ALLOW_ANY`: the viewer resolves to the default group; nothing is locked out.
+
+### 12.3 Chat
+
+```
+Conversations  group, kind: group|direct, title, messages (composition)
+Messages       conversation, author(People), kind: text|audio|image,
+               body ≤ 4000, media (LargeBinary), mediaType, durationMs ≤ 120000, peaks (JSON)
+```
+
+- `POST /api/ledger/sendMessage(conversationId, kind, body?, media?, mediaType?, durationMs?, peaks?)`
+  — audio: mime ∈ {audio/webm, audio/mp4, audio/ogg}, ≤ 5 MB. Rate limit 60/min per user.
+- `GET /api/ledger/Messages(id)/media` streams with `Range` support; cookie + group check on every request.
+- `GET /api/chat/stream` — Server-Sent Events. Event payload is ALWAYS a notification,
+  never data: `{ "entity": "Messages", "id": "...", "conversationId": "...", "v": n }`.
+  Reconnect replays from `Last-Event-ID`. Polling fallback every 15 s uses the same endpoints.
+- Every device write carries `Idempotency-Key` (client UUID); the server keeps 24 h of keys per group.
+
+### 12.4 What is NOT stored
+
+No orientation label, no "couple type" enum on People or Users. `Groups.kind` is a preset
+that sets roster size and copy. `Users.gender` is optional free text a person writes
+about themself and is never used for logic. This is a GDPR Art. 9 / FADP decision, not a
+style choice — see ADR-002 §6.

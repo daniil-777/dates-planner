@@ -1,2 +1,2 @@
-ID,event_ID,leadDays,note,done
-r0000000-0000-4000-8000-000000000001,f0000000-0000-4000-8000-000000000003,14,"Book the sleeper. It sells out every year, and every year we say that.",false
+ID,event_ID,leadDays,note,done,group_ID
+r0000000-0000-4000-8000-000000000001,f0000000-0000-4000-8000-000000000003,14,"Book the sleeper. It sells out every year, and every year we say that.",false,g0000000-0000-4000-8000-000000000001

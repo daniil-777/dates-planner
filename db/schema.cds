@@ -113,6 +113,125 @@ type CorrectionField : String(20) enum {
  *  Master data
  * ------------------------------------------------------------------ */
 
+
+/* ------------------------------------------------------------------ *
+ *  Platform: groups, accounts, membership   (TWM-ADR-002, phase 0)
+ * ------------------------------------------------------------------ */
+
+/**
+ * A household that registered on the platform. Every row that belongs to a household
+ * points at exactly one Group through the `tenant` aspect below; the service narrows
+ * every query to the caller's group before CAP builds SQL (LedgerService.scopeToGroup,
+ * phase 1). `kind` drives copy and defaults only — never behaviour. It is deliberately
+ * not a description of who the people are; see CONTRACTS.md §12.4.
+ */
+@singular: 'Group'
+@plural: 'Groups'
+entity Groups : cuid, managed {
+  name            : String(120);
+  kind            : String(20) enum {
+    couple;
+    household;
+    friends;
+    family;
+    other;
+  } default 'couple';
+  currency        : String(3) default 'CHF';
+  /** Eight characters, shown once, single use, rotated by an owner on demand. */
+  inviteCode      : String(12);
+  inviteExpiresAt : Timestamp null;
+  members         : Composition of many Memberships
+                      on members.group = $self;
+}
+
+/**
+ * A login. Separate from People on purpose: a User is who typed the password, a Person
+ * is a seat in one group's roster. One User may hold seats in several Groups.
+ */
+@singular: 'User'
+@plural: 'Users'
+entity Users : cuid, managed {
+  email        : String(200);
+  /** bcrypt. Never selected by any projection, never logged. */
+  passwordHash : String(80);
+  displayName  : String(100);
+  /**
+   * Optional, self-described, in the person's own words. Not an enum and not required:
+   * classifying people by sex or orientation is special-category data under GDPR Art. 9
+   * and the FADP, and nothing in this app has a purpose for it (ADR-002 §6).
+   */
+  gender       : String(40);
+  memberships  : Association to many Memberships
+                   on memberships.user = $self;
+}
+
+/** Binds a User to a Group and to that user's Person row inside it. */
+@singular: 'Membership'
+@plural: 'Memberships'
+entity Memberships : cuid, managed {
+  user   : Association to Users;
+  group  : Association to Groups;
+  person : Association to People;
+  role   : String(10) enum {
+    owner;
+    member;
+  } default 'member';
+}
+
+/**
+ * Mixed into every entity that belongs to a household.
+ *
+ * Phase 0 (this change): nullable, backfilled to the seeded default group so every
+ * existing row, test and screen keeps working. Phase 1 makes it mandatory and installs
+ * the narrowing handler. Categories are the one shared vocabulary and carry no group.
+ */
+aspect tenant {
+  group : Association to Groups;
+}
+
+/* ------------------------------------------------------------------ *
+ *  Chat   (TWM-ADR-002 §5)
+ * ------------------------------------------------------------------ */
+
+/** One thread per group by default; `direct` threads are a later option. */
+@singular: 'Conversation'
+@plural: 'Conversations'
+entity Conversations : cuid, managed, tenant {
+  kind     : String(10) enum {
+    group;
+    direct;
+  } default 'group';
+  title    : String(120);
+  messages : Composition of many Messages
+               on messages.conversation = $self;
+}
+
+/**
+ * A message. `kind` decides which columns matter: `text` uses body; `audio` and `image`
+ * use media/mediaType, and audio also carries durationMs and `peaks` — a short JSON array
+ * of 0..1 amplitudes captured while recording, so a thread can draw the waveform before a
+ * byte of audio is fetched. Media is only ever served through the API (/Messages(id)/media).
+ */
+@singular: 'Message'
+@plural: 'Messages'
+entity Messages : cuid, managed, tenant {
+  conversation : Association to Conversations;
+  author       : Association to People;
+  kind         : String(10) enum {
+    text;
+    audio;
+    image;
+  } default 'text';
+  body         : String(4000);
+  media        : LargeBinary @Core.MediaType: mediaType;
+  mediaType    : String(50);
+  /** Audio only. Enforced ≤ 120 000 by the service. */
+  durationMs   : Integer;
+  /** Audio only. JSON array of amplitudes, ~40 per second. */
+  peaks        : LargeString;
+}
+
+
 /**
  * Everybody who can pay for something. Any number of rows; two are seeded
  * with `isDefault` so the app is usable on first run (CONTRACTS.md §10).
@@ -123,7 +242,7 @@ type CorrectionField : String(20) enum {
  */
 @singular: 'Person'
 @plural  : 'People'
-entity People : cuid, managed {
+entity People: cuid, managed, tenant {
   name      : String(100);
   /** Hex colour used for this person's avatar. The UI never hardcodes a hue. */
   colour    : String(20);
@@ -138,7 +257,7 @@ entity People : cuid, managed {
  */
 @singular: 'Event'
 @plural  : 'Events'
-entity Events : cuid, authored {
+entity Events: cuid, authored, tenant {
   name         : String(120);
   startsOn     : Date;
   /** Null for a single-day event. */
@@ -186,7 +305,7 @@ entity Events : cuid, authored {
  */
 @singular: 'EventParticipant'
 @plural  : 'EventParticipants'
-entity EventParticipants {
+entity EventParticipants : tenant {
   key event  : Association to Events;
   key person : Association to People;
 }
@@ -206,7 +325,7 @@ entity EventParticipants {
  */
 @singular: 'EventPhoto'
 @plural  : 'EventPhotos'
-entity EventPhotos : cuid, managed {
+entity EventPhotos: cuid, managed, tenant {
   event     : Association to Events;
   image     : LargeBinary @Core.MediaType: mediaType;
   mediaType : String(50)  @Core.IsMediaType;
@@ -225,7 +344,7 @@ entity EventPhotos : cuid, managed {
  */
 @singular: 'Reminder'
 @plural  : 'Reminders'
-entity Reminders : cuid, managed {
+entity Reminders: cuid, managed, tenant {
   event    : Association to Events;
   /** Whole days before `event.startsOn` that this fires. */
   leadDays : Integer default 1;
@@ -261,7 +380,7 @@ entity Categories {
  * that typo from #cds-models.
  */
 @singular: 'Expense'
-entity Expenses : cuid, managed {
+entity Expenses: cuid, managed, tenant {
   date               : Date;
   time               : Time;
   /** Exactly as it appeared on the receipt — the classifier's raw input. */
@@ -302,7 +421,7 @@ entity Expenses : cuid, managed {
  * The scanned image plus the raw Document AI answer. The extraction JSON is
  * kept verbatim so a mapper fix can be replayed without re-uploading anything.
  */
-entity Receipts : cuid, managed {
+entity Receipts: cuid, managed, tenant {
   image            : LargeBinary @Core.MediaType: mediaType;
   mediaType        : String(50)  @Core.IsMediaType;
   fileName         : String(200);
@@ -322,7 +441,7 @@ entity Receipts : cuid, managed {
  * stored** — it is looked at, answered about, and discarded (srv/lib/mood.ts). A ledger
  * of receipts is one thing; an archive of face photos is not something this app keeps.
  */
-entity Moods : cuid, managed {
+entity Moods: cuid, managed, tenant {
   person     : Association to People;
   /** Timestamp rather than DateTime: the client sends `new Date().toISOString()`, and a
       type that rejects the milliseconds in that string would 400 every save. */
@@ -348,7 +467,7 @@ entity Moods : cuid, managed {
  * The romantic layer: a story attached to (optionally) an expense. Kept
  * separate from Expenses so a memory can outlive or precede any posting.
  */
-entity Memories : cuid, managed {
+entity Memories: cuid, managed, tenant {
   expense    : Association to Expenses null;
   title      : String(200);
   note       : LargeString;
@@ -364,7 +483,7 @@ entity Memories : cuid, managed {
 }
 
 /** Images belonging to a memory. A composition so deleting a memory cleans up. */
-entity Photos : cuid, managed {
+entity Photos: cuid, managed, tenant {
   memory    : Association to Memories;
   image     : LargeBinary @Core.MediaType: mediaType;
   mediaType : String(50)  @Core.IsMediaType;
@@ -376,7 +495,7 @@ entity Photos : cuid, managed {
  * what the month totalled, so it can be marked done and reported on later.
  * It moves no money and it computes no debt (CONTRACTS.md §9).
  */
-entity Settlements : cuid, managed {
+entity Settlements: cuid, managed, tenant {
   /** YYYY-MM. */
   period           : String(7);
   /** Everything posted in the period, frozen at close time. */
@@ -391,7 +510,7 @@ entity Settlements : cuid, managed {
 }
 
 /** The generated yearly "Statement of Us", stored so it can be re-read offline. */
-entity Statements : cuid, managed {
+entity Statements: cuid, managed, tenant {
   year            : Integer;
   contentMarkdown : LargeString;
   generatedAt     : Timestamp;
@@ -403,7 +522,7 @@ entity Statements : cuid, managed {
  * Training-data log: every time the human overrules a prediction we keep both
  * labels, which is the entire input to the continuous-learning loop.
  */
-entity Corrections : cuid {
+entity Corrections: cuid, tenant {
   expense   : Association to Expenses;
   field     : CorrectionField;
   predicted : String(50);

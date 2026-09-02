@@ -1,0 +1,741 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{color-scheme:light dark}html,body{margin:0}img{max-width:100%}</style>
+<title>Two-Way Match Platform ADR</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --paper:     #F3F5F9;
+    --panel:     #FFFFFF;
+    --panel-2:   #E9EDF4;
+    --ink:       #101826;
+    --ink-soft:  #46556B;
+    --ink-faint: #7C8AA0;
+    --rule:      #D3DAE6;
+    --blue:      #0070F2;
+    --blue-soft: #E1EEFF;
+    --teal:      #05807C;
+    --teal-soft: #DDF3F1;
+    --amber:     #A85A00;
+    --amber-soft:#FCEFD9;
+    --red:       #B3261E;
+    --red-soft:  #FBE4E2;
+    --magenta:   #C2189B;
+    --magenta-soft: #FBE3F6;
+    --shadow:    0 1px 0 rgba(16,24,38,.06), 0 10px 28px -20px rgba(16,24,38,.4);
+
+    --f-head: "IBM Plex Sans Condensed", "Arial Narrow", "Helvetica Neue", sans-serif;
+    --f-body: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --f-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #0B1220; --panel: #121B2B; --panel-2: #182335;
+      --ink: #E7EDF7; --ink-soft: #A7B4C8; --ink-faint: #6F7F98; --rule: #26324A;
+      --blue: #62A9FF; --blue-soft: #16305A; --teal: #3CCBC4; --teal-soft: #0F3A38;
+      --amber: #EBA84A; --amber-soft: #3E2A0A; --red: #F08A82; --red-soft: #46201C;
+      --magenta: #F28AE1; --magenta-soft: #46163C;
+      --shadow: 0 1px 0 rgba(0,0,0,.4), 0 12px 30px -20px rgba(0,0,0,.9);
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #0B1220; --panel: #121B2B; --panel-2: #182335;
+    --ink: #E7EDF7; --ink-soft: #A7B4C8; --ink-faint: #6F7F98; --rule: #26324A;
+    --blue: #62A9FF; --blue-soft: #16305A; --teal: #3CCBC4; --teal-soft: #0F3A38;
+    --amber: #EBA84A; --amber-soft: #3E2A0A; --red: #F08A82; --red-soft: #46201C;
+    --magenta: #F28AE1; --magenta-soft: #46163C;
+    --shadow: 0 1px 0 rgba(0,0,0,.4), 0 12px 30px -20px rgba(0,0,0,.9);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  body { background: var(--paper); color: var(--ink); font-family: var(--f-body); font-size: 16.5px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 62rem; margin: 0 auto; padding: 0 1.4rem; }
+  .col { max-width: 68ch; }
+  p, ul, ol { margin: 0 0 1em; }
+  li { margin-bottom: .35em; }
+  a { color: var(--blue); text-underline-offset: 2px; }
+  :focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
+  code { font-family: var(--f-mono); font-size: .86em; background: var(--panel-2); border: 1px solid var(--rule); padding: .06em .32em; border-radius: 3px; word-break: break-word; }
+  strong { font-weight: 600; }
+
+  /* ---- document head ---- */
+  .head { border-bottom: 1px solid var(--rule); background: var(--panel); }
+  .head .wrap { padding: 2.4rem 1.4rem 1.8rem; }
+  .doc-kind { font-family: var(--f-mono); font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; color: var(--blue); font-weight: 600; margin: 0 0 .7rem; }
+  h1 { font-family: var(--f-head); font-weight: 700; font-size: clamp(2rem, 5vw, 3rem); line-height: 1.02; letter-spacing: -.01em; text-wrap: balance; margin: 0 0 .9rem; }
+  .abstract { font-size: 1.08rem; color: var(--ink-soft); max-width: 66ch; margin: 0 0 1.4rem; }
+  .meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); }
+  .meta div { background: var(--panel-2); padding: .7rem .9rem; }
+  .meta dt { font-family: var(--f-mono); font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-faint); margin: 0 0 .2rem; }
+  .meta dd { margin: 0; font-size: .92rem; font-weight: 500; }
+  .status { display: inline-block; font-family: var(--f-mono); font-size: .7rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--teal); background: var(--teal-soft); padding: .15rem .5rem; border-radius: 3px; }
+
+  /* ---- sections ---- */
+  section { padding: 2.6rem 0; border-bottom: 1px solid var(--rule); }
+  .sec-id { font-family: var(--f-mono); font-size: .7rem; font-weight: 600; letter-spacing: .14em; color: var(--blue); display: block; margin-bottom: .35rem; }
+  h2 { font-family: var(--f-head); font-weight: 700; font-size: clamp(1.5rem, 3.4vw, 2.05rem); line-height: 1.1; letter-spacing: -.008em; text-wrap: balance; margin: 0 0 1rem; }
+  h3 { font-family: var(--f-head); font-weight: 600; font-size: 1.2rem; margin: 1.6rem 0 .5rem; }
+  .lede { font-size: 1.05rem; color: var(--ink-soft); }
+
+  /* ---- decision table ---- */
+  .tablewrap { overflow-x: auto; margin: 1.2rem 0; border: 1px solid var(--rule); background: var(--panel); }
+  table { border-collapse: collapse; width: 100%; min-width: 38rem; font-size: .9rem; }
+  th, td { text-align: left; padding: .6rem .8rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  thead th { font-family: var(--f-mono); font-size: .66rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-faint); background: var(--panel-2); }
+  tbody tr:last-child td { border-bottom: 0; }
+  td.mono, .mono { font-family: var(--f-mono); font-size: .84rem; }
+  td.num { font-family: var(--f-mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .yes { color: var(--teal); font-weight: 600; } .no { color: var(--red); font-weight: 600; } .warn { color: var(--amber); font-weight: 600; }
+
+  /* ---- decision block ---- */
+  .decision { background: var(--panel); border: 1px solid var(--rule); border-left: 4px solid var(--blue); padding: 1rem 1.2rem; margin: 1.2rem 0; box-shadow: var(--shadow); }
+  .decision .k { font-family: var(--f-mono); font-size: .66rem; letter-spacing: .13em; text-transform: uppercase; color: var(--blue); font-weight: 600; display: block; margin-bottom: .35rem; }
+  .decision p:last-child { margin-bottom: 0; }
+  .risk { border-left-color: var(--amber); } .risk .k { color: var(--amber); }
+  .rejected { border-left-color: var(--red); background: var(--panel); } .rejected .k { color: var(--red); }
+
+  /* ---- figures ---- */
+  figure { margin: 1.6rem 0; }
+  .fig { background: var(--panel); border: 1px solid var(--rule); padding: 1.1rem 1rem; overflow-x: auto; box-shadow: var(--shadow); }
+  figure svg { display: block; width: 100%; height: auto; color: var(--ink); font-family: var(--f-body); }
+  figcaption { font-size: .86rem; color: var(--ink-soft); margin-top: .7rem; padding-left: .8rem; border-left: 2px solid var(--blue); line-height: 1.5; }
+  .fig svg .sb { stroke: var(--blue); } .fig svg .fb { fill: var(--blue); }
+  .fig svg .st { stroke: var(--teal); } .fig svg .ft { fill: var(--teal); }
+  .fig svg .sa { stroke: var(--amber); } .fig svg .fa { fill: var(--amber); }
+  .fig svg .sr { stroke: var(--red); } .fig svg .fr { fill: var(--red); }
+  .fig svg .sm { stroke: var(--magenta); } .fig svg .fm { fill: var(--magenta); }
+  .fig svg .soft-b { fill: var(--blue-soft); } .fig svg .soft-m { fill: var(--magenta-soft); } .fig svg .soft-t { fill: var(--teal-soft); } .fig svg .soft-a { fill: var(--amber-soft); } .fig svg .soft-r { fill: var(--red-soft); }
+  .fig svg .panel { fill: var(--panel-2); }
+  .fig svg .mono { font-family: var(--f-mono); }
+
+  /* ---- code / schema ---- */
+  pre { font-family: var(--f-mono); font-size: .8rem; line-height: 1.55; background: var(--panel); border: 1px solid var(--rule); padding: .9rem 1rem; overflow-x: auto; margin: 1rem 0; }
+  pre .c { color: var(--ink-faint); } pre .k { color: var(--blue); font-weight: 500; } pre .t { color: var(--teal); }
+
+  /* ---- phases ---- */
+  .phases { display: grid; gap: 1px; background: var(--rule); border: 1px solid var(--rule); margin: 1.2rem 0; }
+  .phase { background: var(--panel); padding: .9rem 1rem; display: grid; grid-template-columns: 5.5rem 1fr; gap: .8rem; }
+  .phase .n { font-family: var(--f-head); font-weight: 700; font-size: 1.15rem; color: var(--blue); }
+  .phase .n small { display: block; font-family: var(--f-mono); font-size: .64rem; letter-spacing: .1em; color: var(--ink-faint); font-weight: 400; margin-top: .15rem; }
+  .phase p { margin: 0; font-size: .93rem; }
+  .phase .gate { font-family: var(--f-mono); font-size: .76rem; color: var(--teal); margin-top: .35rem; }
+
+  .foot { padding: 2.2rem 0 3rem; color: var(--ink-faint); font-family: var(--f-mono); font-size: .74rem; }
+
+  /* ---- print ---- */
+  @page { size: A4; margin: 15mm 14mm 17mm; }
+  @media print {
+    :root, :root[data-theme="dark"], :root:not([data-theme="light"]) {
+      --paper:#fff; --panel:#fff; --panel-2:#F1F4F8; --ink:#101826; --ink-soft:#3B4859; --ink-faint:#66748A; --rule:#C5CEDA;
+      --blue:#0058C4; --blue-soft:#E1EEFF; --teal:#046763; --teal-soft:#DDF3F1; --amber:#8A4A00; --amber-soft:#FCEFD9; --red:#9A1F18; --red-soft:#FBE4E2; --magenta:#A8127F; --magenta-soft:#FBE3F6; --shadow:none;
+    }
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    body { font-size: 10pt; line-height: 1.5; }
+    .wrap { max-width: none; padding: 0; } .col { max-width: none; }
+    .head .wrap { padding: 0 0 6mm; } .head { break-after: avoid; }
+    h1 { font-size: 26pt; } h2 { font-size: 16pt; } h3 { font-size: 11.5pt; }
+    section { padding: 6mm 0; }
+    figure, .decision, .tablewrap, .phases, pre, tr { break-inside: avoid; }
+    h2, h3 { break-after: avoid; }
+    .fig, .tablewrap, pre { overflow: visible; } table { min-width: 0; font-size: 9pt; }
+    a { color: var(--ink); text-decoration: none; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+
+
+<header class="head">
+  <div class="wrap">
+    <p class="doc-kind">Architecture decision record · TWM-ADR-002</p>
+    <h1>From one household to many: groups, sync, and chat</h1>
+    <p class="abstract">
+      Two-Way Match today serves exactly one household from one database. This record decides how it
+      becomes a platform many groups can register on, where each group's data lives, how two phones
+      stay in step, and how a conversation with voice messages fits into the same system — without
+      rewriting what already works.
+    </p>
+    <dl class="meta">
+      <div><dt>Status</dt><dd><span class="status">Accepted</span></dd></div>
+      <div><dt>Date</dt><dd>1 September 2026</dd></div>
+      <div><dt>Supersedes</dt><dd>TWM-ADR-001 (single household)</dd></div>
+      <div><dt>Runtime today</dt><dd>SAP CAP · SQLite · Fly.io <span class="mono">fra</span></dd></div>
+      <div><dt>Test baseline</dt><dd class="num">478 backend · 249 frontend</dd></div>
+    </dl>
+  </div>
+</header>
+
+<main>
+
+<section>
+  <div class="wrap col">
+    <span class="sec-id">0 · SUMMARY</span>
+    <h2>Seven decisions, one table</h2>
+    <p class="lede">Everything below argues for this table. If you read nothing else, read this.</p>
+  </div>
+  <div class="wrap">
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Question</th><th>Decision</th><th>Rejected</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Where does data live?</strong></td><td>The server is the system of record. Each device keeps a cache and an outbox for offline use.</td><td>Local-only on each phone; pure cloud with no cache</td></tr>
+          <tr><td><strong>How are groups isolated?</strong></td><td>One database, a <code>group</code> column on every tenant table, and one handler that narrows every query to the caller's group.</td><td>A database per group; a schema per group</td></tr>
+          <tr><td><strong>Who is a user?</strong></td><td><code>Users</code> log in. <code>People</code> are the roster inside a group. A <code>Membership</code> joins the two, with a role.</td><td>Reusing <code>People</code> as accounts</td></tr>
+          <tr><td><strong>How do messages arrive live?</strong></td><td>Server-sent events over the existing HTTP stack; sending stays a normal POST.</td><td>WebSockets; a hosted pub/sub vendor</td></tr>
+          <tr><td><strong>How are voice notes stored?</strong></td><td>Recorded in the browser, stored as-is next to receipts, served only through the API. 120 s / 5 MB cap.</td><td>Server-side transcoding; public object URLs</td></tr>
+          <tr><td><strong>Which database engine?</strong></td><td>SQLite on the Fly volume now. Postgres when a second machine, a 2 GB file, or sustained chat load arrives.</td><td>Postgres from day one</td></tr>
+          <tr><td><strong>Is chat end-to-end encrypted?</strong></td><td>No, deliberately, in v1. TLS in transit, encrypted volume at rest, server never exposes media publicly.</td><td>E2EE — it would blind the features the app exists for</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap col">
+    <span class="sec-id">1 · CONTEXT</span>
+    <h2>What exists, and what must not break</h2>
+    <p>
+      The running system is a single SAP CAP service at <code>/api/ledger</code> in front of a
+      SQLite file on a Fly.io volume in Frankfurt, serving a React PWA. It has fourteen entities,
+      a two-head classifier that runs in-process, an LLM-backed receipt extractor, cookie sessions,
+      and 727 automated tests. It is deployed with a commit-stamped build that refuses to ship a dirty
+      tree.
+    </p>
+    <p>
+      Two properties of that codebase decide the shape of this design. First, it already has a
+      <em>query-narrowing</em> visibility mechanism: unrevealed surprise events are removed from
+      <code>Events</code>, <code>eventTotals</code> and the calendar by a <code>before READ</code>
+      handler that rewrites the query with <code>not in</code> — rather than sieving rows afterwards
+      — so counts and pages stay honest, and a hidden id answers <code>404</code>, never
+      <code>403</code>. Group isolation is that mechanism generalised. Second, the scan flow already
+      has an on-device queue that downscales images and retries uploads. Offline sync is that queue
+      generalised.
+    </p>
+  </div>
+  <div class="wrap">
+    <figure>
+      <div class="fig">
+        <svg viewBox="0 0 900 300" role="img" aria-label="System context: phones and desktops run the PWA, which talks only to the CAP API on Fly; the API talks to SQLite on a volume, the in-process classifier, SAP Document AI, and an LLM provider.">
+          <defs><marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>
+          <!-- devices -->
+          <rect x="20" y="60" width="150" height="54" rx="4" class="panel" stroke="currentColor" stroke-width="1.3"/>
+          <text x="95" y="83" text-anchor="middle" font-size="12" font-weight="600" fill="currentColor">Phone A · PWA</text>
+          <text x="95" y="101" text-anchor="middle" font-size="10.5" fill="currentColor" opacity=".7">cache + outbox</text>
+          <rect x="20" y="136" width="150" height="54" rx="4" class="panel" stroke="currentColor" stroke-width="1.3"/>
+          <text x="95" y="159" text-anchor="middle" font-size="12" font-weight="600" fill="currentColor">Phone B · PWA</text>
+          <text x="95" y="177" text-anchor="middle" font-size="10.5" fill="currentColor" opacity=".7">cache + outbox</text>
+          <rect x="20" y="212" width="150" height="54" rx="4" class="panel" stroke="currentColor" stroke-width="1.3"/>
+          <text x="95" y="235" text-anchor="middle" font-size="12" font-weight="600" fill="currentColor">Desktop · PWA</text>
+          <text x="95" y="253" text-anchor="middle" font-size="10.5" fill="currentColor" opacity=".7">same bundle</text>
+          <!-- arrows to API -->
+          <line x1="176" y1="87" x2="318" y2="150" stroke="currentColor" stroke-width="1.4" marker-end="url(#a1)"/>
+          <line x1="176" y1="163" x2="318" y2="163" stroke="currentColor" stroke-width="1.4" marker-end="url(#a1)"/>
+          <line x1="176" y1="239" x2="318" y2="176" stroke="currentColor" stroke-width="1.4" marker-end="url(#a1)"/>
+          <text x="247" y="150" text-anchor="middle" font-size="10" fill="currentColor" opacity=".75">HTTPS · cookie</text>
+          <!-- API -->
+          <rect x="326" y="96" width="220" height="134" rx="4" class="soft-b sb" stroke-width="1.8"/>
+          <text x="436" y="122" text-anchor="middle" font-size="13" font-weight="700" class="fb">CAP API · Fly fra</text>
+          <text x="436" y="142" text-anchor="middle" font-size="10.5" class="mono" fill="currentColor">/api/ledger · /api/auth</text>
+          <text x="436" y="158" text-anchor="middle" font-size="10.5" class="mono" fill="currentColor">/api/chat/stream (SSE)</text>
+          <text x="436" y="182" text-anchor="middle" font-size="10.5" fill="currentColor" opacity=".8">group scope · sessions</text>
+          <text x="436" y="198" text-anchor="middle" font-size="10.5" fill="currentColor" opacity=".8">classifier in-process</text>
+          <text x="436" y="214" text-anchor="middle" font-size="10.5" fill="currentColor" opacity=".8">rate limits · media streaming</text>
+          <!-- storage -->
+          <rect x="610" y="60" width="270" height="62" rx="4" class="soft-t st" stroke-width="1.6"/>
+          <text x="745" y="84" text-anchor="middle" font-size="12" font-weight="600" class="ft">SQLite on volume /data</text>
+          <text x="745" y="103" text-anchor="middle" font-size="10.5" fill="currentColor" opacity=".8">system of record · WAL · nightly backup</text>
+          <line x1="552" y1="130" x2="604" y2="96" stroke="currentColor" stroke-width="1.4" marker-end="url(#a1)"/>
+          <text x="590" y="108" text-anchor="end" font-size="10" fill="currentColor" opacity=".75">reads / writes</text>
+          <!-- external -->
+          <rect x="610" y="150" width="270" height="44" rx="4" class="panel" stroke="currentColor" stroke-width="1.2" stroke-dasharray="4 3"/>
+          <text x="745" y="177" text-anchor="middle" font-size="11.5" fill="currentColor">SAP Document AI · receipt fields</text>
+          <rect x="610" y="212" width="270" height="44" rx="4" class="panel" stroke="currentColor" stroke-width="1.2" stroke-dasharray="4 3"/>
+          <text x="745" y="239" text-anchor="middle" font-size="11.5" fill="currentColor">LLM provider · statement, extraction</text>
+          <line x1="552" y1="172" x2="604" y2="172" stroke="currentColor" stroke-width="1.2" marker-end="url(#a1)"/>
+          <line x1="552" y1="200" x2="604" y2="232" stroke="currentColor" stroke-width="1.2" marker-end="url(#a1)"/>
+          <text x="578" y="164" text-anchor="middle" font-size="9.5" fill="currentColor" opacity=".7">calls out</text>
+        </svg>
+      </div>
+      <figcaption>Every device runs the same PWA bundle and talks to exactly one thing: the API. The database, the classifier and the external services sit behind it. Dashed boxes are called out to; nothing calls in.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section>
+  <div class="wrap col">
+    <span class="sec-id">2 · ADR-2.1 · WHERE DATA LIVES</span>
+    <h2>The server is the system of record; devices keep a working copy</h2>
+    <p class="lede">
+      The question the brief asks — local on the phone, or in the cloud — has a short answer once
+      you draw the two phones.
+    </p>
+  </div>
+  <div class="wrap">
+    <figure>
+      <div class="fig">
+        <svg viewBox="0 0 900 250" role="img" aria-label="Two options side by side. Local-only: each phone has its own database and there is no path between them. Server of record: both phones sync to one API and database; each keeps a cache and an outbox.">
+          <defs><marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>
+          <!-- Option A -->
+          <text x="205" y="26" text-anchor="middle" font-size="11" font-weight="600" letter-spacing="1.5" fill="currentColor" opacity=".7">A · LOCAL ONLY</text>
+          <rect x="40" y="60" width="140" height="70" rx="4" class="panel" stroke="currentColor" stroke-width="1.3"/>
+          <text x="110" y="86" text-anchor="middle" font-size="12" font-weight="600" fill="currentColor">Phone A</text>
+          <text x="110" y="106" text-anchor="middle" font-size="10.5" class="mono" fill="currentColor">ledger.sqlite</text>
+          <rect x="230" y="60" width="140" height="70" rx="4" class="panel" stroke="currentColor" stroke-width="1.3"/>
+          <text x="300" y="86" text-anchor="middle" font-size="12" font-weight="600" fill="currentColor">Phone B</text>
+          <text x="300" y="106" text-anchor="middle" font-size="10.5" class="mono" fill="currentColor">ledger.sqlite</text>
+          <!-- the missing edge -->
+          <line x1="186" y1="95" x2="224" y2="95" stroke-width="2" class="sr" stroke-dasharray="3 4"/>
+          <text x="205" y="86" text-anchor="middle" font-size="18" class="fr" font-weight="700">×</text>
+          <text x="205" y="160" text-anchor="middle" font-size="10.5" class="fr" font-weight="600">no path between them</text>
+          <text x="205" y="178" text-anchor="middle" font-size="10" fill="currentColor" opacity=".75">every shared feature — totals, events,</text>
+          <text x="205" y="193" text-anchor="middle" font-size="10" fill="currentColor" opacity=".75">chat — needs one, and building it is</text>
+          <text x="205" y="208" text-anchor="middle" font-size="10" fill="currentColor" opacity=".75">a sync engine, not an app</text>
+          <!-- divider -->
+          <line x1="440" y1="20" x2="440" y2="230" stroke="currentColor" stroke-width="1" opacity=".25"/>
+          <!-- Option B -->
+          <text x="670" y="26" text-anchor="middle" font-size="11" font-weight="600" letter-spacing="1.5" class="fb">B · SERVER OF RECORD + DEVICE CACHE  ✓</text>
+          <rect x="480" y="60" width="140" height="70" rx="4" class="panel" stroke="currentColor" stroke-width="1.3"/>
+          <text x="550" y="82" text-anchor="middle" font-size="12" font-weight="600" fill="currentColor">Phone A</text>
+          <text x="550" y="100" text-anchor="middle" font-size="10" fill="currentColor" opacity=".8">IndexedDB cache</text>
+          <text x="550" y="115" text-anchor="middle" font-size="10" fill="currentColor" opacity=".8">outbox (offline writes)</text>
+          <rect x="480" y="160" width="140" height="70" rx="4" class="panel" stroke="currentColor" stroke-width="1.3"/>
+          <text x="550" y="182" text-anchor="middle" font-size="12" font-weight="600" fill="currentColor">Phone B</text>
+          <text x="550" y="200" text-anchor="middle" font-size="10" fill="currentColor" opacity=".8">IndexedDB cache</text>
+          <text x="550" y="215" text-anchor="middle" font-size="10" fill="currentColor" opacity=".8">outbox (offline writes)</text>
+          <rect x="720" y="100" width="160" height="90" rx="4" class="soft-t st" stroke-width="1.8"/>
+          <text x="800" y="128" text-anchor="middle" font-size="12" font-weight="700" class="ft">API + SQLite</text>
+          <text x="800" y="147" text-anchor="middle" font-size="10.5" fill="currentColor" opacity=".85">one truth per group</text>
+          <text x="800" y="164" text-anchor="middle" font-size="10.5" fill="currentColor" opacity=".85">backed up nightly</text>
+          <line x1="626" y1="95" x2="714" y2="130" stroke-width="1.5" class="sb" marker-end="url(#a2)"/>
+          <line x1="714" y1="150" x2="626" y2="110" stroke-width="1.5" class="st" marker-end="url(#a2)" stroke-dasharray="4 3"/>
+          <line x1="626" y1="195" x2="714" y2="160" stroke-width="1.5" class="sb" marker-end="url(#a2)"/>
+          <line x1="714" y1="175" x2="626" y2="210" stroke-width="1.5" class="st" marker-end="url(#a2)" stroke-dasharray="4 3"/>
+          <text x="668" y="100" text-anchor="middle" font-size="9.5" class="fb">writes</text>
+          <text x="668" y="214" text-anchor="middle" font-size="9.5" class="ft">SSE pushes</text>
+        </svg>
+      </div>
+      <figcaption>Option A has no edge between the two phones, and every feature this app exists for lives on that edge. Option B adds the server as the one place both phones agree on; the dashed teal arrows are the live pushes that keep each cache warm.</figcaption>
+    </figure>
+  </div>
+  <div class="wrap col">
+    <div class="decision">
+      <span class="k">Decision</span>
+      <p><strong>Cloud is the system of record; every device keeps a local working copy.</strong> The existing CAP server on Fly (Frankfurt) holds the truth. Each device caches what it has read in IndexedDB and queues what it could not send in an outbox. Reads never block on the network when the cache can answer; writes are optimistic and reconciled when the server confirms.</p>
+    </div>
+    <p>
+      "Local only" is attractive for privacy and for cost, and it is the wrong answer for this
+      product for one reason: the app is <em>about</em> two or more people sharing a ledger. Any
+      feature that shows one person what another did — the month total, an event's spend, a
+      message — requires a path between devices. Building that path without a server means
+      device discovery, conflict resolution and merge semantics: a distributed-systems project,
+      not a household app. A server is the cheapest possible implementation of "both phones agree."
+    </p>
+    <p>
+      "Pure cloud" is the other trap. The app is an installable PWA that people open on a train
+      and in a restaurant basement. A screen that is blank without signal is a native-app
+      regression. The cache is what makes it feel like an app.
+    </p>
+    <p>
+      Data residency: Fly <code>fra</code> keeps every byte in the EU. For a Swiss household that
+      satisfies the revised FADP; for EU users it satisfies GDPR's transfer rules without
+      further paperwork. The nightly backup artefact must stay in the same region.
+    </p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap col">
+    <span class="sec-id">3 · ADR-2.2 · TENANCY</span>
+    <h2>One database, a group column, one narrowing handler</h2>
+    <p class="lede">
+      Instagram and Facebook are the brief's reference points. What they actually do at the
+      storage layer is not a database per user — it is a tenant key on every row and a
+      discipline that no query runs without it. That discipline is the whole design.
+    </p>
+  </div>
+  <div class="wrap">
+    <figure>
+      <div class="fig">
+        <svg viewBox="0 0 900 230" role="img" aria-label="A request carries a session cookie. The API resolves the session to a user, a group and a person, then one handler adds where group equals that group to every read and stamps it onto every write, before the query reaches the database.">
+          <defs><marker id="a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>
+          <rect x="20" y="70" width="150" height="70" rx="4" class="panel" stroke="currentColor" stroke-width="1.3"/>
+          <text x="95" y="96" text-anchor="middle" font-size="12" font-weight="600" fill="currentColor">Request</text>
+          <text x="95" y="114" text-anchor="middle" font-size="10" class="mono" fill="currentColor">Cookie: twm_session</text>
+          <text x="95" y="128" text-anchor="middle" font-size="10" class="mono" fill="currentColor">GET /Expenses?$top=20</text>
+          <line x1="176" y1="105" x2="214" y2="105" stroke="currentColor" stroke-width="1.4" marker-end="url(#a3)"/>
+          <rect x="220" y="55" width="170" height="100" rx="4" class="soft-b sb" stroke-width="1.6"/>
+          <text x="305" y="78" text-anchor="middle" font-size="12" font-weight="700" class="fb">resolve session</text>
+          <text x="305" y="98" text-anchor="middle" font-size="10.5" class="mono" fill="currentColor">user → membership</text>
+          <text x="305" y="114" text-anchor="middle" font-size="10.5" class="mono" fill="currentColor">→ group, person, role</text>
+          <text x="305" y="138" text-anchor="middle" font-size="10" fill="currentColor" opacity=".75">no membership → 401</text>
+          <line x1="396" y1="105" x2="434" y2="105" stroke="currentColor" stroke-width="1.4" marker-end="url(#a3)"/>
+          <rect x="440" y="40" width="210" height="130" rx="4" class="soft-t st" stroke-width="1.8"/>
+          <text x="545" y="64" text-anchor="middle" font-size="12" font-weight="700" class="ft">scopeToGroup()</text>
+          <text x="545" y="84" text-anchor="middle" font-size="10.5" fill="currentColor" opacity=".9">before READ</text>
+          <text x="545" y="100" text-anchor="middle" font-size="10.5" class="mono" fill="currentColor">.where({group_ID: g})</text>
+          <text x="545" y="122" text-anchor="middle" font-size="10.5" fill="currentColor" opacity=".9">before CREATE / UPDATE</text>
+          <text x="545" y="138" text-anchor="middle" font-size="10.5" class="mono" fill="currentColor">data.group_ID = g</text>
+          <text x="545" y="158" text-anchor="middle" font-size="10" fill="currentColor" opacity=".75">foreign id → 404, never 403</text>
+          <line x1="656" y1="105" x2="694" y2="105" stroke="currentColor" stroke-width="1.4" marker-end="url(#a3)"/>
+          <rect x="700" y="70" width="180" height="70" rx="4" class="panel" stroke="currentColor" stroke-width="1.3"/>
+          <text x="790" y="96" text-anchor="middle" font-size="12" font-weight="600" fill="currentColor">SQLite</text>
+          <text x="790" y="114" text-anchor="middle" font-size="10" class="mono" fill="currentColor">…WHERE group_ID = ?</text>
+          <text x="790" y="128" text-anchor="middle" font-size="10" fill="currentColor" opacity=".75">index (group_ID, date)</text>
+          <text x="450" y="205" font-size="10.5" fill="currentColor" opacity=".8">Same shape as today's surprise filter — the query is narrowed, not the result sieved, so $count and paging stay truthful.</text>
+        </svg>
+      </div>
+      <figcaption>One handler, registered for every tenant entity, is the entire isolation boundary. It runs before CAP builds SQL, so there is no code path that can read another group's rows by accident.</figcaption>
+    </figure>
+  </div>
+  <div class="wrap col">
+    <div class="decision">
+      <span class="k">Decision</span>
+      <p><strong>Row-level tenancy.</strong> Every entity that belongs to a household gains <code>group : Association to Groups</code>. A single <code>scopeToGroup</code> handler narrows reads and stamps writes. Cross-group lookups by id return <code>404</code> so that the existence of another group's data is itself not disclosed. A composite index <code>(group_ID, date)</code> on <code>Expenses</code> keeps the Ledger's monthly query flat as groups multiply.</p>
+    </div>
+    <div class="decision rejected">
+      <span class="k">Rejected · database per group</span>
+      <p>One SQLite file per group on the same volume is tempting — isolation by construction — but it defeats <code>cds-typer</code>, breaks the single-connection CAP driver, turns the nightly backup into N backups, and makes any cross-group operation (an admin view, a migration) a loop over files. It buys nothing that the narrowing handler plus tests does not.</p>
+    </div>
+    <h3>Data model</h3>
+    <p>Additive. Nothing that exists is renamed or removed; three entities join the model and one column joins each tenant table.</p>
+  </div>
+  <div class="wrap">
+    <figure>
+      <div class="fig">
+        <svg viewBox="0 0 900 330" role="img" aria-label="Entity relationships: Users log in; Memberships join a User to a Group with a role and a Person; Groups own People, Expenses, Events, Memories, Moods, Settlements and Conversations; Conversations own Messages, which may carry an audio attachment.">
+          <defs><marker id="a4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>
+          <!-- identity row -->
+          <rect x="20" y="30" width="150" height="66" rx="4" class="soft-b sb" stroke-width="1.5"/>
+          <text x="95" y="52" text-anchor="middle" font-size="12" font-weight="700" class="fb">Users</text>
+          <text x="95" y="70" text-anchor="middle" font-size="10" class="mono" fill="currentColor">email · passwordHash</text>
+          <text x="95" y="84" text-anchor="middle" font-size="10" class="mono" fill="currentColor">NEW</text>
+          <rect x="230" y="30" width="170" height="66" rx="4" class="soft-b sb" stroke-width="1.5"/>
+          <text x="315" y="52" text-anchor="middle" font-size="12" font-weight="700" class="fb">Memberships</text>
+          <text x="315" y="70" text-anchor="middle" font-size="10" class="mono" fill="currentColor">user · group · person</text>
+          <text x="315" y="84" text-anchor="middle" font-size="10" class="mono" fill="currentColor">role: owner | member</text>
+          <rect x="460" y="30" width="170" height="66" rx="4" class="soft-b sb" stroke-width="1.5"/>
+          <text x="545" y="52" text-anchor="middle" font-size="12" font-weight="700" class="fb">Groups</text>
+          <text x="545" y="70" text-anchor="middle" font-size="10" class="mono" fill="currentColor">name · kind · inviteCode</text>
+          <text x="545" y="84" text-anchor="middle" font-size="10" class="mono" fill="currentColor">currency · NEW</text>
+          <line x1="176" y1="63" x2="224" y2="63" stroke="currentColor" stroke-width="1.3" marker-end="url(#a4)"/>
+          <text x="200" y="56" text-anchor="middle" font-size="9" fill="currentColor" opacity=".7">1..n</text>
+          <line x1="406" y1="63" x2="454" y2="63" stroke="currentColor" stroke-width="1.3" marker-end="url(#a4)"/>
+          <text x="430" y="56" text-anchor="middle" font-size="9" fill="currentColor" opacity=".7">n..1</text>
+          <!-- group owns -->
+          <line x1="545" y1="102" x2="545" y2="128" stroke="currentColor" stroke-width="1.3" marker-end="url(#a4)"/>
+          <text x="560" y="120" font-size="9.5" fill="currentColor" opacity=".7">owns (group_ID on each)</text>
+          <g font-size="11" font-weight="600">
+            <rect x="60" y="134" width="118" height="40" rx="3" class="panel" stroke="currentColor" stroke-width="1.2"/><text x="119" y="159" text-anchor="middle" fill="currentColor">People</text>
+            <rect x="192" y="134" width="118" height="40" rx="3" class="panel" stroke="currentColor" stroke-width="1.2"/><text x="251" y="159" text-anchor="middle" fill="currentColor">Expenses</text>
+            <rect x="324" y="134" width="118" height="40" rx="3" class="panel" stroke="currentColor" stroke-width="1.2"/><text x="383" y="159" text-anchor="middle" fill="currentColor">Events</text>
+            <rect x="456" y="134" width="118" height="40" rx="3" class="panel" stroke="currentColor" stroke-width="1.2"/><text x="515" y="159" text-anchor="middle" fill="currentColor">Memories</text>
+            <rect x="588" y="134" width="118" height="40" rx="3" class="panel" stroke="currentColor" stroke-width="1.2"/><text x="647" y="159" text-anchor="middle" fill="currentColor">Moods</text>
+            <rect x="720" y="134" width="160" height="40" rx="3" class="panel" stroke="currentColor" stroke-width="1.2"/><text x="800" y="159" text-anchor="middle" fill="currentColor">Settlements · Statements</text>
+          </g>
+          <line x1="119" y1="134" x2="545" y2="102" stroke="currentColor" stroke-width=".8" opacity=".35"/>
+          <line x1="251" y1="134" x2="545" y2="102" stroke="currentColor" stroke-width=".8" opacity=".35"/>
+          <line x1="383" y1="134" x2="545" y2="102" stroke="currentColor" stroke-width=".8" opacity=".35"/>
+          <line x1="647" y1="134" x2="545" y2="102" stroke="currentColor" stroke-width=".8" opacity=".35"/>
+          <line x1="800" y1="134" x2="545" y2="102" stroke="currentColor" stroke-width=".8" opacity=".35"/>
+          <!-- chat -->
+          <rect x="230" y="220" width="180" height="66" rx="4" class="soft-m sm" stroke-width="1.5"/>
+          <text x="320" y="242" text-anchor="middle" font-size="12" font-weight="700" class="fm">Conversations</text>
+          <text x="320" y="260" text-anchor="middle" font-size="10" class="mono" fill="currentColor">group · kind: group | direct</text>
+          <text x="320" y="274" text-anchor="middle" font-size="10" class="mono" fill="currentColor">NEW</text>
+          <rect x="470" y="220" width="200" height="66" rx="4" class="soft-m sm" stroke-width="1.5"/>
+          <text x="570" y="242" text-anchor="middle" font-size="12" font-weight="700" class="fm">Messages</text>
+          <text x="570" y="260" text-anchor="middle" font-size="10" class="mono" fill="currentColor">author · kind: text | audio | image</text>
+          <text x="570" y="274" text-anchor="middle" font-size="10" class="mono" fill="currentColor">body · media · durationMs · peaks[]</text>
+          <line x1="416" y1="253" x2="464" y2="253" stroke="currentColor" stroke-width="1.3" marker-end="url(#a4)"/>
+          <text x="440" y="246" text-anchor="middle" font-size="9" fill="currentColor" opacity=".7">1..n</text>
+          <line x1="320" y1="214" x2="500" y2="102" stroke="currentColor" stroke-width=".8" opacity=".35"/>
+          <text x="720" y="253" font-size="10" fill="currentColor" opacity=".8">media served only via</text>
+          <text x="720" y="268" font-size="10" class="mono" fill="currentColor">/Messages(id)/media</text>
+          <text x="20" y="318" font-size="10" fill="currentColor" opacity=".7">Existing entities keep their names and shapes; each gains a nullable group association, backfilled to a seeded default group so every current row and test still holds.</text>
+        </svg>
+      </div>
+      <figcaption>Identity (blue) is separated from the roster: a User can belong to several Groups, and in each one is represented by a Person row. Chat (magenta) hangs off the group like everything else, so the same scoping handler protects it.</figcaption>
+    </figure>
+  </div>
+  <div class="wrap col">
+<pre><span class="c">// db/schema.cds — additive; every existing entity keeps its name and shape</span>
+<span class="k">entity</span> Groups : cuid, managed {
+  name       : String(120);
+  <span class="c">// What kind of household this is. Used for copy and defaults only — never for logic.</span>
+  kind       : String(20) <span class="k">enum</span> { couple; household; friends; family; other; };
+  currency   : String(3) <span class="k">default</span> 'CHF';
+  inviteCode : String(12);           <span class="c">// rotated on demand; joins are one-time</span>
+  members    : Composition of many Memberships on members.group = $self;
+}
+<span class="k">entity</span> Users : cuid, managed {
+  email        : String(200) @assert.format: '^[^@]+@[^@]+$';
+  passwordHash : String(80);          <span class="c">// bcrypt; never selected by any projection</span>
+  displayName  : String(100);
+  <span class="c">// Optional, self-described, free text. See §6 on why this is not an enum.</span>
+  gender       : String(40);
+}
+<span class="k">entity</span> Memberships : cuid, managed {
+  user   : Association to Users;
+  group  : Association to Groups;
+  person : Association to People;    <span class="c">// this user's roster row inside this group</span>
+  role   : String(10) <span class="k">enum</span> { owner; member; };
+}
+<span class="c">// Tenant aspect, mixed into People, Expenses, Events, Memories, Moods, Settlements,
+// Statements, Corrections, Conversations. Nullable during migration, then @mandatory.</span>
+<span class="k">aspect</span> tenant { group : Association to Groups; }</pre>
+  </div>
+</section>
+
+<section>
+  <div class="wrap col">
+    <span class="sec-id">4 · ADR-2.3 · SYNC</span>
+    <h2>Offline-first without a sync engine</h2>
+    <p class="lede">
+      The app never needs two devices to edit the same row at the same moment. That single fact
+      lets it skip CRDTs entirely.
+    </p>
+  </div>
+  <div class="wrap">
+    <figure>
+      <div class="fig">
+        <svg viewBox="0 0 900 260" role="img" aria-label="Write path: the UI writes to the outbox in IndexedDB, the UI updates optimistically, a worker drains the outbox to the API when online, the API commits and publishes an SSE event, and every other device invalidates its cache for that entity and refetches.">
+          <defs><marker id="a5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>
+          <text x="150" y="26" text-anchor="middle" font-size="11" font-weight="600" letter-spacing="1.5" fill="currentColor" opacity=".7">DEVICE A</text>
+          <rect x="20" y="40" width="120" height="50" rx="4" class="panel" stroke="currentColor" stroke-width="1.3"/>
+          <text x="80" y="62" text-anchor="middle" font-size="11.5" font-weight="600" fill="currentColor">UI action</text>
+          <text x="80" y="78" text-anchor="middle" font-size="9.5" fill="currentColor" opacity=".75">"Post expense"</text>
+          <line x1="146" y1="65" x2="184" y2="65" stroke="currentColor" stroke-width="1.4" marker-end="url(#a5)"/>
+          <rect x="190" y="40" width="120" height="50" rx="4" class="soft-b sb" stroke-width="1.5"/>
+          <text x="250" y="62" text-anchor="middle" font-size="11.5" font-weight="700" class="fb">outbox</text>
+          <text x="250" y="78" text-anchor="middle" font-size="9.5" class="mono" fill="currentColor">IndexedDB</text>
+          <line x1="250" y1="96" x2="250" y2="130" stroke="currentColor" stroke-width="1.3" marker-end="url(#a5)"/>
+          <text x="262" y="118" font-size="9.5" fill="currentColor" opacity=".75">optimistic row</text>
+          <rect x="190" y="136" width="120" height="44" rx="4" class="panel" stroke="currentColor" stroke-width="1.3"/>
+          <text x="250" y="155" text-anchor="middle" font-size="11" font-weight="600" fill="currentColor">cache</text>
+          <text x="250" y="170" text-anchor="middle" font-size="9.5" fill="currentColor" opacity=".75">TanStack + IDB</text>
+          <line x1="316" y1="65" x2="384" y2="65" stroke-width="1.5" class="sb" marker-end="url(#a5)"/>
+          <text x="350" y="56" text-anchor="middle" font-size="9.5" class="fb">drain when online</text>
+          <text x="350" y="82" text-anchor="middle" font-size="9" fill="currentColor" opacity=".7">idempotency key</text>
+          <rect x="390" y="30" width="160" height="70" rx="4" class="soft-t st" stroke-width="1.8"/>
+          <text x="470" y="55" text-anchor="middle" font-size="12" font-weight="700" class="ft">API</text>
+          <text x="470" y="72" text-anchor="middle" font-size="9.5" fill="currentColor" opacity=".85">commit · stamp group</text>
+          <text x="470" y="87" text-anchor="middle" font-size="9.5" fill="currentColor" opacity=".85">publish {entity, id, v}</text>
+          <line x1="556" y1="65" x2="624" y2="65" stroke-width="1.5" class="st" marker-end="url(#a5)" stroke-dasharray="4 3"/>
+          <text x="590" y="56" text-anchor="middle" font-size="9.5" class="ft">SSE event</text>
+          <text x="750" y="26" text-anchor="middle" font-size="11" font-weight="600" letter-spacing="1.5" fill="currentColor" opacity=".7">DEVICE B</text>
+          <rect x="630" y="40" width="120" height="50" rx="4" class="panel" stroke="currentColor" stroke-width="1.3"/>
+          <text x="690" y="62" text-anchor="middle" font-size="11.5" font-weight="600" fill="currentColor">stream client</text>
+          <text x="690" y="78" text-anchor="middle" font-size="9.5" class="mono" fill="currentColor">EventSource</text>
+          <line x1="690" y1="96" x2="690" y2="130" stroke="currentColor" stroke-width="1.3" marker-end="url(#a5)"/>
+          <text x="702" y="118" font-size="9.5" fill="currentColor" opacity=".75">invalidate ['expenses']</text>
+          <rect x="630" y="136" width="120" height="44" rx="4" class="panel" stroke="currentColor" stroke-width="1.3"/>
+          <text x="690" y="155" text-anchor="middle" font-size="11" font-weight="600" fill="currentColor">cache</text>
+          <text x="690" y="170" text-anchor="middle" font-size="9.5" fill="currentColor" opacity=".75">refetch → repaint</text>
+          <line x1="756" y1="158" x2="810" y2="158" stroke="currentColor" stroke-width="1.2" marker-end="url(#a5)"/>
+          <rect x="816" y="136" width="64" height="44" rx="4" class="panel" stroke="currentColor" stroke-width="1.3"/>
+          <text x="848" y="162" text-anchor="middle" font-size="11" font-weight="600" fill="currentColor">UI</text>
+          <text x="20" y="225" font-size="10.5" fill="currentColor" opacity=".8">The stream carries only "something changed" — an entity name and an id. It never carries data, so a</text>
+          <text x="20" y="241" font-size="10.5" fill="currentColor" opacity=".8">stale or replayed event can only cause an extra fetch, never a wrong row. Reconnects replay from Last-Event-ID.</text>
+        </svg>
+      </div>
+      <figcaption>Writes go through an outbox with an idempotency key, so a retried upload cannot post a receipt twice. Other devices learn that a row changed and refetch it; they never receive the row over the stream.</figcaption>
+    </figure>
+  </div>
+  <div class="wrap col">
+    <div class="decision">
+      <span class="k">Decision</span>
+      <p><strong>Invalidation, not replication.</strong> Devices cache reads and queue writes. The server publishes <em>notifications</em> (entity, id, version), never payloads. Conflicts are resolved last-writer-wins on the server with the version number; the UI shows the server's row the moment it arrives. This is enough because two people in one household do not edit the same expense simultaneously in practice, and when they do, the second save wins visibly rather than merging silently.</p>
+    </div>
+    <p>
+      The scan queue already does two thirds of this: it holds images in IndexedDB, retries, and
+      reconciles against the returned draft. Promoting it to a general outbox is a refactor, not an
+      invention. The idempotency key is a client-generated UUID sent as
+      <code>Idempotency-Key</code>; the server stores the last 24 h of keys per group and replays
+      the original response for a duplicate.
+    </p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap col">
+    <span class="sec-id">5 · ADR-2.4 &amp; 2.5 · CHAT AND VOICE</span>
+    <h2>A conversation is just another tenant entity with a live feed</h2>
+    <p class="lede">
+      WhatsApp-like means three things people notice: messages appear without refreshing, a
+      voice note records with one press and plays inline, and the thread survives a bad connection.
+    </p>
+  </div>
+  <div class="wrap">
+    <figure>
+      <div class="fig">
+        <svg viewBox="0 0 900 300" role="img" aria-label="Voice message pipeline: press and hold starts MediaRecorder and an analyser capturing waveform peaks; release yields a blob in webm/opus on Chrome or mp4/AAC on Safari; the blob and peaks upload through a sendMessage action; the server validates size and duration, stores the media, and publishes an SSE event; the recipient's thread inserts the bubble, drawing the waveform from peaks immediately and streaming the audio on tap.">
+          <defs><marker id="a6" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>
+          <text x="140" y="24" text-anchor="middle" font-size="11" font-weight="600" letter-spacing="1.5" fill="currentColor" opacity=".7">SENDER</text>
+          <rect x="20" y="40" width="240" height="56" rx="4" class="panel" stroke="currentColor" stroke-width="1.3"/>
+          <text x="140" y="60" text-anchor="middle" font-size="11.5" font-weight="600" fill="currentColor">press &amp; hold → MediaRecorder</text>
+          <text x="140" y="78" text-anchor="middle" font-size="9.5" fill="currentColor" opacity=".8">AnalyserNode samples 40 peaks/s → peaks[]</text>
+          <line x1="140" y1="102" x2="140" y2="128" stroke="currentColor" stroke-width="1.3" marker-end="url(#a6)"/>
+          <text x="152" y="120" font-size="9.5" fill="currentColor" opacity=".75">release · max 120 s</text>
+          <rect x="20" y="134" width="240" height="64" rx="4" class="soft-b sb" stroke-width="1.5"/>
+          <text x="140" y="154" text-anchor="middle" font-size="11.5" font-weight="700" class="fb">Blob, as recorded</text>
+          <text x="140" y="171" text-anchor="middle" font-size="9.5" class="mono" fill="currentColor">Chrome/Android: audio/webm;codecs=opus</text>
+          <text x="140" y="186" text-anchor="middle" font-size="9.5" class="mono" fill="currentColor">Safari/iOS: audio/mp4 (AAC)</text>
+          <line x1="266" y1="166" x2="334" y2="166" stroke-width="1.5" class="sb" marker-end="url(#a6)"/>
+          <text x="300" y="157" text-anchor="middle" font-size="9.5" class="fb">POST sendMessage</text>
+          <text x="300" y="181" text-anchor="middle" font-size="9" fill="currentColor" opacity=".7">via outbox</text>
+          <rect x="340" y="120" width="220" height="92" rx="4" class="soft-t st" stroke-width="1.8"/>
+          <text x="450" y="142" text-anchor="middle" font-size="12" font-weight="700" class="ft">API</text>
+          <text x="450" y="160" text-anchor="middle" font-size="9.5" fill="currentColor" opacity=".9">mime ∈ {webm, mp4, ogg} · ≤ 5 MB</text>
+          <text x="450" y="175" text-anchor="middle" font-size="9.5" fill="currentColor" opacity=".9">durationMs ≤ 120 000 · group stamp</text>
+          <text x="450" y="190" text-anchor="middle" font-size="9.5" fill="currentColor" opacity=".9">store media + peaks · publish</text>
+          <text x="450" y="204" text-anchor="middle" font-size="9" class="mono" fill="currentColor">{conversation, messageId}</text>
+          <line x1="566" y1="166" x2="634" y2="166" stroke-width="1.5" class="st" marker-end="url(#a6)" stroke-dasharray="4 3"/>
+          <text x="600" y="157" text-anchor="middle" font-size="9.5" class="ft">SSE</text>
+          <text x="760" y="24" text-anchor="middle" font-size="11" font-weight="600" letter-spacing="1.5" fill="currentColor" opacity=".7">RECIPIENT</text>
+          <rect x="640" y="40" width="240" height="56" rx="4" class="panel" stroke="currentColor" stroke-width="1.3"/>
+          <text x="760" y="60" text-anchor="middle" font-size="11.5" font-weight="600" fill="currentColor">bubble inserted at once</text>
+          <text x="760" y="78" text-anchor="middle" font-size="9.5" fill="currentColor" opacity=".8">waveform drawn from peaks[] — no audio fetched</text>
+          <line x1="760" y1="102" x2="760" y2="128" stroke="currentColor" stroke-width="1.3" marker-end="url(#a6)"/>
+          <text x="772" y="120" font-size="9.5" fill="currentColor" opacity=".75">tap play</text>
+          <rect x="640" y="134" width="240" height="64" rx="4" class="panel" stroke="currentColor" stroke-width="1.3"/>
+          <text x="760" y="156" text-anchor="middle" font-size="11.5" font-weight="600" fill="currentColor">&lt;audio&gt; streams the media</text>
+          <text x="760" y="173" text-anchor="middle" font-size="9.5" class="mono" fill="currentColor">GET /Messages(id)/media · Range</text>
+          <text x="760" y="188" text-anchor="middle" font-size="9.5" fill="currentColor" opacity=".8">cookie-authenticated, group-scoped</text>
+          <text x="20" y="250" font-size="10.5" fill="currentColor" opacity=".8">No transcoding. Every current browser plays both containers, so the file is stored exactly as the microphone produced it — the</text>
+          <text x="20" y="266" font-size="10.5" fill="currentColor" opacity=".8">same rule receipts follow. Peaks travel with the message so the thread paints instantly; the audio itself is fetched only on play.</text>
+        </svg>
+      </div>
+      <figcaption>The waveform is the trick that makes it feel instant: forty numbers per second captured while recording, stored as a short array, drawn before a single byte of audio is downloaded.</figcaption>
+    </figure>
+  </div>
+  <div class="wrap col">
+    <div class="decision">
+      <span class="k">Decision · realtime</span>
+      <p><strong>Server-sent events</strong> on <code>GET /api/chat/stream</code>, one connection per open client, subscribed to the caller's group. Sends are ordinary POSTs. On reconnect the browser resends <code>Last-Event-ID</code> and the server replays what was missed from the message table. When there is no stream (older browsers, hostile proxies), the thread polls every 15 s — the same code path, slower.</p>
+    </div>
+    <div class="decision rejected">
+      <span class="k">Rejected · WebSockets, hosted pub/sub</span>
+      <p>Chat delivery is one-directional; the client never needs to push over the socket. WebSockets add an upgrade path through helmet and the CSP, connection-state handling, and a second protocol to test, for no gain here. A hosted service (Pusher, Ably) would move message metadata to a third party outside the EU and add a bill to a household app.</p>
+    </div>
+    <div class="decision">
+      <span class="k">Decision · voice</span>
+      <p><strong>Record in the browser, store as recorded, serve through the API.</strong> <code>MediaRecorder</code> with the container the platform prefers; a 120-second and 5 MB ceiling enforced on both sides; media streamed with <code>Range</code> support through the cookie-authenticated, group-scoped endpoint — never a public URL. No server-side transcoding: the container matrix is two entries and every current browser plays both.</p>
+    </div>
+    <div class="decision risk">
+      <span class="k">Scaling note</span>
+      <p>The SSE subscriber map lives in the Node process. That is correct today — Fly runs exactly one machine (<code>min_machines_running = 1</code>, auto-stop off). The moment a second machine exists, the map must move to Postgres <code>LISTEN/NOTIFY</code> or Redis, and that is the same trigger that moves the database (§7). The two migrations are one migration.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap col">
+    <span class="sec-id">6 · ADR-2.6 · REGISTRATION</span>
+    <h2>Groups register; people join by invitation</h2>
+    <p class="lede">The brief asks for group types at sign-up. Here is how to have them without storing something the app has no business storing.</p>
+    <h3>The flow</h3>
+    <ol>
+      <li><strong>Create account</strong> — email, password, display name. That is a <code>User</code>.</li>
+      <li><strong>Create a group or join one.</strong> Creating asks for a name and a <em>kind</em> — <em>Two of us</em>, <em>A household</em>, <em>Friends</em>, <em>Family</em>. Joining asks for the invite code the other person was shown.</li>
+      <li><strong>Your seat in the group</strong> — a <code>Person</code> row is created for you with your display name and a colour; a <code>Membership</code> binds the three.</li>
+      <li>Document #1, the model, the Ledger and the chat are then <em>this group's</em>, and nobody else's.</li>
+    </ol>
+    <p>The two presets the brief names — a man and a woman, or two people of the same sex — both land on <em>Two of us</em>. The preset sets the roster size to two and the copy to the couple voice. That is all a preset needs to do.</p>
+    <div class="decision risk">
+      <span class="k">Why the composition is optional and free-text, not a required enum</span>
+      <p>Whether a couple is heterosexual or same-sex is <strong>special-category data</strong> under GDPR Article 9 and the Swiss FADP's "sensitive personal data": it concerns sex life and sexual orientation. Storing it needs explicit consent, a stated purpose, and stronger protection — and this app has <em>no purpose</em> for it. Nothing in the ledger, the classifier, the calendar or the chat behaves differently for one couple than another. Making it a required field would collect the most sensitive data in the system for zero product value. So: each person may describe their gender in their own words, or not at all; nothing is inferred from it; it drives copy only, if that. The presets give the brief its sign-up choice; the schema declines to turn that choice into a stored label.</p>
+    </div>
+    <h3>Invitations</h3>
+    <p>An eight-character code, shown once, valid for 72 hours, single use, rotated by the owner on demand. It is enough for a household and it is the mechanism Instagram, Signal and every family app converged on. Links (<code>/join/CODE</code>) wrap the same code so a phone can open it from a message.</p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap col">
+    <span class="sec-id">7 · ADR-2.7 · STORAGE AND SCALE</span>
+    <h2>SQLite until a specific thing happens, then Postgres</h2>
+    <p class="lede">A file database is the right engine for a single machine serving hundreds of households. The question is not "is SQLite serious" — it is "what is the trigger to leave it."</p>
+  </div>
+  <div class="wrap">
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Trigger</th><th>Why it matters</th><th>Move to</th></tr></thead>
+        <tbody>
+          <tr><td>A second Fly machine</td><td>SQLite is single-writer on one disk; two machines cannot share the file safely.</td><td class="mono">Postgres (Fly Postgres, fra) + LISTEN/NOTIFY for SSE fan-out</td></tr>
+          <tr><td>DB file &gt; 2 GB</td><td>Backups and volume snapshots get slow; VACUUM pauses become visible.</td><td class="mono">Postgres; media to Tigris (Fly's S3), signed URLs still served via the API</td></tr>
+          <tr><td>Sustained &gt; 10 chat writes/s</td><td>Every write takes the single WAL lock; audio inserts are large.</td><td class="mono">Same move; also chunked audio upload</td></tr>
+          <tr><td>More than ~1 000 active groups</td><td>Not a SQLite limit — an operations one: per-group support, GDPR export/delete, abuse.</td><td class="mono">Admin service, audit log, per-group export job</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="wrap col">
+    <p>
+      Blobs stay in the database until the file passes roughly one gigabyte. Receipts, event photos
+      and voice notes all follow the same path today (stripped, downscaled, stored as
+      <code>LargeBinary</code>, streamed through the service), and one path is worth more than an
+      early optimisation. When they move to object storage, the API keeps issuing the URLs — a
+      short-lived signed URL is handed out only after the group check passes — so nothing in the
+      client changes and nothing becomes publicly addressable.
+    </p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap col">
+    <span class="sec-id">8 · ADR-2.8 · SECURITY</span>
+    <h2>What protects a household's data, and what deliberately does not</h2>
+    <ul>
+      <li><strong>Sessions</strong> — the existing httpOnly, SameSite=Lax cookie, HMAC-signed, 7-day expiry, gains a <code>groupId</code> claim. Switching groups re-issues it.</li>
+      <li><strong>Authorisation</strong> — <code>scopeToGroup</code> on every tenant entity and every action; an id from another group is <code>404</code>. This is tested by a suite that creates two groups and proves each cannot see, count, total, or stream the other.</li>
+      <li><strong>Media</strong> — receipts, photos and voice notes are never served from a public path. <code>Range</code> requests are supported so audio scrubs, but every byte passes the cookie and the group check.</li>
+      <li><strong>Rate limits</strong> — already on login, scan and statement; added on <code>sendMessage</code> (60/min) and media upload (20/min) per user.</li>
+      <li><strong>At rest</strong> — the Fly volume is encrypted; bcrypt for passwords; the LLM key and session secret live only in Fly secrets.</li>
+      <li><strong>Erasure</strong> — deleting a group cascades through compositions and detaches nothing: the whole household's rows go, the backup rotates them out within 30 days. This is the GDPR/FADP right to erasure, implemented as one action.</li>
+    </ul>
+    <div class="decision rejected">
+      <span class="k">Not in v1 · end-to-end encryption of chat</span>
+      <p>E2EE would mean the server cannot read messages — and this server's job is to read the household's data: it totals expenses, writes the yearly statement, classifies receipts and answers the calendar. Blinding it to chat while it reads everything else buys an inconsistent promise. If the product ever becomes many strangers rather than households who share a ledger on purpose, revisit with a per-group key held on devices. Say this plainly in the privacy note rather than implying WhatsApp-grade secrecy.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap col">
+    <span class="sec-id">9 · MIGRATION</span>
+    <h2>Four phases, each shippable, none destructive</h2>
+    <p class="lede">The constraint from the brief — do not destroy what works — becomes the plan. Every phase leaves 727 tests green and a deployable tree.</p>
+  </div>
+  <div class="wrap">
+    <div class="phases">
+      <div class="phase"><div class="n">0<small>FOUNDATION</small></div><div><p>Add <code>Groups</code>, <code>Users</code>, <code>Memberships</code>, <code>Conversations</code>, <code>Messages</code>; add a <em>nullable</em> <code>group</code> to every tenant entity; seed one default group and backfill every existing row to it. Regenerate types.</p><p class="gate">gate: cds compile · 478 backend tests unchanged · app boots</p></div></div>
+      <div class="phase"><div class="n">1<small>ISOLATION</small></div><div><p>Session carries <code>groupId</code>. <code>scopeToGroup</code> registered for every tenant entity and action. Registration, invite and join flows. Login page gains "Create a group". Column becomes mandatory.</p><p class="gate">gate: two-group isolation suite · every existing test still passes under the default group</p></div></div>
+      <div class="phase"><div class="n">2<small>CHAT</small></div><div><p>SSE stream, <code>sendMessage</code> / media endpoint, the thread UI with press-to-record, waveform bubbles, unread counts, and the outbox promoted from the scan queue.</p><p class="gate">gate: message round-trip through two browsers in Playwright · voice note recorded, uploaded, played</p></div></div>
+      <div class="phase"><div class="n">3<small>POLISH</small></div><div><p>The UI pass: home grid density, consistent card system across pages, motion on the launcher and chat, dark theme parity, the "Payment run" mobile fix, and copy that speaks in the group's voice.</p><p class="gate">gate: phone screenshots of every page reviewed · no horizontal overflow · Lighthouse ≥ 90</p></div></div>
+    </div>
+  </div>
+  <div class="wrap col">
+    <h3>Delivery pipeline</h3>
+    <p>
+      Unchanged, because it already refuses the mistakes that matter: <code>git commit</code> →
+      CI runs typecheck, both suites and the production build → <code>npm run deploy</code>
+      stamps the commit SHA into the bundle and refuses a dirty tree → Fly builds the image
+      remotely and rolls it out in <code>fra</code> → <code>/health</code> reports the build it is
+      running. Each phase above is a sequence of such deploys, not a big bang.
+    </p>
+  </div>
+</section>
+
+</main>
+
+<footer class="foot">
+  <div class="wrap">TWM-ADR-002 · Two-Way Match · accepted 1 September 2026 · supersedes ADR-001</div>
+</footer>
+
+</body>
+</html>

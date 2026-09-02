@@ -1,2 +1,2 @@
-ID,expense_ID,title,note,occurredOn,kind,pinned
-d0000000-0000-4000-8000-000000000001,e0000000-0000-4000-8000-000000000001,Document #1,"The first posting in a ledger we have been keeping ever since. Booked manually, approved unanimously, never reversed.",2024-06-15,anniversary,true
+ID,expense_ID,title,note,occurredOn,kind,pinned,group_ID
+d0000000-0000-4000-8000-000000000001,e0000000-0000-4000-8000-000000000001,Document #1,"The first posting in a ledger we have been keeping ever since. Booked manually, approved unanimously, never reversed.",2024-06-15,anniversary,true,g0000000-0000-4000-8000-000000000001

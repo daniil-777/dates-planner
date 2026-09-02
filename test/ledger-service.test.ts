@@ -839,6 +839,9 @@ describe('runSettlement() and markSettled()', () => {
     // And the clearing document itself is one figure and some paperwork —
     // asserted as a whole key set, so a column that says who should pay whom
     // cannot creep back in unnoticed.
+    // `group_ID` is the tenant column from TWM-ADR-002 phase 0: present on every household
+    // row, nullable until phase 1 stamps it from the session. The list stays exact on
+    // purpose — it is what keeps owedByA/owedByB/net from ever coming back.
     expect(Object.keys(settlement).sort()).toEqual([
       'ID',
       'approvedBy',
@@ -846,6 +849,7 @@ describe('runSettlement() and markSettled()', () => {
       'createdAt',
       'createdBy',
       'grandTotal',
+      'group_ID',
       'modifiedAt',
       'modifiedBy',
       'period',

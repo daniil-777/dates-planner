@@ -267,3 +267,36 @@ Bottom navigation order on mobile: Scan · Ledger · Events · Memories · More
 - Surprises the current person created show with the "Only you" badge; surprises created
   by anybody else are simply absent (§11.3).
 - Reminder creation from an event: lead time in days plus an optional note.
+
+
+---
+
+## 10. Chat
+
+`/chat` — `app/src/pages/ChatPage.tsx` plus `app/src/pages/chat/`. One thread per group.
+
+- Bubbles: mine right / theirs left, author colour from `Person.colour`, day separators,
+  read as far as the last fetched message. Text, image and audio kinds.
+- **Voice**: press-and-hold on the mic button starts `MediaRecorder` with the platform's
+  preferred container (`audio/webm;codecs=opus`, else `audio/mp4`); an `AnalyserNode`
+  samples ~40 peaks/s into `peaks[]`. Release sends; slide-left cancels; 120 s hard stop.
+  The bubble draws the waveform from `peaks` immediately and only fetches audio on play.
+  `<audio>` plays inline; a single global player so two notes never play at once.
+- **Live**: one `EventSource` on `/api/chat/stream` while the app is open; on a
+  `Messages` event invalidate `['messages', conversationId]`. Poll every 15 s when the
+  stream is unavailable. Unread count on the Chat tile and bottom bar.
+- Offline: sends go through the outbox with an idempotency key; a pending bubble shows a
+  clock, a failed one a retry.
+- Secure context only for recording (same rule as the camera): over plain http the mic
+  button explains why and the text box still works.
+
+## 11. Registration and groups
+
+- `/login` gains **Create account** and **Join with a code**. Creating asks for name and
+  kind — *Two of us*, *A household*, *Friends*, *Family* — nothing else.
+- Settings → **Group**: name, members with roles, the invite code with "Show once / rotate",
+  leave group, and (owner only) delete group with a two-step confirm that spells out erasure.
+- The ShellBar person switcher becomes a **group switcher** when a user has more than one
+  membership; with one, it stays as it is.
+- No screen anywhere asks about orientation. `gender` on the profile is an optional
+  free-text field labelled "How you describe yourself (optional)".
