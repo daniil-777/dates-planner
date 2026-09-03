@@ -88,7 +88,9 @@ export function requireAuthorSecret(env: NodeJS.ProcessEnv = process.env): void 
  * stated so the `String(64)` column and this function cannot drift apart.
  */
 export function authorKey(groupId: string, env: NodeJS.ProcessEnv = process.env): string {
-  return createHmac('sha256', authorSecret(env)).update(DOMAIN + groupId).digest('hex')
+  return createHmac('sha256', authorSecret(env))
+    .update(DOMAIN + groupId)
+    .digest('hex')
 }
 
 /**

@@ -113,7 +113,8 @@ describe('the vocabulary', () => {
     // ADR-002 §6 and ADR-003 §5: the commons must not reintroduce group composition. This
     // fails loudly if anybody ever adds a tag describing the household rather than the place.
     const forbidden = /couple|gay|straight|lesbian|man|woman|male|female|gender|orientation/i
-    for (const tag of PLACE_TAGS) expect(tag, `tag "${tag}" describes people`).not.toMatch(forbidden)
+    for (const tag of PLACE_TAGS)
+      expect(tag, `tag "${tag}" describes people`).not.toMatch(forbidden)
   })
 
   it('narrows unknown codes rather than trusting the wire', () => {
@@ -213,7 +214,7 @@ describe('geohashing', () => {
 
 describe('the map links', () => {
   it('builds keyless universal links for both map apps', () => {
-    const links = mapLinks(47.3769, 8.5417, "Kafi Dihei & Co")
+    const links = mapLinks(47.3769, 8.5417, 'Kafi Dihei & Co')
     expect(links.google).toBe(
       'https://www.google.com/maps/search/?api=1&query=47.376900%2C8.541700',
     )
@@ -256,11 +257,14 @@ describe('the author key', () => {
   })
 
   it('refuses to run in production without a secret of its own', () => {
+    expect(() => requireAuthorSecret({ NODE_ENV: 'production' } as NodeJS.ProcessEnv)).toThrow(
+      /COMMONS_AUTHOR_SECRET/,
+    )
     expect(() =>
-      requireAuthorSecret({ NODE_ENV: 'production' } as NodeJS.ProcessEnv),
-    ).toThrow(/COMMONS_AUTHOR_SECRET/)
-    expect(() =>
-      requireAuthorSecret({ NODE_ENV: 'production', COMMONS_AUTHOR_SECRET: 'short' } as NodeJS.ProcessEnv),
+      requireAuthorSecret({
+        NODE_ENV: 'production',
+        COMMONS_AUTHOR_SECRET: 'short',
+      } as NodeJS.ProcessEnv),
     ).toThrow(/32 characters/)
     expect(() => requireAuthorSecret({ NODE_ENV: 'production', ...env })).not.toThrow()
   })

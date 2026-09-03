@@ -720,6 +720,15 @@ entity PlaceRatingTags {
  */
 entity PlaceStats : cuid {
   place    : Association to Places;
+  /**
+   * The two filter columns are copied here from `Places` on purpose. Discovery orders by
+   * `score` and filters by cell and kind, and a read model that has to join to do that is
+   * not a read model — the index `(geohash6, kind, score DESC)` on this one table answers
+   * "the best restaurants near here" in a single range scan, and the place rows are then
+   * fetched by id for the page that survived, never for the neighbourhood.
+   */
+  geohash6 : String(6);
+  kind     : PlaceKind default 'other';
   /** Distinct households, which by the uniqueness rule is also the rating count. */
   ratings  : Integer default 0;
   starSum  : Integer default 0;

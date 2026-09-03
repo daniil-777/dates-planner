@@ -1,12 +1,12 @@
 # TWM-ADR-003 — The commons: shared places, ratings and date cards
 
-**Status:** accepted, unimplemented. Supersedes nothing; extends ADR-002.
+**Status:** accepted. Phase 0 shipped; phases 1–3 outstanding. Extends ADR-002.
 **Normative contract:** `docs/CONTRACTS.md` §14.
 
 Every household using this app already records where it went, what it cost and whether it
 was a good evening. All of that is trapped in one household. The single most useful thing
-one household could hand another is *"this place worked, here is what to do there, it costs
-about this much"* — and that is the feature.
+one household could hand another is _"this place worked, here is what to do there, it costs
+about this much"_ — and that is the feature.
 
 It is also the first thing this app has ever built that lets data leave a household, so
 most of this document is about how that is done without breaking the promise the rest of
@@ -18,11 +18,11 @@ the app makes.
 
 Three surfaces, one corpus.
 
-| Surface | The question it answers |
-|---|---|
-| **Tonight** | "What do we do this evening?" — three cards, each a restaurant *and* an activity, with a cost band |
-| **Places** | "What is good near us?" — map and list, stars, tags, what worked |
-| **Give back** | "How was it?" — one tap after an event, from the household's own history |
+| Surface       | The question it answers                                                                            |
+| ------------- | -------------------------------------------------------------------------------------------------- |
+| **Tonight**   | "What do we do this evening?" — three cards, each a restaurant _and_ an activity, with a cost band |
+| **Places**    | "What is good near us?" — map and list, stars, tags, what worked                                   |
+| **Give back** | "How was it?" — one tap after an event, from the household's own history                           |
 
 Plus a second deck of cards for **gifts and activities** with no restaurant in them.
 
@@ -33,7 +33,7 @@ Plus a second deck of cards for **gifts and activities** with no restaurant in t
 The request was to share ratings "on Google or Apple Maps". That is not possible, and it is
 worth stating plainly rather than quietly building something else:
 
-- **Google** — the Business Profile API can list reviews and *reply* to them, and explicitly
+- **Google** — the Business Profile API can list reviews and _reply_ to them, and explicitly
   cannot create them. Review creation is restricted to a signed-in Google user in Search or
   Maps, deliberately, as an anti-spam measure. There is no third-party write path, and
   simulating one through automation would violate the platform policy outright.
@@ -82,9 +82,22 @@ made loudly:
 
 ## 5. Decision: anonymous authorship, and k-anonymity on display
 
-`PlaceRatings` stores `group` for exactly two purposes — one rating per group per place, and
-letting a group withdraw its own — and **it is never projected**. Reads never touch that
-table; they read the aggregate.
+`PlaceRatings` needs an author for exactly two purposes — one rating per household per place,
+and letting that household withdraw its own — and it stores **neither the group nor anything
+derived from it in a joinable form**. It stores `authorKey`, an HMAC of the group id under a
+server secret: stable, opaque, unique, and not a foreign key to anything.
+
+That is a stronger claim than "never projected", and deliberately so. A `group_ID` column
+would satisfy both purposes and would also make `JOIN Groups` something a person could write
+six months from now, in a query, a report or a debugging session, turning an anonymous corpus
+into an attributed one by accident. The column does not exist, so the join cannot be written.
+
+The secret has one operational cost that must be stated rather than discovered: **rotating it
+orphans every existing rating.** The rows survive and stay anonymous, and no household can
+amend or withdraw its own any more. It is therefore not rotated on the ordinary schedule; if
+it must be rotated, the ratings are re-keyed in the same migration or abandoned deliberately.
+
+Reads never touch that table at all; they read the aggregate.
 
 **k = 3.** A place shows no stars, no tags and no tips until three distinct groups have
 rated it. Below that it says so. The reason is concrete: "the only household that goes to
@@ -104,7 +117,7 @@ who did it.** A family of five and two women on a third date read the same corpu
 contribute to the same one, and neither can tell which rows came from the other.
 
 That is not only a privacy position. It is the product position: the thing that makes a tip
-useful is the *place*, and sorting tips by who wrote them is how every other app in this
+useful is the _place_, and sorting tips by who wrote them is how every other app in this
 category became worse.
 
 ## 6. Decision: stars to give, Bayes to rank
@@ -126,8 +139,8 @@ says as much. Both are satisfiable at once:
   on write, and it is the difference between a ranking that is useful in month one and one
   that is noise.
 
-Nothing is ever presented as a league table. A card says *"worked for 12 households"*, never
-*"#3 in Zürich"* — celebrate, do not rank.
+Nothing is ever presented as a league table. A card says _"worked for 12 households"_, never
+_"#3 in Zürich"_ — celebrate, do not rank.
 
 ## 7. Decision: structured tags first, prose second
 
@@ -162,8 +175,8 @@ And the part that has to be said out loud: **this schema scales, this deployment
 The store today is one SQLite file on one Fly volume. ADR-002 already names the cutover
 triggers (a 2 GB file, or sustained load); a public commons crosses them far sooner than a
 household ledger ever would. Postgres, with a read replica for discovery, is the plan.
-Nothing in this design assumes SQLite, and nothing in it requires Postgres to *work* — it
-requires Postgres to be *fast at scale*, which is the honest version of the claim.
+Nothing in this design assumes SQLite, and nothing in it requires Postgres to _work_ — it
+requires Postgres to be _fast at scale_, which is the honest version of the claim.
 
 ## 9. Decision: the card is the product
 
@@ -171,7 +184,7 @@ The dossier's advice — make the action tiny, offer three choices, preserve aut
 novelty gently, celebrate rather than rank — is not decoration. It is the interaction spec:
 
 - **Three cards, never one.** One suggestion is an instruction; three is a choice.
-- **A card is a whole evening**: a place to eat *and* something to do, not a search result.
+- **A card is a whole evening**: a place to eat _and_ something to do, not a search result.
 - **Cost is a band, not a price** — `≈ CHF 40–70 for two` — because the number comes from
   what other households actually recorded, and a precise figure would be a lie about a menu
   we have not read.
@@ -199,9 +212,9 @@ novelty gently, celebrate rather than rank — is not decoration. It is the inte
 
 ## 11. Phases
 
-| # | Ships | Gate |
-|---|---|---|
-| 0 | Schema, commons service, ratings + stats + Bayesian score, server-side place search | Two groups rate one place; neither can read the other's row; stats correct |
-| 1 | **Places** — map, list, place page, rate sheet, tag chips, maps deep links | k-anonymity holds under test; keyset pagination over 100 k synthetic places |
-| 2 | **Tonight** — the three-card deck, cost bands, *Plan it* into an Event | Cards render with an empty corpus and with a full one |
-| 3 | Gift and activity decks, share sheet, report/withdraw flows | Report hides a tip within one request; withdraw removes it from stats |
+| #   | Ships                                                                               | Gate                                                                        |
+| --- | ----------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| 0   | Schema, commons service, ratings + stats + Bayesian score, server-side place search | Two groups rate one place; neither can read the other's row; stats correct  |
+| 1   | **Places** — map, list, place page, rate sheet, tag chips, maps deep links          | k-anonymity holds under test; keyset pagination over 100 k synthetic places |
+| 2   | **Tonight** — the three-card deck, cost bands, _Plan it_ into an Event              | Cards render with an empty corpus and with a full one                       |
+| 3   | Gift and activity decks, share sheet, report/withdraw flows                         | Report hides a tip within one request; withdraw removes it from stats       |

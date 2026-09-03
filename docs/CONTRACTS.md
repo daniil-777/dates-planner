@@ -633,3 +633,104 @@ that would embarrass somebody if they leaked.
 their own map. The pairing anybody sees (two women, two men, a man and a woman) is the
 two individual choices side by side. This is **not** an orientation field and must not be
 turned into one; see §12.4 and ADR-002 §6.
+
+---
+
+## 14. The commons — places, ratings and cards (TWM-ADR-003)
+
+Normative for the shared corpus. The reasoning is in `docs/ADR-003-COMMONS.md`; this section
+is what code is held to. **The commons is the only data in this app that is not a single
+household's.** Every rule below exists to keep that exception narrow.
+
+### 14.1 The island rule
+
+```
+Places  PlaceRatings  PlaceRatingTags  PlaceStats  PlaceTagCounts  Ideas
+```
+
+- These entities carry **neither the `tenant` aspect nor `managed`.** No `group` column, so
+  `scopeToGroup` has nothing to narrow and is never registered on them; no `createdBy`, which
+  would otherwise put a login name on an anonymous review.
+- **No association crosses the line**, in either direction. A rating cannot be joined to an
+  expense, an event, a memory or a person, because there is no column to join on.
+- Served from `/api/commons` by `CommonsService`, which projects **no entity that holds an
+  author**. `PlaceRatings` is not exposed in any shape, `@readonly` included.
+- **k = 3** (`ANONYMITY_THRESHOLD`). A place shows no stars, no chips, no cost band and no
+  tips until three distinct households have rated it, and appears in no list or card before
+  then. Below the threshold those fields are **null, never zero** — a client must not be able
+  to render `0.0 ★` for a place nobody has judged.
+- The threshold is applied **on read, never on write**: a place below it still accumulates
+  ratings, or it could never reach three.
+
+### 14.2 Vocabulary (exact strings, ASCII, additive-only)
+
+Shared by CDS, `srv/lib/commons/vocabulary.ts` and the frontend, exactly like §1.1.
+
+```
+tags   quiet lively outdoor view easy_to_talk book_ahead no_booking_needed late_open
+       step_free dog_ok great_food good_value walk_after first_date big_group rainy_day
+       special_occasion surprise_worked
+
+kinds  restaurant cafe bar activity outdoors culture shop other
+
+cost   free under_15 c15_30 c30_60 c60_120 over_120
+```
+
+- At most **6 tags** per rating; unknown codes are dropped, not stored.
+- **Cost bands are per _person_**, never per couple. Nothing in this app may assume a
+  household is two people, and this is the place that would most easily forget it.
+- **No tag may describe the people rather than the place.** No group size, no couple type, no
+  orientation — ADR-002 §6 and ADR-003 §5. `test/commons-lib.test.ts` fails if one appears.
+- Tips: at most **240 characters**, no URL, no `@handle`, refused with a sentence rather than
+  silently stripped.
+
+### 14.3 Ranking
+
+Displayed and ordered by different numbers, on purpose:
+
+| | |
+|---|---|
+| shown | the plain mean, two decimals |
+| ordered | `score = (v·R + m·C) / (v + m)`, rounded to 4 dp |
+
+`v` ratings with mean `R`, global mean `C = 3.9`, prior weight `m = 8`. Rounding to four
+decimals is required, not cosmetic: `score` is a `Decimal(6,4)` and keyset pagination can skip
+or repeat a row at a page boundary if two ties do not tie identically on every engine.
+
+One household is **one voice**: `(place, authorKey)` is unique, and rating again amends.
+
+### 14.4 Geography
+
+`geohash6` (≈1.2 × 0.6 km) on both `Places` and `PlaceStats`. "Near me" is
+`geohash6 IN (<cell + 8 neighbours>)` — nine equalities against one index, identical on SQLite
+and Postgres, no PostGIS. The nine cells over-select; callers filter the returned page by true
+haversine distance. Index: `(geohash6, kind, score DESC)`.
+
+Pagination is **keyset, never offset**: the cursor carries `score|place_ID`, base64url.
+
+### 14.5 Authorship
+
+`PlaceRatings.authorKey = HMAC-SHA256(COMMONS_AUTHOR_SECRET, "twm:commons:author:v1:" + groupId)`,
+hex. Opaque, stable, unique, and not a foreign key to anything.
+
+- **It never crosses the wire.** No response contains it; no request may supply one. A handler
+  that needs "whose rating is this" derives it again from the session.
+- The server refuses to start in production without a secret of at least 32 characters, the
+  same posture as the `AUTH_*` variables.
+- **Rotating the secret orphans every rating** — the rows stay, anonymous, and no household
+  can amend or withdraw its own. Re-key in the same migration or abandon deliberately; see
+  `RUNBOOK.md`.
+
+### 14.6 Cards
+
+`tonight` deals **at most three** evenings, each a place to eat plus either a place to go or an
+`Ideas` card, with the two cost bands combined. Fewer than three is a valid answer; padding the
+deck to reach three is not.
+
+- The deal is a **seeded weighted sample** from the top of the ranking, seeded by
+  `date + authorKey` — stable for the household for the day, different between households, and
+  reaching about twelve deep so the same evening is not proposed all week.
+- Places a household has already rated are **down-weighted, never hidden**.
+- The line under a card names the corpus (`"worked for 12 households"`) and **never a rank**.
+- Google and Apple are **destinations, not stores**: every card carries keyless universal
+  links out. Nothing is ever written back to either — neither platform permits it.

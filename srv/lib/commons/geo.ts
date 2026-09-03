@@ -154,19 +154,13 @@ const EARTH_RADIUS_M = 6_371_008.8
  * Haversine, which is accurate to a few metres over the few kilometres this is ever asked
  * about, and cheap enough to run over a page of rows that the index already narrowed.
  */
-export function distanceMetres(
-  aLat: number,
-  aLon: number,
-  bLat: number,
-  bLon: number,
-): number {
+export function distanceMetres(aLat: number, aLon: number, bLat: number, bLon: number): number {
   const toRadians = Math.PI / 180
   const dLat = (bLat - aLat) * toRadians
   const dLon = (bLon - aLon) * toRadians
   const lat1 = aLat * toRadians
   const lat2 = bLat * toRadians
-  const h =
-    Math.sin(dLat / 2) ** 2 + Math.sin(dLon / 2) ** 2 * Math.cos(lat1) * Math.cos(lat2)
+  const h = Math.sin(dLat / 2) ** 2 + Math.sin(dLon / 2) ** 2 * Math.cos(lat1) * Math.cos(lat2)
   return 2 * EARTH_RADIUS_M * Math.asin(Math.min(1, Math.sqrt(h)))
 }
 

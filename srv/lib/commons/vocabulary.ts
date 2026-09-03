@@ -127,3 +127,28 @@ export const ANONYMITY_THRESHOLD = 3
 
 /** The longest a tip may be. Long enough for a sentence, short enough not to be a story. */
 export const MAX_TIP_LENGTH = 240
+
+/**
+ * Two cost bands added together, as a band.
+ *
+ * An evening is a meal and something to do, and the card shows one figure for both. Adding
+ * bands means adding *ranges*, so this works on the midpoints and re-bands the total — the
+ * open-ended top band is treated as its floor, because "over 120 plus over 120" is still
+ * usefully "over 120" and any larger claim would be invented.
+ */
+export function combineCostBands(a: CostBand | null, b: CostBand | null): CostBand {
+  const midpoint = (band: CostBand | null): number => {
+    if (band === null) return 0
+    const { from, to } = COST_RANGE[band]
+    return to === null ? from : (from + to) / 2
+  }
+  return costBandOf(midpoint(a) + midpoint(b))
+}
+
+/** How a band reads on a card, in the household's own currency. Per person, always. */
+export function costBandLabel(band: CostBand | null, currency = 'CHF'): string {
+  if (band === null) return 'no idea yet'
+  if (band === 'free') return 'free'
+  const { from, to } = COST_RANGE[band]
+  return to === null ? `${currency} ${from}+ each` : `${currency} ${from}\u2013${to} each`
+}
