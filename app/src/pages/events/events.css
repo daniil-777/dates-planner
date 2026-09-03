@@ -444,7 +444,7 @@
   gap: 0.3rem;
   flex: 0 0 auto;
   padding: 0.1rem 0.5rem;
-  border: 1px solid var(--sapInformativeBorderColor, #0070f2);
+  border: 1px solid var(--sapInformationBorderColor, #0070f2);
   border-radius: var(--twm-radius-pill);
   background: var(--sapInformationBackground, rgba(0, 112, 242, 0.06));
   color: var(--sapInformativeTextColor, #0064d9);
@@ -479,7 +479,7 @@
 .ev-secret {
   margin: 0;
   padding: var(--twm-space-m) var(--twm-space-l);
-  border-inline-start: 3px solid var(--sapInformativeBorderColor, #0070f2);
+  border-inline-start: 3px solid var(--sapInformationBorderColor, #0070f2);
   border-radius: 0 var(--twm-radius-s) var(--twm-radius-s) 0;
   background: var(--sapInformationBackground, rgba(0, 112, 242, 0.06));
   font-size: 0.875rem;

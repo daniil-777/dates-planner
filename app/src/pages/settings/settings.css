@@ -517,3 +517,57 @@
   border-color: var(--sapButton_Emphasized_Background, #0070f2);
   background: var(--sapList_SelectionBackgroundColor, #e5f0fa);
 }
+
+/* ------------------------------------------------------------------ *
+ *  Household: the invitation, and the other households one belongs to
+ * ------------------------------------------------------------------ */
+
+.household__invite {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.6rem;
+}
+
+/* Read aloud across a table, so: large, spaced, and in a face where a letter
+   cannot be mistaken for a digit. */
+.household__code {
+  margin: 0;
+  align-self: stretch;
+  font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: clamp(1.6rem, 8vw, 2.1rem);
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-indent: 0.22em; /* the trailing space would otherwise pull it off-centre */
+  text-align: center;
+  color: var(--sapContent_Selected_TextColor, #0070f2);
+  background: var(--sapBackgroundColor, #f5f6f7);
+  border: 1px solid var(--sapList_BorderColor, #d9d9d9);
+  border-radius: 10px;
+  padding: 0.7rem 0.5rem;
+}
+
+.household__note {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: var(--sapContent_LabelColor, #556b82);
+}
+
+.household__others {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.9rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid var(--sapList_BorderColor, #d9d9d9);
+}
+
+.household__othersLabel {
+  margin: 0;
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--sapContent_LabelColor, #556b82);
+}

@@ -18,6 +18,7 @@ import { BankImport } from './settings/BankImport'
 import { OnboardingWizard } from './settings/OnboardingWizard'
 import { AddPerson, PersonEditor } from './settings/PeopleSettings'
 import { PlannerCard } from './settings/PlannerCard'
+import { HouseholdCard } from './settings/HouseholdCard'
 import { LanguageCard } from './settings/LanguageCard'
 import { SessionCard } from './settings/SessionCard'
 import { SettingsCard } from './settings/SettingsCard'
@@ -70,6 +71,8 @@ export function SettingsPage() {
             the same flat.
           </p>
         </div>
+
+        <HouseholdCard />
 
         <SettingsCard
           icon="group"

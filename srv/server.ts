@@ -1387,6 +1387,8 @@ interface MePayload {
   userId: string | null
   groupId: string | null
   groupName: string | null
+  /** The preset the household was created with — copy for the Settings card, never logic. */
+  kind: string | null
   role: 'owner' | 'member' | null
   /** Every household this account belongs to, so the switcher needs no second request. */
   memberships: Array<{ groupId: string; groupName: string; role: string; personName: string }>
@@ -1440,6 +1442,7 @@ async function authMe(req: Request, res: Response): Promise<void> {
     userId: session?.userId ?? null,
     groupId: membership?.groupId ?? null,
     groupName: membership?.groupName ?? null,
+    kind: membership?.kind ?? null,
     role: membership?.role ?? null,
     memberships,
   }

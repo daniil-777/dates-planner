@@ -48,6 +48,7 @@ function sessionFrom(user: AuthUser | null): Session {
     userId: null,
     groupId: user === null ? null : 'g-1',
     groupName: user === null ? null : 'Our household',
+    kind: user === null ? null : 'couple',
     role: user === null ? null : 'owner',
     personName: user?.displayName ?? null,
     memberships: [],

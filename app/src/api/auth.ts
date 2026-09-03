@@ -212,6 +212,8 @@ export interface Session {
   userId: string | null
   groupId: string | null
   groupName: string | null
+  /** The preset the household was created with. Copy only — never behaviour. */
+  kind: string | null
   role: 'owner' | 'member' | null
   personName: string | null
   memberships: Membership[]
@@ -236,6 +238,7 @@ export async function session(): Promise<Session> {
     userId: text(record.userId),
     groupId: text(record.groupId),
     groupName: text(record.groupName),
+    kind: text(record.kind),
     role: record.role === 'owner' || record.role === 'member' ? record.role : null,
     personName: text(record.personName),
     memberships: Array.isArray(record.memberships)

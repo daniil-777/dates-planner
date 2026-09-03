@@ -99,6 +99,13 @@
   flex: 1 1 auto;
 }
 
+/* The trailing action keeps its whole label. Everything in this row is happy to shrink,
+   so without this the button is what gives and "New reminder" arrives as "Ne…"; the text
+   block beside it has min-width: 0 precisely so it can wrap instead. */
+.cal-next__row > ui5-button {
+  flex: 0 0 auto;
+}
+
 .cal-next__title {
   font-weight: 600;
   overflow-wrap: anywhere;
@@ -183,13 +190,13 @@
 }
 
 .cal-day--today {
-  border-color: var(--sapContent_BadgeBackground, #0070f2);
+  border-color: var(--sapBrandColor, #0070f2);
   font-weight: 700;
 }
 
 .cal-day--selected {
   background: var(--sapList_SelectionBackgroundColor, #e3f0ff);
-  border-color: var(--sapContent_BadgeBackground, #0070f2);
+  border-color: var(--sapBrandColor, #0070f2);
 }
 
 .cal-day__num {
@@ -210,13 +217,13 @@
   width: 0.375rem;
   height: 0.375rem;
   border-radius: 50%;
-  background: var(--sapContent_BadgeBackground, #0070f2);
+  background: var(--sapBrandColor, #0070f2);
 }
 
 /* A surprise only this viewer can see is the same dot, hollow. */
 .cal-dot--only {
   background: transparent;
-  border: 1px solid var(--sapContent_BadgeBackground, #0070f2);
+  border: 1px solid var(--sapBrandColor, #0070f2);
 }
 
 /* A reminder is deliberately not a dot: a diamond reads as a different kind of thing
@@ -225,12 +232,12 @@
   width: 0.375rem;
   height: 0.375rem;
   transform: rotate(45deg);
-  background: var(--sapIndicationColor_6, #e76500);
+  background: var(--sapCriticalColor, #e76500);
 }
 
 .cal-mark--done {
   background: transparent;
-  border: 1px solid var(--sapIndicationColor_6, #e76500);
+  border: 1px solid var(--sapCriticalColor, #e76500);
 }
 
 .cal-day__more {
@@ -271,7 +278,7 @@
 }
 
 .cal-list__day--today {
-  border-color: var(--sapContent_BadgeBackground, #0070f2);
+  border-color: var(--sapBrandColor, #0070f2);
 }
 
 .cal-list__head {
@@ -334,12 +341,12 @@
 }
 
 .cal-entry__icon {
-  color: var(--sapContent_IconColor, #0070f2);
+  color: var(--sapBrandColor, #0070f2);
   flex: 0 0 auto;
 }
 
 .cal-entry--reminder .cal-entry__icon {
-  color: var(--sapIndicationColor_6, #e76500);
+  color: var(--sapCriticalColor, #e76500);
 }
 
 .cal-entry--done .cal-entry__title {
