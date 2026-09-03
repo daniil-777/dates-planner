@@ -595,3 +595,181 @@ entity BodyZones: cuid, managed, tenant {
   level : Integer;
   note  : String(200);
 }
+
+/* ------------------------------------------------------------------ *
+ *  The commons   (TWM-ADR-003)
+ * ------------------------------------------------------------------ *
+ *
+ *  The one part of this database that is NOT a household's private data, and
+ *  the only place where something a household typed can be read by strangers.
+ *  Everything about it is arranged so that stays true in the narrow sense and
+ *  in no wider one.
+ *
+ *  Three rules hold for every entity below, and each is visible in the code
+ *  rather than left to discipline:
+ *
+ *  1. **No `tenant` aspect.** These rows have no `group` column, so
+ *     `scopeToGroup` has nothing to narrow and is never registered on them.
+ *     That is the whole difference between the commons and the rest of the app,
+ *     and it is one word — its absence.
+ *
+ *  2. **No `managed` aspect.** CAP's `managed` stamps `createdBy` and
+ *     `modifiedBy` with the login name. On a household table that is an audit
+ *     trail; here it would be a byline on an anonymous review. `createdAt` is
+ *     declared by hand where it is wanted, and the two `*By` columns do not
+ *     exist to be leaked.
+ *
+ *  3. **No association to a tenant entity.** A published rating cannot be
+ *     joined to an expense, an event, a memory or a person, because there is no
+ *     column to join on. Authorship is an opaque `authorKey` — an HMAC of the
+ *     group id under a server secret — which is enough to enforce one rating per
+ *     group and to let a group withdraw its own, and is not enough to identify
+ *     anybody or to join anything. See `srv/lib/commons/author.ts`.
+ */
+
+/** Roughly what an evening at a place costs **one person**, not a couple: this app
+ *  has never assumed a household is two people and must not start here. */
+type CostBand : String(12) enum {
+  free;
+  under_15;
+  c15_30;
+  c30_60;
+  c60_120;
+  over_120;
+}
+
+type PlaceKind : String(20) enum {
+  restaurant;
+  cafe;
+  bar;
+  activity;
+  outdoors;
+  culture;
+  shop;
+  other;
+}
+
+/**
+ * A place in the shared corpus. Identity comes from OpenStreetMap where there is
+ * an id for it, and from rounded coordinates where there is not (ADR-003 §3).
+ */
+entity Places : cuid {
+  @mandatory
+  name      : String(200);
+  kind      : PlaceKind default 'other';
+  @mandatory
+  lat       : Double;
+  @mandatory
+  lon       : Double;
+  /**
+   * Six-character geohash, about a 1.2 km cell. "Near me" is a prefix match over
+   * the nine cells around a point, which is an index range scan on SQLite today
+   * and on Postgres later — no PostGIS, no extension, no rewrite (ADR-003 §8).
+   */
+  @mandatory
+  geohash6  : String(6);
+  city      : String(120);
+  /** ISO 3166-1 alpha-2, upper case. */
+  country   : String(2);
+  /** `node` | `way` | `relation`, and the OSM id, when the place came from OSM. */
+  osmType   : String(10);
+  osmId     : String(24);
+  createdAt : Timestamp;
+  stats     : Composition of one PlaceStats
+                on stats.place = $self;
+  ratings   : Composition of many PlaceRatings
+                on ratings.place = $self;
+}
+
+/**
+ * One household's verdict on one place. Never projected into any read model:
+ * discovery reads `PlaceStats`, and this table exists to be aggregated, to be
+ * unique per author, and to be withdrawn.
+ */
+entity PlaceRatings : cuid {
+  place     : Association to Places;
+  /**
+   * HMAC of the rating group's id. Opaque, stable, and unique together with
+   * `place` — which is what enforces one rating per household per place, and
+   * what lets that household take it back later.
+   */
+  @mandatory
+  authorKey : String(64);
+  @mandatory @assert.range: [1, 5]
+  stars     : Integer;
+  costBand  : CostBand;
+  /** Optional, 240 characters, published only above the k-anonymity threshold. */
+  tip       : String(240);
+  /** Set when somebody reports the tip; a reported tip is hidden, not deleted. */
+  tipHidden : Boolean default false;
+  createdAt : Timestamp;
+  tags      : Composition of many PlaceRatingTags
+                on tags.rating = $self;
+}
+
+/** A chip from the fixed vocabulary in CONTRACTS.md §14.2. */
+entity PlaceRatingTags {
+  key rating : Association to PlaceRatings;
+  key tag    : String(24);
+}
+
+/**
+ * The read model, denormalised and written in the same transaction as a rating.
+ * Discovery is one indexed lookup here and never an aggregate over `PlaceRatings`
+ * — which is the whole of the scaling story (ADR-003 §8).
+ */
+entity PlaceStats : cuid {
+  place    : Association to Places;
+  /** Distinct households, which by the uniqueness rule is also the rating count. */
+  ratings  : Integer default 0;
+  starSum  : Integer default 0;
+  s1       : Integer default 0;
+  s2       : Integer default 0;
+  s3       : Integer default 0;
+  s4       : Integer default 0;
+  s5       : Integer default 0;
+  /** The plain mean, shown. One decimal is all anybody reads. */
+  mean     : Decimal(3, 2) default 0;
+  /**
+   * The mean shrunk toward the global mean — what everything is ordered by, so a
+   * single five-star rating cannot outrank forty at 4.6 (ADR-003 §6).
+   */
+  score    : Decimal(6, 4) default 0;
+  /** How many published tips this place has, above the threshold. */
+  tips     : Integer default 0;
+  /** The commonest cost band, for the card. Null until anybody has said. */
+  costBand : CostBand;
+  changedAt : Timestamp;
+}
+
+/** Tag counts per place: the read model tag filtering orders by. */
+entity PlaceTagCounts {
+  key place : Association to Places;
+  key tag   : String(24);
+  count     : Integer default 0;
+}
+
+/**
+ * A card in one of the decks — an activity or a gift idea. Seeded, and later
+ * community-contributed. Not a place: a card says what to *do*, and may or may
+ * not name somewhere to do it.
+ */
+entity Ideas : cuid {
+  @mandatory
+  title     : String(120);
+  /** One sentence. What you would actually do. */
+  summary   : String(240);
+  deck      : String(20) enum {
+    activity;
+    gift;
+  } default 'activity';
+  kind      : PlaceKind default 'activity';
+  costBand  : CostBand;
+  /** Chips from the same vocabulary the ratings use. */
+  tags      : String(200);
+  /** Minutes, roughly, so an evening can be assembled without overrunning it. */
+  minutes   : Integer;
+  /** Seeded rows are curated and never withdrawn; contributed ones can be. */
+  seeded    : Boolean default true;
+  createdAt : Timestamp;
+}
