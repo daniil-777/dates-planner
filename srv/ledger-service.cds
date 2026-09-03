@@ -78,6 +78,19 @@ service LedgerService @(path: '/api/ledger') {
   /** Mood readings — manual taps and camera detections alike. The photo is never stored. */
   entity Moods             as projection on twm.Moods;
 
+  /**
+   * The household's thread, and what has been said in it.
+   *
+   * `Messages` carries the media stream the same way `Receipts` and `EventPhotos` do, so a
+   * voice note is fetched from `/api/ledger/Messages(<id>)/media` and never from a public
+   * path. Writing a message goes through the `sendMessage` action rather than a plain
+   * CREATE: the action is where the size, duration and mime limits live, and a raw insert
+   * would walk straight past them.
+   */
+  entity Conversations     as projection on twm.Conversations;
+
+  entity Messages          as projection on twm.Messages;
+
   /* ------------------------------------------------------------- posting */
 
   /**
@@ -203,6 +216,35 @@ service LedgerService @(path: '/api/ledger') {
 
   /** Ticks a reminder off. Idempotent: a second tap changes nothing. */
   action   completeReminder(ID : UUID)                                                     returns Reminders;
+
+  /**
+   * Say something. `kind` decides which of the remaining arguments matter:
+   * `text` uses `body`; `audio` and `image` use `media`/`mediaType`, and audio also
+   * carries `durationMs` and `peaks` — a JSON array of amplitudes captured while
+   * recording, so a thread draws the waveform before fetching a byte of audio.
+   */
+  action   sendMessage(conversationId : UUID, kind : String, body : String, media : LargeBinary, mediaType : String, durationMs : Integer, peaks : String) returns Messages;
+
+  /** The thread, newest last, with the author's name and colour already joined on. */
+  function messages(conversationId : UUID, since : String)                                 returns array of {
+    ID          : UUID;
+    at          : Timestamp;
+    kind        : String;
+    body        : String;
+    mediaType   : String;
+    durationMs  : Integer;
+    peaks       : String;
+    authorId    : UUID;
+    authorName  : String;
+    authorColour : String;
+    mine        : Boolean;
+  };
+
+  /** The one conversation this household talks in, created with the household. */
+  function conversation()                                                                  returns {
+    ID    : UUID;
+    title : String;
+  };
 
   /**
    * Everything the calendar needs for one window, in a single call.

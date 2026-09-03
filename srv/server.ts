@@ -80,6 +80,13 @@ import {
 import { describeProvider } from './lib/llm'
 import { migrate, refreshViews } from './lib/migrate'
 import {
+  addChatListener,
+  CHAT_HEARTBEAT_MS,
+  chatListenerCount,
+  replayChat,
+  type ChatEvent,
+} from './lib/chat-stream'
+import {
   createGroup,
   currentInvite,
   GroupError,
@@ -527,6 +534,8 @@ interface HealthPayload {
    * build. The Version card compares it with the stamp inside the bundle a device loaded.
    */
   build: BuildStamp | null
+  /** How many browsers are holding a chat stream open. Useful when one says nothing arrives. */
+  chatListeners: number
 }
 
 /**
@@ -546,6 +555,7 @@ function health(_req: Request, res: Response): void {
     model: modelTrainedAt(),
     docai: getDocAiClient().mode,
     llm: describeProvider(),
+    chatListeners: chatListenerCount(),
     build: readBuildStamp(BUILD_STAMP_PATH),
   }
   // A cached health check is a lie about the present.
@@ -1058,6 +1068,7 @@ function mountAuthRoutes(app: express.Application): void {
   })
 
   mountGroupRoutes(app)
+  mountChatStream(app)
 }
 
 /* ------------------------------------------------------------------ *
@@ -1221,6 +1232,95 @@ function publicAccount(account: AccountRow): Record<string, unknown> {
 function value(payload: unknown, key: string): unknown {
   if (typeof payload !== 'object' || payload === null) return undefined
   return (payload as Record<string, unknown>)[key]
+}
+
+/**
+ * `GET /api/chat/stream` — server-sent events for the caller's household.
+ *
+ * The response never ends: it is held open, written to when somebody says something, and
+ * closed only when the browser goes away. Three things that are easy to get wrong and are
+ * done deliberately here:
+ *
+ *  - **`X-Accel-Buffering: no`.** A reverse proxy that buffers will hold events until its
+ *    buffer fills, which turns a live thread into one that updates every few minutes. Fly's
+ *    proxy honours this header, and so does nginx if one ever sits in front.
+ *  - **A heartbeat comment.** An idle connection is closed by proxies and by phones going
+ *    to sleep; a `:` line every 25 seconds keeps it alive and costs two bytes.
+ *  - **`Last-Event-ID`.** The browser sends it on reconnect, and anything still in the
+ *    replay window is delivered rather than missed, so a tunnel dropping does not silently
+ *    lose a message.
+ *
+ * Events carry ids only — the client fetches what changed through the ordinary
+ * group-scoped read, which is what keeps authorisation in one place.
+ */
+function mountChatStream(app: express.Application): void {
+  app.get('/api/chat/stream', (req, res, next) => {
+    void streamChat(req, res).catch(next)
+  })
+}
+
+async function streamChat(req: Request, res: Response): Promise<void> {
+  const session = verifySessionToken(readSessionToken(req.headers.cookie))
+  const account = credentials === null ? null : await identify(req, credentials)
+  if (credentials !== null && account === null) {
+    res.status(401).json({ error: { code: 'unauthenticated', message: 'sign in first' } })
+    return
+  }
+
+  // Which household to listen to. An account session names it; anything else — the
+  // configured AUTH_* logins, or the open door — belongs to the seeded household, which
+  // is what `LedgerService` resolves such a request to as well.
+  const groupId = session?.groupId ?? (await defaultGroupId())
+  if (groupId === null) {
+    res.status(404).json({ error: { code: 'no_household', message: 'no household to listen to' } })
+    return
+  }
+
+  res.status(200)
+  res.setHeader('Content-Type', 'text/event-stream; charset=utf-8')
+  res.setHeader('Cache-Control', 'no-cache, no-transform')
+  res.setHeader('Connection', 'keep-alive')
+  res.setHeader('X-Accel-Buffering', 'no')
+  res.flushHeaders?.()
+
+  const write = (event: ChatEvent): void => {
+    res.write(`id: ${event.id}\n`)
+    res.write(`event: message\n`)
+    res.write(`data: ${JSON.stringify(event)}\n\n`)
+  }
+
+  // Anything missed while the connection was down, before anything new.
+  const lastSeen = Number(req.headers['last-event-id'] ?? 0)
+  if (Number.isFinite(lastSeen) && lastSeen > 0) {
+    for (const missed of replayChat(groupId, lastSeen)) write(missed)
+  }
+  res.write(': listening\n\n')
+
+  const remove = addChatListener({ groupId, send: write })
+  const heartbeat = setInterval(() => {
+    // A comment line: ignored by EventSource, enough to keep a proxy from closing us.
+    res.write(': ping\n\n')
+  }, CHAT_HEARTBEAT_MS)
+
+  const close = (): void => {
+    clearInterval(heartbeat)
+    remove()
+  }
+  req.on('close', close)
+  req.on('error', close)
+}
+
+/** The seeded household, for a listener whose session names none. */
+async function defaultGroupId(): Promise<string | null> {
+  try {
+    const rows = (await SELECT.from('twowaymatch.Groups')
+      .columns('ID')
+      .where({ isDefault: true })) as Array<{ ID?: string }>
+    const marked = rows.map(row => String(row.ID)).sort()[0]
+    return marked ?? null
+  } catch {
+    return null
+  }
 }
 
 /**

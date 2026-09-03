@@ -43,6 +43,9 @@ const SettingsPage = lazyPage(() => import('./pages/SettingsPage'), 'SettingsPag
 // The engineering write-up. Lazy because it is a 60 KB iframe host nobody loads on a
 // cold start, and it must never sit in the first-paint bundle.
 const HowItWorksPage = lazyPage(() => import('./pages/HowItWorksPage'), 'HowItWorksPage')
+// Lazy like the rest: the thread pulls in a recorder and a waveform nobody needs on the
+// first paint of the launcher.
+const ChatPage = lazyPage(() => import('./pages/ChatPage'), 'ChatPage')
 
 interface BoundaryState {
   error: unknown
@@ -82,24 +85,25 @@ export function App() {
   return (
     <AuthGate>
       <AppShell>
-      <RouteErrorBoundary>
-        <Suspense fallback={<LoadingSkeleton rows={4} />}>
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/scan/*" element={<ScanPage />} />
-            <Route path="/ledger/*" element={<LedgerPage />} />
-            <Route path="/events" element={<EventsPage />} />
-            <Route path="/events/:id" element={<EventsPage />} />
-            <Route path="/calendar/*" element={<CalendarPage />} />
-            <Route path="/memories/*" element={<MemoriesPage />} />
-            <Route path="/mood" element={<MoodPage />} />
-            <Route path="/statement/*" element={<StatementPage />} />
-            <Route path="/settings/*" element={<SettingsPage />} />
-            <Route path="/how-it-works" element={<HowItWorksPage />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </Suspense>
-      </RouteErrorBoundary>
+        <RouteErrorBoundary>
+          <Suspense fallback={<LoadingSkeleton rows={4} />}>
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/scan/*" element={<ScanPage />} />
+              <Route path="/ledger/*" element={<LedgerPage />} />
+              <Route path="/events" element={<EventsPage />} />
+              <Route path="/events/:id" element={<EventsPage />} />
+              <Route path="/calendar/*" element={<CalendarPage />} />
+              <Route path="/memories/*" element={<MemoriesPage />} />
+              <Route path="/mood" element={<MoodPage />} />
+              <Route path="/statement/*" element={<StatementPage />} />
+              <Route path="/settings/*" element={<SettingsPage />} />
+              <Route path="/chat" element={<ChatPage />} />
+              <Route path="/how-it-works" element={<HowItWorksPage />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Suspense>
+        </RouteErrorBoundary>
       </AppShell>
     </AuthGate>
   )

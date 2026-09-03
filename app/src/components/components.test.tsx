@@ -257,6 +257,7 @@ describe('AppShell', () => {
       '/ledger',
       '/events',
       '/memories',
+      '/chat',
       '/calendar',
       '/statement',
       '/settings',

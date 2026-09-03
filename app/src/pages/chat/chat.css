@@ -1,0 +1,293 @@
+/**
+ * The thread.
+ *
+ * Colours come from the UI5 theme variables the rest of the app uses, so this follows
+ * sap_horizon and sap_horizon_dark without a second palette of its own. The two literals
+ * are the brand blue for one's own bubbles and the author's colour, which arrives per
+ * message as an inline style.
+ */
+
+.chat {
+  display: flex;
+  flex-direction: column;
+  /* The composer sits at the bottom and the thread scrolls between; the page itself never
+     scrolls, which is what keeps the input reachable with a thumb. */
+  height: 100%;
+  min-height: 0;
+}
+
+.chat__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.9rem 1rem 0.7rem;
+  border-bottom: 1px solid var(--sapList_BorderColor, #d9d9d9);
+}
+
+.chat__title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--sapTitleColor, #1d2d3e);
+}
+
+.chat__sub {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.15rem 0 0;
+  font-size: 0.8rem;
+  color: var(--sapContent_LabelColor, #556b82);
+}
+
+.chat__dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--sapContent_LabelColor, #556b82);
+}
+
+.chat__dot--live {
+  background: var(--sapPositiveColor, #256f3a);
+}
+
+.chat__thread {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 1rem 0.9rem 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.chat__day {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+/* A hairline with the date sitting in it. */
+.chat__daymark {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0.9rem 0 0.35rem;
+  font-size: 0.75rem;
+  color: var(--sapContent_LabelColor, #556b82);
+}
+
+.chat__daymark::before,
+.chat__daymark::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--sapList_BorderColor, #d9d9d9);
+}
+
+.chat__row {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.45rem;
+  max-width: 88%;
+}
+
+.chat__row--mine {
+  align-self: flex-end;
+  flex-direction: row-reverse;
+}
+
+.chat__bubble {
+  position: relative;
+  padding: 0.5rem 0.7rem 1.35rem;
+  border-radius: 14px 14px 14px 4px;
+  background: var(--sapTile_Background, #fff);
+  border: 1px solid var(--sapList_BorderColor, #d9d9d9);
+  min-width: 4.5rem;
+}
+
+.chat__row--mine .chat__bubble {
+  border-radius: 14px 14px 4px 14px;
+  background: color-mix(in srgb, #0070f2 12%, var(--sapTile_Background, #fff));
+  border-color: color-mix(in srgb, #0070f2 28%, transparent);
+}
+
+.chat__author {
+  margin: 0 0 0.15rem;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--sapContent_LabelColor, #556b82);
+}
+
+.chat__text {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  color: var(--sapTextColor, #1d2d3e);
+  /* A pasted URL must wrap rather than widen the bubble past the screen. */
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+/* Tucked into the padding reserved above, so it never reflows the text. */
+.chat__time {
+  position: absolute;
+  right: 0.7rem;
+  bottom: 0.4rem;
+  font-size: 0.68rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--sapContent_LabelColor, #556b82);
+}
+
+/* ---------------------------------------------------------------- voice */
+
+.voice {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-width: 11rem;
+}
+
+.voice__play {
+  flex: 0 0 auto;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  border: 0;
+  background: #0070f2;
+  color: #fff;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.voice__play:focus-visible {
+  outline: 2px solid var(--sapContent_FocusColor, #0070f2);
+  outline-offset: 2px;
+}
+
+.voice__wave {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 1.6rem;
+}
+
+.voice__bar {
+  flex: 1 1 auto;
+  min-width: 2px;
+  border-radius: 1px;
+  background: color-mix(in srgb, #0070f2 55%, transparent);
+}
+
+.voice__bar--live {
+  background: #f31ded;
+}
+
+.voice__len {
+  flex: 0 0 auto;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--sapContent_LabelColor, #556b82);
+}
+
+/* ------------------------------------------------------------- composer */
+
+.chat__composer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.8rem calc(0.6rem + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--sapList_BorderColor, #d9d9d9);
+  background: var(--sapObjectHeader_Background, var(--sapBackgroundColor, #fff));
+}
+
+.chat__input {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 2.75rem;
+  padding: 0 0.85rem;
+  border-radius: 999px;
+  border: 1px solid var(--sapField_BorderColor, #b3b3b3);
+  background: var(--sapField_Background, #fff);
+  color: var(--sapTextColor, #1d2d3e);
+  /* 16px or iOS Safari zooms the page the moment this is focused. */
+  font-size: 16px;
+}
+
+.chat__input:focus-visible {
+  outline: 2px solid var(--sapContent_FocusColor, #0070f2);
+  outline-offset: 1px;
+}
+
+.chat__mic,
+.chat__send,
+.chat__cancel {
+  flex: 0 0 auto;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 50%;
+  border: 0;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  background: #0070f2;
+  color: #fff;
+}
+
+.chat__cancel {
+  background: transparent;
+  color: var(--sapContent_LabelColor, #556b82);
+}
+
+.chat__send:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.chat__mic:focus-visible,
+.chat__send:focus-visible,
+.chat__cancel:focus-visible {
+  outline: 2px solid var(--sapContent_FocusColor, #0070f2);
+  outline-offset: 2px;
+}
+
+.chat__recording {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+}
+
+.chat__timer {
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--sapNegativeColor, #aa0808);
+  font-weight: 600;
+}
+
+.chat__hint {
+  margin: 0;
+  padding: 0 1rem 0.8rem;
+  font-size: 0.82rem;
+  color: var(--sapContent_LabelColor, #556b82);
+}
+
+.chat__srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chat__thread {
+    scroll-behavior: auto;
+  }
+}

@@ -19,6 +19,7 @@
  * | Memories | `#F31DED` | Gifts |
  * | Statement | `#256F3A` | Subscriptions |
  * | Settings | `#5B738B` | Home |
+ * | Chat | `#D20A0A` | Health |
  * | How it works | `#A45D00` | Cafes |
  *
  * A tile's accent is passed to CSS as `--home-accent` and used for the icon, the rule
@@ -27,7 +28,15 @@
  */
 
 export type HomeTileId =
-  | 'scan' | 'mood' | 'ledger' | 'events' | 'calendar' | 'memories' | 'statement' | 'settings'
+  | 'scan'
+  | 'mood'
+  | 'ledger'
+  | 'events'
+  | 'calendar'
+  | 'memories'
+  | 'statement'
+  | 'settings'
+  | 'chat'
   | 'howItWorks'
 
 export interface HomeTileSpec {
@@ -111,6 +120,14 @@ export const HOME_TILES: readonly HomeTileSpec[] = [
     icon: 'action-settings',
     accent: '#5B738B',
     hint: 'People, model, data',
+  },
+  {
+    id: 'chat',
+    to: '/chat',
+    label: 'Chat',
+    icon: 'discussion',
+    accent: '#D20A0A',
+    hint: 'Say something',
   },
   {
     id: 'howItWorks',

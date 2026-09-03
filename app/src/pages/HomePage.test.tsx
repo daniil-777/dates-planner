@@ -243,6 +243,7 @@ describe('the home grid', () => {
       '/memories',
       '/statement',
       '/settings',
+      '/chat',
       '/how-it-works',
     ])
 
@@ -352,10 +353,14 @@ describe('the home grid', () => {
     // constants with nothing to wait for: the write-up tile (the article is a static
     // asset) and the mood tile (its figure is an invitation, not a number) — shimmering
     // on either would be a lie.
-    const awaited = HOME_TILES.filter(spec => spec.id !== 'howItWorks' && spec.id !== 'mood')
+    // ...and the chat tile, whose figure is an invitation too: there is no unread count
+    // until the app keeps a read marker.
+    const STATIC_FIGURES = new Set(['howItWorks', 'mood', 'chat'])
+    const awaited = HOME_TILES.filter(spec => !STATIC_FIGURES.has(spec.id))
     expect(screen.getAllByTestId('home-tile-shimmer')).toHaveLength(awaited.length)
     expect(tile('howItWorks')).not.toHaveAttribute('aria-busy', 'true')
     expect(tile('mood')).not.toHaveAttribute('aria-busy', 'true')
+    expect(tile('chat')).not.toHaveAttribute('aria-busy', 'true')
     // The destinations are reachable while their numbers are still in the post.
     expect(tile('ledger')).toHaveAttribute('href', '/ledger')
     expect(tile('ledger')).toHaveAttribute('aria-busy', 'true')

@@ -39,6 +39,7 @@
 import cds from '@sap/cds'
 import type { Request } from '@sap/cds'
 import { readSessionToken, verifySessionToken } from './lib/auth'
+import { publishChat } from './lib/chat-stream'
 import type {
   Correction,
   Event,
@@ -132,6 +133,21 @@ interface ScopedContext {
   twmGroupId?: string
 }
 
+/** One message, with its author already joined on. */
+interface ChatMessageRow {
+  ID: string
+  at: string
+  kind: string
+  body: string | null
+  mediaType: string | null
+  durationMs: number | null
+  peaks: string | null
+  authorId: string | null
+  authorName: string
+  authorColour: string
+  mine: boolean
+}
+
 interface NarrowableQuery {
   where(filter: Record<string, unknown>): unknown
 }
@@ -220,9 +236,37 @@ const TENANT_ENTITIES = [
   'Settlements',
   'Statements',
   'Corrections',
+  'Conversations',
+  'Messages',
 ] as const
 
 const MEMBERSHIPS = 'twowaymatch.Memberships'
+const CONVERSATIONS = 'LedgerService.Conversations'
+const MESSAGES = 'LedgerService.Messages'
+
+/** A message is a note, not an essay; the column is 4000 and this is well inside it. */
+const MAX_MESSAGE_CHARS = 2000
+
+/** Two minutes of Opus is roughly 1 MB, so 5 MB is generous for both kinds. */
+const MAX_MEDIA_BYTES = 5 * 1024 * 1024
+const MAX_AUDIO_MS = 120_000
+
+/**
+ * What a microphone or camera in a browser actually produces.
+ *
+ * Chrome and Android give `audio/webm;codecs=opus`, Safari and iOS give `audio/mp4`; the
+ * set is small because it is a description of reality rather than a wish list, and every
+ * current browser plays both.
+ */
+const ALLOWED_AUDIO: ReadonlySet<string> = new Set([
+  'audio/webm',
+  'audio/webm;codecs=opus',
+  'audio/ogg',
+  'audio/ogg;codecs=opus',
+  'audio/mp4',
+  'audio/mpeg',
+])
+const ALLOWED_IMAGE: ReadonlySet<string> = new Set(['image/jpeg', 'image/png', 'image/webp'])
 const EVENTS_TABLE = 'twowaymatch.Events'
 
 const PERIOD_PATTERN = /^\d{4}-(?:0[1-9]|1[0-2])$/
@@ -481,6 +525,7 @@ export default class LedgerService extends cds.ApplicationService {
     this.before(['CREATE', 'UPDATE'], 'Events', req => this.validateEventWrite(req))
     this.before('CREATE', 'EventParticipants', req => this.validateParticipantWrite(req))
     this.before(['CREATE', 'UPDATE'], 'EventPhotos', req => this.guardRawPhotoWrite(req))
+    this.before(['CREATE', 'UPDATE'], 'Messages', req => this.guardRawMessageWrite(req))
 
     /* ------------------------------------------------- group isolation */
 
@@ -544,6 +589,9 @@ export default class LedgerService extends cds.ApplicationService {
     this.on('scanReceipt', req => this.onScanReceipt(req))
     this.on('detectMood', req => this.onDetectMood(req))
     this.on('generateStatement', req => this.onGenerateStatement(req))
+    this.on('conversation', req => this.onConversation(req))
+    this.on('messages', req => this.onMessages(req))
+    this.on('sendMessage', req => this.onSendMessage(req))
     this.on('addEventPhoto', req => this.onAddEventPhoto(req))
     this.on('deleteEventPhoto', req => this.onDeleteEventPhoto(req))
     this.on('revealSurprise', req => this.onRevealSurprise(req))
@@ -2187,6 +2235,8 @@ export default class LedgerService extends cds.ApplicationService {
     'LedgerService.Settlements',
     'LedgerService.Statements',
     'LedgerService.Corrections',
+    'LedgerService.Conversations',
+    'LedgerService.Messages',
   ] as const
 
   /**
@@ -2230,5 +2280,232 @@ export default class LedgerService extends cds.ApplicationService {
     const context = cds.context as ScopedContext | undefined
     if (context === undefined) return
     context.twmGroupId = (await this.scope(req)) ?? undefined
+  }
+  /* ------------------------------------------------------------------ *
+   *  Chat  (TWM-ADR-002 section 5, CONTRACTS section 12.3)
+   * ------------------------------------------------------------------ */
+
+  /**
+   * The household's one thread.
+   *
+   * Created alongside the household in `srv/lib/groups.ts`, but a household that predates
+   * chat — the seeded one, and anything migrated — has none, so this makes it on first
+   * ask. That is cheaper than a migration step and means the thread simply exists the
+   * first time anybody opens it.
+   */
+  private async onConversation(req: Request): Promise<{ ID: string; title: string }> {
+    const existing = (await SELECT.one.from(CONVERSATIONS).columns('ID', 'title')) as
+      { ID?: string; title?: string | null } | null | undefined
+    if (existing != null && existing.ID != null) {
+      return { ID: String(existing.ID), title: existing.title ?? 'Us' }
+    }
+
+    const group = await this.scope(req)
+    if (group === null) req.reject(404, 'there is no household to talk in yet.')
+    const ID = cds.utils.uuid()
+    await INSERT.into(CONVERSATIONS).entries({ ID, group_ID: group, kind: 'group', title: 'Us' })
+    return { ID, title: 'Us' }
+  }
+
+  /**
+   * The thread, oldest first, with each author's name and colour already joined on.
+   *
+   * Joined here rather than in the client because a message list is the one screen where
+   * an extra request per row would be felt: fifty messages from three people should cost
+   * one query and one roster read, not fifty-one.
+   *
+   * `since` is an ISO timestamp. The stream tells a client that something changed; the
+   * client then asks for what it has not seen, which keeps the stream carrying ids rather
+   * than data (CONTRACTS section 12.3).
+   */
+  private async onMessages(req: Request): Promise<ChatMessageRow[]> {
+    const { conversationId, since } = req.data as {
+      conversationId?: string
+      since?: string | null
+    }
+    const conversation =
+      typeof conversationId === 'string' && conversationId !== ''
+        ? conversationId
+        : (await this.onConversation(req)).ID
+
+    let query = SELECT.from(MESSAGES)
+      .columns('ID', 'createdAt', 'kind', 'body', 'mediaType', 'durationMs', 'peaks', 'author_ID')
+      .where({ conversation_ID: conversation })
+    if (typeof since === 'string' && since !== '') {
+      query = query.and({ createdAt: { '>': since } })
+    }
+    const rows = (await query) as Array<{
+      ID: string
+      createdAt?: string | null
+      kind?: string | null
+      body?: string | null
+      mediaType?: string | null
+      durationMs?: number | null
+      peaks?: string | null
+      author_ID?: string | null
+    }>
+
+    const people = (await SELECT.from(PEOPLE).columns('ID', 'name', 'colour')) as Person[]
+    const byId = new Map(people.map(person => [String(person.ID), person]))
+    const me = await this.viewer(req)
+
+    return rows
+      .map(row => {
+        const author = row.author_ID == null ? undefined : byId.get(String(row.author_ID))
+        return {
+          ID: String(row.ID),
+          at: row.createdAt ?? '',
+          kind: row.kind ?? 'text',
+          body: row.body ?? null,
+          mediaType: row.mediaType ?? null,
+          durationMs: row.durationMs ?? null,
+          peaks: row.peaks ?? null,
+          authorId: row.author_ID == null ? null : String(row.author_ID),
+          authorName: author?.name ?? 'Somebody',
+          authorColour: author?.colour ?? '#5B738B',
+          mine: me !== null && row.author_ID != null && String(row.author_ID) === me.ID,
+        }
+      })
+      .sort((a, b) => a.at.localeCompare(b.at))
+  }
+
+  /**
+   * Say something.
+   *
+   * The limits live here rather than on the entity because a plain CREATE would walk past
+   * them: `guardRawMessageWrite` refuses that route for exactly this reason, the same way
+   * `EventPhotos` refuses a raw insert of an image.
+   *
+   * Audio is stored as recorded. Every current browser plays both containers the platform
+   * microphones produce, so transcoding on the server would cost CPU and a dependency to
+   * arrive at the same bytes (ADR-002 section 5).
+   */
+  private async onSendMessage(req: Request): Promise<ChatMessageRow> {
+    const data = req.data as {
+      conversationId?: string
+      kind?: string
+      body?: string | null
+      media?: Buffer | string | null
+      mediaType?: string | null
+      durationMs?: number | null
+      peaks?: string | null
+    }
+
+    const conversation =
+      typeof data.conversationId === 'string' && data.conversationId !== ''
+        ? data.conversationId
+        : (await this.onConversation(req)).ID
+    const kind = data.kind === 'audio' || data.kind === 'image' ? data.kind : 'text'
+    const me = await this.viewer(req)
+
+    const row: Record<string, unknown> = {
+      ID: cds.utils.uuid(),
+      ...(await this.groupStamp(req)),
+      conversation_ID: conversation,
+      author_ID: me?.ID ?? null,
+      kind,
+    }
+
+    if (kind === 'text') {
+      const body = typeof data.body === 'string' ? data.body.trim() : ''
+      if (body === '') req.reject(400, 'a message needs something in it.')
+      if (body.length > MAX_MESSAGE_CHARS) {
+        req.reject(400, `a message is at most ${MAX_MESSAGE_CHARS} characters.`)
+      }
+      row.body = body
+    } else {
+      const media = toBuffer(data.media)
+      if (media === null) req.reject(400, `a ${kind} message needs something attached.`)
+      const bytes = (media as Buffer).length
+      if (bytes > MAX_MEDIA_BYTES) {
+        req.reject(400, `that is ${bytes} bytes; the limit is ${MAX_MEDIA_BYTES}.`)
+      }
+      const mediaType = typeof data.mediaType === 'string' ? data.mediaType.toLowerCase() : ''
+      const allowed = kind === 'audio' ? ALLOWED_AUDIO : ALLOWED_IMAGE
+      if (!allowed.has(mediaType)) {
+        req.reject(
+          400,
+          `${mediaType === '' ? 'that' : mediaType} is not a ${kind} this app accepts.`,
+        )
+      }
+      row.media = media
+      row.mediaType = mediaType
+
+      if (kind === 'audio') {
+        const duration = Number(data.durationMs ?? 0)
+        if (!Number.isFinite(duration) || duration <= 0) {
+          req.reject(400, 'a voice message needs a duration.')
+        }
+        if (duration > MAX_AUDIO_MS) {
+          req.reject(400, `a voice message is at most ${MAX_AUDIO_MS / 1000} seconds.`)
+        }
+        row.durationMs = Math.round(duration)
+        // Kept as the string the client sent, after checking it parses: the column is a
+        // JSON array of amplitudes and nothing on the server reads it, so validating the
+        // shape and storing it verbatim beats re-serialising it.
+        row.peaks = normalisePeaks(data.peaks)
+      }
+    }
+
+    await INSERT.into(MESSAGES).entries(row)
+    publishChat(String(row.group_ID ?? ''), conversation, String(row.ID))
+
+    const sent = await this.onMessages({
+      ...req,
+      data: { conversationId: conversation, since: null },
+    } as unknown as Request)
+    const mine = sent.find(message => message.ID === row.ID)
+    if (mine === undefined) req.reject(500, 'the message was saved but could not be read back.')
+    return mine as ChatMessageRow
+  }
+
+  /**
+   * A raw CREATE on `Messages` is refused, so every message goes through the action above
+   * and therefore through its limits. Same rule, same reason, as `EventPhotos`.
+   */
+  private guardRawMessageWrite(req: Request): void {
+    for (const data of payloadRows(req.data)) {
+      if (isSet(data.media) || isSet(data.body)) {
+        req.reject(400, 'use the sendMessage action to say something.')
+      }
+    }
+  }
+}
+
+/**
+ * The bytes a client sent, however the protocol handed them over.
+ *
+ * An OData action declared `LargeBinary` arrives as a Buffer over one transport and as a
+ * base64 string over another, and the scan flow has always had to cope with both. Returns
+ * null for anything empty, so the caller rejects with a message about the attachment
+ * rather than storing nothing.
+ */
+function toBuffer(value: unknown): Buffer | null {
+  if (Buffer.isBuffer(value)) return value.length > 0 ? value : null
+  if (typeof value === 'string' && value.trim() !== '') {
+    const decoded = Buffer.from(value, 'base64')
+    return decoded.length > 0 ? decoded : null
+  }
+  return null
+}
+
+/**
+ * The waveform, checked and stored verbatim.
+ *
+ * Nothing on the server reads `peaks` — it exists so a thread can draw a voice note before
+ * fetching any audio — so this validates the shape and hands back the client's own string
+ * rather than re-serialising it. Anything unparseable becomes null: a missing waveform
+ * draws a flat bar, which is a far better outcome than refusing the message.
+ */
+function normalisePeaks(value: unknown): string | null {
+  if (typeof value !== 'string' || value.trim() === '') return null
+  try {
+    const parsed: unknown = JSON.parse(value)
+    if (!Array.isArray(parsed) || parsed.length === 0) return null
+    if (!parsed.every(entry => typeof entry === 'number' && Number.isFinite(entry))) return null
+    // A couple of thousand samples is two minutes at 40/s; beyond that something is wrong.
+    return parsed.length <= 6000 ? value : null
+  } catch {
+    return null
   }
 }

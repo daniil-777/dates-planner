@@ -126,6 +126,12 @@ export function HomePage() {
     memories: figureFromBoth<Memory[], Expense[]>(memoriesQuery, expensesQuery, memoriesFigure),
     statement: figureFrom<Statement[]>(statementsQuery, statementFigure),
     settings: figureFrom<Person[]>(peopleQuery, peopleFigure),
+    // The thread's own live figure — an unread count — needs a read marker this app does
+    // not keep yet, so the tile says what it is for instead of guessing at a number.
+    chat: {
+      status: 'ready',
+      figure: { kind: 'text', value: 'Say something', emphasis: 'phrase', caption: null },
+    },
     // The write-up is a static asset, so its figure never loads and never fails —
     // it is simply what the article is.
     howItWorks: {

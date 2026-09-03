@@ -15,6 +15,7 @@ import '@ui5/webcomponents-icons/dist/da.js'
 import '@ui5/webcomponents-icons/dist/newspaper.js'
 import '@ui5/webcomponents-icons/dist/action-settings.js'
 import '@ui5/webcomponents-icons/dist/learning-assistant.js'
+import '@ui5/webcomponents-icons/dist/discussion.js'
 
 // The next-up strip: a nudge, a date in the diary, a year come round again.
 import '@ui5/webcomponents-icons/dist/bell.js'

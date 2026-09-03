@@ -32,6 +32,7 @@ export const NAV_ITEMS = [
   { to: '/ledger', label: 'Expenses', icon: 'money-bills', hint: 'Postings and payment runs' },
   { to: '/events', label: 'Events', icon: 'calendar', hint: 'Trips, dinners, parties' },
   { to: '/memories', label: 'Memories', icon: 'heart', hint: 'The timeline' },
+  { to: '/chat', label: 'Chat', icon: 'discussion', hint: 'Say something' },
   { to: '/calendar', label: 'Calendar', icon: 'appointment-2', hint: 'The month, day by day' },
   { to: '/statement', label: 'Statement', icon: 'newspaper', hint: 'The Statement of Us' },
   { to: '/settings', label: 'Settings', icon: 'action-settings', hint: 'People, model, data' },
