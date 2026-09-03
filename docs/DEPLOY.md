@@ -5,7 +5,7 @@ the household has bookmarked on their phones.
 
 Path B, `docs/DEPLOY_BTP.md`, puts the same app on SAP BTP Cloud Foundry with HANA and
 XSUAA. That one is the demo — it is the version you show someone who says "but is it
-*really* SAP" — and its free-tier database stops every night. This one is the one that
+_really_ SAP" — and its free-tier database stops every night. This one is the one that
 holds the receipts.
 
 ---
@@ -15,22 +15,22 @@ holds the receipts.
 This document was written against the running code. Everything in the list below was
 executed and its output read:
 
-| Claim | How it was checked |
-|---|---|
-| `cds-tsx serve` loads the TypeScript handlers; plain `cds-serve` does not | booted both; the second serves `AdminService`/`LedgerService` with no `impl:` and answers `/health` with CAP's `{"status":"UP"}` stub |
-| `CDS_REQUIRES_DB_CREDENTIALS_URL` relocates the database | booted with it set to a path outside the project; CAP logged `connect to db > sqlite { url: … }` and created the file there |
-| `cds-deploy` creates and seeds a fresh database at that path | ran it; 19 expenses, 5 people, 2 events, 10 categories, 1 memory |
-| `npx cds-typer "*" --outputDirectory @cds-models` reproduces the generated types | ran it into a scratch directory; identical layout and `index.d.ts` |
-| In production `/health` answers **401** to an anonymous caller and 200 with credentials | booted with `NODE_ENV=production` and `AUTH_*` set; `curl` both ways |
-| `package-lock.json` carries the musl builds of `sharp` | `@img/sharp-linuxmusl-x64` and `-arm64` are both in the lockfile |
-| `npx tsx scripts/backup.ts --out <dir>` produces a readable archive | ran it; `tar tzf` lists `manifest.json`, `db.sqlite`, `images/` |
-| `npm run backup -- --out <dir>` does **not** work | `cds run` eats the flag: `Invalid option: --out` |
-| The end-to-end suite passes against a real server | `npx playwright test` — 27 passed, 5 skipped |
-| The whole container layout works | assembled it in a scratch directory — package.json, tsconfig.json, db/, srv/, scripts/, generated `@cds-models/`, `ml/model/weights.json`, an `app/dist/`, node_modules — and started it under `env -i` with only the variables the Dockerfile and fly.toml set. Deploy, seed, both services loaded, SPA at `/`, `/health` ok, 401 anonymously |
-| `cds-typer` works with no `app/` folder, which is what the `deps` stage looks like | ran it against a directory holding only `db/` and `srv/` |
+| Claim                                                                                   | How it was checked                                                                                                                                                                                                                                                                                                                             |
+| --------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `cds-tsx serve` loads the TypeScript handlers; plain `cds-serve` does not               | booted both; the second serves `AdminService`/`LedgerService` with no `impl:` and answers `/health` with CAP's `{"status":"UP"}` stub                                                                                                                                                                                                          |
+| `CDS_REQUIRES_DB_CREDENTIALS_URL` relocates the database                                | booted with it set to a path outside the project; CAP logged `connect to db > sqlite { url: … }` and created the file there                                                                                                                                                                                                                    |
+| `cds-deploy` creates and seeds a fresh database at that path                            | ran it; 19 expenses, 5 people, 2 events, 10 categories, 1 memory                                                                                                                                                                                                                                                                               |
+| `npx cds-typer "*" --outputDirectory @cds-models` reproduces the generated types        | ran it into a scratch directory; identical layout and `index.d.ts`                                                                                                                                                                                                                                                                             |
+| In production `/health` answers **401** to an anonymous caller and 200 with credentials | booted with `NODE_ENV=production` and `AUTH_*` set; `curl` both ways                                                                                                                                                                                                                                                                           |
+| `package-lock.json` carries the musl builds of `sharp`                                  | `@img/sharp-linuxmusl-x64` and `-arm64` are both in the lockfile                                                                                                                                                                                                                                                                               |
+| `npx tsx scripts/backup.ts --out <dir>` produces a readable archive                     | ran it; `tar tzf` lists `manifest.json`, `db.sqlite`, `images/`                                                                                                                                                                                                                                                                                |
+| `npm run backup -- --out <dir>` does **not** work                                       | `cds run` eats the flag: `Invalid option: --out`                                                                                                                                                                                                                                                                                               |
+| The end-to-end suite passes against a real server                                       | `npx playwright test` — 27 passed, 5 skipped                                                                                                                                                                                                                                                                                                   |
+| The whole container layout works                                                        | assembled it in a scratch directory — package.json, tsconfig.json, db/, srv/, scripts/, generated `@cds-models/`, `ml/model/weights.json`, an `app/dist/`, node_modules — and started it under `env -i` with only the variables the Dockerfile and fly.toml set. Deploy, seed, both services loaded, SPA at `/`, `/health` ok, 401 anonymously |
+| `cds-typer` works with no `app/` folder, which is what the `deps` stage looks like      | ran it against a directory holding only `db/` and `srv/`                                                                                                                                                                                                                                                                                       |
 
 **Not verified, because this machine has no Docker:** the image has never been built or
-run. The Dockerfile's *runtime decisions* are all from the table above, reproduced outside
+run. The Dockerfile's _runtime decisions_ are all from the table above, reproduced outside
 a container. What is untested is the packaging — layer order, `npm ci` on alpine, the
 `vite build` inside the web stage, and the heredoc entrypoint. Expect to iterate once on
 the first `fly deploy`, and read §9 before you do.
@@ -125,12 +125,12 @@ is deliberate: CAP's configured `auth.kind` is `mocked`, whose default user tabl
 `'*': true`, so a missing variable must never be able to fall back to "any username, any
 password".
 
-| Name | What it is |
-|---|---|
+| Name          | What it is                                              |
+| ------------- | ------------------------------------------------------- |
 | `AUTH_USER_A` | her login. Must match a `People.email` in the seed data |
-| `AUTH_HASH_A` | the bcrypt hash from §2 |
-| `AUTH_USER_B` | your login |
-| `AUTH_HASH_B` | the other hash |
+| `AUTH_HASH_A` | the bcrypt hash from §2                                 |
+| `AUTH_USER_B` | your login                                              |
+| `AUTH_HASH_B` | the other hash                                          |
 
 ```bash
 fly secrets set \
@@ -146,12 +146,12 @@ you if this happened, but it will tell you by refusing to boot.
 
 ### Strongly wanted — set it on the first deploy
 
-| Name | What it is |
-|---|---|
+| Name             | What it is                                                |
+| ---------------- | --------------------------------------------------------- |
 | `SESSION_SECRET` | the key that signs the session cookie (`srv/lib/auth.ts`) |
 
 Not required: with it unset, `sessionSecret()` falls back to 32 random bytes chosen once per
-boot. That is a *stronger* key than any passphrase, so it is never a weakening — it simply
+boot. That is a _stronger_ key than any passphrase, so it is never a weakening — it simply
 does not survive a restart, which means **everybody is signed out on every deploy**, and the
 `immediate` strategy in `fly.toml` means every deploy is a restart. On a phone that is a
 login screen instead of the app, in a restaurant, holding a receipt.
@@ -168,29 +168,29 @@ from `ml/model/weights.json`. Nothing degrades into a stub.
 
 **Statement generator** (`docs/CONTRACTS.md` §7 — first configured provider wins):
 
-| Name | Notes |
-|---|---|
-| `ANTHROPIC_API_KEY` | **secret.** Its presence alone selects the Anthropic provider |
-| `ANTHROPIC_WORKSPACE_ID` | only for an *identity-linked* key (one tied to your user, not created inside a workspace): the API refuses those with `anthropic-workspace-id is required` until this names the workspace (`wrkspc_…`, console → Settings → Workspaces). Shared by the statement writer, the receipt reader and the mood estimate |
-| `ANTHROPIC_MODEL` | optional; defaults to `claude-opus-5` |
-| `ANTHROPIC_BASE_URL` | optional; only for a gateway |
-| `LLM_BASE_URL` + `LLM_API_KEY` | any OpenAI-compatible `/chat/completions`. **Both** required |
-| `LLM_MODEL` | required for the OpenAI-compatible provider, which has no default |
-| `AICORE_SERVICE_KEY` | **secret.** The whole AI Core service key as one line of JSON |
-| `AICORE_MODEL`, `AICORE_RESOURCE_GROUP`, `AICORE_DEPLOYMENT_ID` | optional |
+| Name                                                            | Notes                                                                                                                                                                                                                                                                                                             |
+| --------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ANTHROPIC_API_KEY`                                             | **secret.** Its presence alone selects the Anthropic provider                                                                                                                                                                                                                                                     |
+| `ANTHROPIC_WORKSPACE_ID`                                        | only for an _identity-linked_ key (one tied to your user, not created inside a workspace): the API refuses those with `anthropic-workspace-id is required` until this names the workspace (`wrkspc_…`, console → Settings → Workspaces). Shared by the statement writer, the receipt reader and the mood estimate |
+| `ANTHROPIC_MODEL`                                               | optional; defaults to `claude-opus-5`                                                                                                                                                                                                                                                                             |
+| `ANTHROPIC_BASE_URL`                                            | optional; only for a gateway                                                                                                                                                                                                                                                                                      |
+| `LLM_BASE_URL` + `LLM_API_KEY`                                  | any OpenAI-compatible `/chat/completions`. **Both** required                                                                                                                                                                                                                                                      |
+| `LLM_MODEL`                                                     | required for the OpenAI-compatible provider, which has no default                                                                                                                                                                                                                                                 |
+| `AICORE_SERVICE_KEY`                                            | **secret.** The whole AI Core service key as one line of JSON                                                                                                                                                                                                                                                     |
+| `AICORE_MODEL`, `AICORE_RESOURCE_GROUP`, `AICORE_DEPLOYMENT_ID` | optional                                                                                                                                                                                                                                                                                                          |
 
 **Receipt extraction** (`docs/CONTRACTS.md` §6). All four, or none — the client falls back
 to mock mode if any one is missing, which is the behaviour you want rather than a 401 at
 the supermarket checkout:
 
-| Name | Where it comes from |
-|---|---|
-| `DOCAI_URL` | service key `url` — the API host, no path |
-| `DOCAI_UAA_URL` | service key `uaa.url` — the **token** host. Swapping these two is the classic mistake and shows up as a 401 |
-| `DOCAI_CLIENT_ID` | service key `uaa.clientid` |
-| `DOCAI_CLIENT_SECRET` | **secret.** service key `uaa.clientsecret` |
-| `DOCAI_SCHEMA_NAME`, `DOCAI_DOCUMENT_TYPE` | optional; neither affects the mock/live decision |
-| `MOCK_DOCAI` | set to `1` to force fixtures even with credentials present |
+| Name                                       | Where it comes from                                                                                         |
+| ------------------------------------------ | ----------------------------------------------------------------------------------------------------------- |
+| `DOCAI_URL`                                | service key `url` — the API host, no path                                                                   |
+| `DOCAI_UAA_URL`                            | service key `uaa.url` — the **token** host. Swapping these two is the classic mistake and shows up as a 401 |
+| `DOCAI_CLIENT_ID`                          | service key `uaa.clientid`                                                                                  |
+| `DOCAI_CLIENT_SECRET`                      | **secret.** service key `uaa.clientsecret`                                                                  |
+| `DOCAI_SCHEMA_NAME`, `DOCAI_DOCUMENT_TYPE` | optional; neither affects the mock/live decision                                                            |
+| `MOCK_DOCAI`                               | set to `1` to force fixtures even with credentials present                                                  |
 
 **Remote classifier** (optional; local inference is the default and stays the default):
 `CLASSIFIER_URL`, `CLASSIFIER_TOKEN`, `CLASSIFIER_RESOURCE_GROUP`.
@@ -269,10 +269,10 @@ fly certs show twm.example.com                # tells you exactly which records 
 
 At your DNS provider:
 
-| Type | Name | Value |
-|---|---|---|
-| `A` | `twm` | the shared or dedicated IPv4 from `fly ips list` |
-| `AAAA` | `twm` | the IPv6 |
+| Type   | Name  | Value                                            |
+| ------ | ----- | ------------------------------------------------ |
+| `A`    | `twm` | the shared or dedicated IPv4 from `fly ips list` |
+| `AAAA` | `twm` | the IPv6                                         |
 
 An apex domain needs both records at the root; a subdomain can use `CNAME` →
 `<app>.fly.dev` instead, which is easier and survives an IP change. Fly issues the
@@ -296,20 +296,26 @@ curl -u 'you@example.com:your-password' https://twm.example.com/health
 ```
 
 ```json
-{ "status": "ok", "version": "1.0.0", "uptime": 41,
-  "model": "2026-09-01T12:20:32", "docai": "mock", "llm": "Deterministic template · …",
-  "build": { "version": "1.0.0", "commit": "8cea17b", "builtAt": "2026-09-01T10:47:13.211Z" } }
+{
+  "status": "ok",
+  "version": "1.0.0",
+  "uptime": 41,
+  "model": "2026-09-01T12:20:32",
+  "docai": "mock",
+  "llm": "Deterministic template · …",
+  "build": { "version": "1.0.0", "commit": "8cea17b", "builtAt": "2026-09-01T10:47:13.211Z" }
+}
 ```
 
 Read all five of the interesting fields:
 
-* `model` — `null` means `ml/model/weights.json` did not make it into the image and every
+- `model` — `null` means `ml/model/weights.json` did not make it into the image and every
   prediction is a fallback.
-* `docai` — `mock` or `live`. If you set the four `DOCAI_*` secrets and this still says
+- `docai` — `mock` or `live`. If you set the four `DOCAI_*` secrets and this still says
   `mock`, one of them is empty.
-* `llm` — names the *variable* a key came from, never the key.
-* `version` — comes from `package.json`, so it is how you tell which release is running.
-* `build` — which *frontend build* is being served: the commit and the time the bundle was
+- `llm` — names the _variable_ a key came from, never the key.
+- `version` — comes from `package.json`, so it is how you tell which release is running.
+- `build` — which _frontend build_ is being served: the commit and the time the bundle was
   built, read from `app/dist/build.json`. `null` means `app/dist` has no stamp, which on a
   deployed machine means the `web` stage did not run the current `app/vite/buildStamp.ts`.
   `"commit": "unknown"` means the image was built without `GIT_SHA` — use `npm run deploy`.
@@ -325,7 +331,7 @@ Without credentials that endpoint returns **401**, by design: `srv/server.ts` mo
 auth in front of every route, `/health` included. That is why `fly.toml` uses a TCP check
 rather than an HTTP one — an anonymous HTTP probe would fail forever and Fly would restart a
 perfectly healthy machine every few minutes. The `HEALTHCHECK` in the Dockerfile is the
-richer probe (it treats 200 *and* 401 as healthy, so it also proves the auth middleware is
+richer probe (it treats 200 _and_ 401 as healthy, so it also proves the auth middleware is
 mounted), but Fly Machines ignore an image's healthcheck. The whole argument, in full, is in
 the comments of `fly.toml`.
 
@@ -395,7 +401,7 @@ Then check, in the installed app:
       "bottom bar clears the home indicator" e2e test guards.
 - [ ] The status bar is legible in both light and dark mode.
 - [ ] Tap **Scan** → **Scan receipt**. iOS asks for camera permission once. Allow it.
-      *If the prompt never appears, the page is not on HTTPS.*
+      _If the prompt never appears, the page is not on HTTPS._
 - [ ] Photograph a real receipt. A draft posting appears with a merchant and an amount.
 - [ ] **Post** it. Open **Ledger**. It is there, with the amount as `CHF 47.85` —
       apostrophes for thousands, never commas.
@@ -403,9 +409,9 @@ Then check, in the installed app:
 
 Two iOS truths worth knowing before they surprise you:
 
-* A standalone web app keeps its own credential store, separate from Safari's. She may have
+- A standalone web app keeps its own credential store, separate from Safari's. She may have
   to enter the password once more inside the installed app. Once.
-* iOS evicts service-worker caches from apps that go unused for weeks. The app still works —
+- iOS evicts service-worker caches from apps that go unused for weeks. The app still works —
   it just fetches instead of serving from cache. Nothing is lost; the data lives on the
   server.
 
@@ -479,23 +485,85 @@ is the difference between a tool and a chore.
 
 ## 11. When it does not work
 
-| What you see | What it is | What to do |
-|---|---|---|
-| `refusing to start in production without working credentials` | one of the four `AUTH_*` is missing, or a hash lost its `$` to the shell | re-set it in **single quotes**; §4 |
-| `Could not load the "sharp" module using the linuxmusl-x64 runtime` | the build stage and the runtime stage are on different libc | both must be alpine; read the header of the Dockerfile |
-| 404 at `/`, but `/ledger` returns JSON | `app/dist` is not in the image | check the `web` stage in the build log |
-| `/health` says `"model": null` | `ml/model/weights.json` is missing or unparseable | it is committed; check the `COPY` line and that it is not caught by `.dockerignore` |
-| Every prediction is `Groceries` at low confidence | same as above, from the other end | `/health` |
-| The data was there yesterday and is gone today | the database is on the container layer, not the volume | `fly ssh console -C "ls -la /data"`; check `CDS_REQUIRES_DB_CREDENTIALS_URL` in `fly.toml` |
-| Machine restarts every few minutes | someone replaced the TCP check with an HTTP check on `/health`, which is 401 for an anonymous prober | put the TCP check back; the reasoning is in `fly.toml` |
-| The app renders in Times New Roman | the `72` faces are not being served — either `app/public/fonts` did not reach the image, or someone removed the `twm-bundle-ui5-fonts` plugin from `app/vite.config.ts` and the baked CDN URLs came back | `curl -I https://…/fonts/72-Regular.woff2` should be 200 `font/woff2`; `GO-LIVE.md` §1.1 |
-| Everybody is signed out after every deploy | `SESSION_SECRET` is unset, so the cookie key is regenerated on each boot | set it; §4 |
-| `npm ci` fails on alpine building a native module | no musl prebuild for something | add `RUN apk add --no-cache python3 make g++` to the failing stage |
-| `fly ssh console` hangs | the machine is stopped | `fly status`; `auto_stop_machines` should be `'off'` |
-| A phone keeps showing last week's screen after a deploy | the service worker has the new build but is waiting for a tap — or has not looked yet | **Settings → Version**: the card names both builds and has **Check for updates**; the **Reload** banner appears once the new build is installed. Killing and reopening the app also makes the browser check |
-| No banner, and the Version card is missing altogether | the phone is still on a build from before the card existed: that worker updated on its own and never waits, so it has nothing to tap and nothing that tells the new worker to take over | close the installed app fully (swipe it away) and open it again — once. From then on the banner does the job |
-| `/health` says `"build": null` or `"commit": "unknown"` | the `web` stage did not write `dist/build.json`, or was built without `GIT_SHA` | `npm run deploy`, not `fly deploy`; check the `COPY app/vite/` line in the Dockerfile |
-| a scan or face-scan fails with `anthropic-workspace-id is required when authenticating with an identity-linked API key` | the key is tied to your user, not to a workspace | `fly secrets set ANTHROPIC_WORKSPACE_ID='wrkspc_…'` — or create the key *inside* a workspace instead, which needs no id |
+| What you see                                                                                                            | What it is                                                                                                                                                                                               | What to do                                                                                                                                                                                                  |
+| ----------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `refusing to start in production without working credentials`                                                           | one of the four `AUTH_*` is missing, or a hash lost its `$` to the shell                                                                                                                                 | re-set it in **single quotes**; §4                                                                                                                                                                          |
+| `Could not load the "sharp" module using the linuxmusl-x64 runtime`                                                     | the build stage and the runtime stage are on different libc                                                                                                                                              | both must be alpine; read the header of the Dockerfile                                                                                                                                                      |
+| 404 at `/`, but `/ledger` returns JSON                                                                                  | `app/dist` is not in the image                                                                                                                                                                           | check the `web` stage in the build log                                                                                                                                                                      |
+| `/health` says `"model": null`                                                                                          | `ml/model/weights.json` is missing or unparseable                                                                                                                                                        | it is committed; check the `COPY` line and that it is not caught by `.dockerignore`                                                                                                                         |
+| Every prediction is `Groceries` at low confidence                                                                       | same as above, from the other end                                                                                                                                                                        | `/health`                                                                                                                                                                                                   |
+| The data was there yesterday and is gone today                                                                          | the database is on the container layer, not the volume                                                                                                                                                   | `fly ssh console -C "ls -la /data"`; check `CDS_REQUIRES_DB_CREDENTIALS_URL` in `fly.toml`                                                                                                                  |
+| Machine restarts every few minutes                                                                                      | someone replaced the TCP check with an HTTP check on `/health`, which is 401 for an anonymous prober                                                                                                     | put the TCP check back; the reasoning is in `fly.toml`                                                                                                                                                      |
+| The app renders in Times New Roman                                                                                      | the `72` faces are not being served — either `app/public/fonts` did not reach the image, or someone removed the `twm-bundle-ui5-fonts` plugin from `app/vite.config.ts` and the baked CDN URLs came back | `curl -I https://…/fonts/72-Regular.woff2` should be 200 `font/woff2`; `GO-LIVE.md` §1.1                                                                                                                    |
+| Everybody is signed out after every deploy                                                                              | `SESSION_SECRET` is unset, so the cookie key is regenerated on each boot                                                                                                                                 | set it; §4                                                                                                                                                                                                  |
+| `npm ci` fails on alpine building a native module                                                                       | no musl prebuild for something                                                                                                                                                                           | add `RUN apk add --no-cache python3 make g++` to the failing stage                                                                                                                                          |
+| `fly ssh console` hangs                                                                                                 | the machine is stopped                                                                                                                                                                                   | `fly status`; `auto_stop_machines` should be `'off'`                                                                                                                                                        |
+| A phone keeps showing last week's screen after a deploy                                                                 | the service worker has the new build but is waiting for a tap — or has not looked yet                                                                                                                    | **Settings → Version**: the card names both builds and has **Check for updates**; the **Reload** banner appears once the new build is installed. Killing and reopening the app also makes the browser check |
+| No banner, and the Version card is missing altogether                                                                   | the phone is still on a build from before the card existed: that worker updated on its own and never waits, so it has nothing to tap and nothing that tells the new worker to take over                  | close the installed app fully (swipe it away) and open it again — once. From then on the banner does the job                                                                                                |
+| `/health` says `"build": null` or `"commit": "unknown"`                                                                 | the `web` stage did not write `dist/build.json`, or was built without `GIT_SHA`                                                                                                                          | `npm run deploy`, not `fly deploy`; check the `COPY app/vite/` line in the Dockerfile                                                                                                                       |
+| a scan or face-scan fails with `anthropic-workspace-id is required when authenticating with an identity-linked API key` | the key is tied to your user, not to a workspace                                                                                                                                                         | `fly secrets set ANTHROPIC_WORKSPACE_ID='wrkspc_…'` — or create the key _inside_ a workspace instead, which needs no id                                                                                     |
 
 `docs/RUNBOOK.md` covers the application-level failures — a scan that will not extract, a
 settlement that looks wrong, a restore. This file stops at the edge of the machine.
+
+---
+
+## Postgres
+
+SQLite on the volume is still the default and is still right for one household. Postgres is
+for the commons (ADR-003): one corpus read and written by every household, which is not a
+shape one file on one machine serves while that machine is also serving the app.
+
+**Be clear about the cost before starting.** Fly's Managed Postgres begins at about **$38 a
+month** (Basic, shared-2x, 1 GB) plus storage. Unmanaged Fly Postgres is a few dollars a month
+and is explicitly unsupported by Fly — you are the DBA, including the night it fails over.
+The SQLite volume costs cents. Nothing in the app needs Postgres until the commons has real
+traffic, and `DATABASE_URL` is the whole of the switch, so this can wait until it is worth
+paying for.
+
+### 1. Create it
+
+```bash
+fly mpg create --name twm-db --region fra          # managed; see `fly mpg --help`
+fly mpg attach twm-db --app twm-dates-planner      # sets DATABASE_URL as a secret
+```
+
+`DATABASE_URL` is the only setting. `srv/lib/database.ts` reads it, parses it and points CAP
+at Postgres; unset, everything behaves exactly as it does today.
+
+### 2. Let the app build the schema
+
+Deploy with `DATABASE_URL` set and start once. `migrate()` finds an empty database, generates
+the DDL from the model for the Postgres dialect, creates every table and index, and records
+the steps. **Do not run `cds deploy`** — it drops every table first, which is right for a test
+and catastrophic here.
+
+Check `/health` and the log line `database: postgres` before going further.
+
+### 3. Copy the rows
+
+Offline. A live database copied twice is a household with two of every receipt.
+
+```bash
+fly scale count 0 --app twm-dates-planner                 # stop writing
+fly ssh sftp get /data/db.sqlite ./db.sqlite              # pull the real thing
+
+DATABASE_URL='postgres://…' npx tsx scripts/migrate-to-postgres.ts --from db.sqlite --dry-run
+DATABASE_URL='postgres://…' npx tsx scripts/migrate-to-postgres.ts --from db.sqlite
+
+fly scale count 1 --app twm-dates-planner
+```
+
+The script verifies every table row-for-row and fails on any mismatch. **Rehearse it on the
+pulled copy first** — that is what the `--dry-run` is for, and pulling a copy costs nothing.
+
+### 4. Afterwards
+
+- **Turn off `.github/workflows/backup.yml`.** It snapshots the SQLite file; against Postgres
+  it produces an empty tarball every night. `scripts/backup.ts` now refuses to run rather than
+  pretend, but the workflow will still go green on the failure unless it is disabled.
+- **Keep the volume and the file for a while.** It is the only rollback: unset `DATABASE_URL`
+  and the app is back on SQLite exactly as before, minus anything written since the cutover.
+- **`COMMONS_AUTHOR_SECRET` must be set** before the commons is used in production; the server
+  refuses to start without it. Rotating it later orphans every published rating — see
+  CONTRACTS §14.5.

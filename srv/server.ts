@@ -77,6 +77,7 @@ import {
   verifyCredentials,
   verifySessionToken,
 } from './lib/auth'
+import { configureDatabase } from './lib/database'
 import { describeProvider } from './lib/llm'
 import { migrate, refreshViews } from './lib/migrate'
 import {
@@ -1680,6 +1681,17 @@ cds.on('served', async () => {
   // `group_ID` existed.
   await refreshViews(database)
 })
+
+/**
+ * Point CAP at Postgres when `DATABASE_URL` is set, before anything connects.
+ *
+ * At module load rather than on `bootstrap`: by the time an event fires, CAP may already
+ * have resolved `cds.requires.db`, and a database chosen twice is a database chosen wrong.
+ * With no `DATABASE_URL` this does nothing at all and the SQLite file stays the store, which
+ * is what development, the tests and a single household all still want (`lib/database.ts`).
+ */
+const store = configureDatabase()
+if (store === 'postgres') cds.log('server').info('database: postgres')
 
 cds.on('bootstrap', configureApp)
 cds.on('served', verifyLoginMapping)

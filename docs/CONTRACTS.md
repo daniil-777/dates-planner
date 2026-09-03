@@ -20,18 +20,18 @@ Display names may be prettier than the code (`Cafes` → "Cafés"); **the code i
 
 Display metadata (name, SAP icon, colour, sortOrder) lives only in the Categories CSV:
 
-| code | name | icon | colour | sortOrder |
-|---|---|---|---|---|
-| Groceries | Groceries | `cart` | `#0070F2` | 10 |
-| Dining | Dining | `meal` | `#E76500` | 20 |
-| Cafes | Cafés | `cup` | `#A45D00` | 30 |
-| Transport | Transport | `bus-public-transport` | `#7858FF` | 40 |
-| Travel | Travel | `flight` | `#049F9A` | 50 |
-| Gifts | Gifts | `gift` | `#F31DED` | 60 |
-| Home | Home | `home` | `#5B738B` | 70 |
-| Health | Health | `heartbeat` | `#D20A0A` | 80 |
-| Entertainment | Entertainment | `video` | `#C87200` | 90 |
-| Subscriptions | Subscriptions | `subscription` | `#256F3A` | 100 |
+| code          | name          | icon                   | colour    | sortOrder |
+| ------------- | ------------- | ---------------------- | --------- | --------- |
+| Groceries     | Groceries     | `cart`                 | `#0070F2` | 10        |
+| Dining        | Dining        | `meal`                 | `#E76500` | 20        |
+| Cafes         | Cafés         | `cup`                  | `#A45D00` | 30        |
+| Transport     | Transport     | `bus-public-transport` | `#7858FF` | 40        |
+| Travel        | Travel        | `flight`               | `#049F9A` | 50        |
+| Gifts         | Gifts         | `gift`                 | `#F31DED` | 60        |
+| Home          | Home          | `home`                 | `#5B738B` | 70        |
+| Health        | Health        | `heartbeat`            | `#D20A0A` | 80        |
+| Entertainment | Entertainment | `video`                | `#C87200` | 90        |
+| Subscriptions | Subscriptions | `subscription`         | `#256F3A` | 100       |
 
 ### 1.2 Moment codes
 
@@ -42,7 +42,7 @@ everyday  date_night  trip  gift
 ### 1.3 Other enums
 
 - `Expenses.split`: **REMOVED.** Debt tracking is gone (see §9), so a per-expense
-  split had no consumer left. An expense records who *paid*, not who owes.
+  split had no consumer left. An expense records who _paid_, not who owes.
 - `Expenses.status`: `draft` | `confirmed`
 - `Expenses.source`: `scan` | `import` | `manual`
 - `Receipts.extractionStatus`: `pending` | `done` | `failed` | `mock`
@@ -73,10 +73,10 @@ Applied in this exact order:
 3. Unicode NFKD normalise, then drop all combining marks (`Mn` category).
    (`café` → `cafe`, `zürich` → already `zuerich` from step 2.)
 4. Remove date-like and id-like tokens with these regexes, in order, replacing with a space:
-   - `\b\d{1,2}[./-]\d{1,2}[./-]\d{2,4}\b`   (dates)
-   - `\b\d{1,2}:\d{2}(:\d{2})?\b`            (times)
+   - `\b\d{1,2}[./-]\d{1,2}[./-]\d{2,4}\b` (dates)
+   - `\b\d{1,2}:\d{2}(:\d{2})?\b` (times)
    - `\b(nr|no|ref|trx|tid|kd)[.:]?\s*\d+\b` (reference ids)
-   - `\b\d{4,}\b`                            (long digit runs)
+   - `\b\d{4,}\b` (long digit runs)
 5. Replace every character that is not `[a-z0-9 ]` with a space.
 6. Collapse runs of whitespace to a single space; strip leading/trailing space.
 
@@ -102,6 +102,7 @@ Mirrors scikit-learn's `analyzer='char_wb'`:
   "ab"    -> [' a', 'ab', 'b ', ' ab', 'ab ', ' ab ']
   "abc"   -> [' a', 'ab', 'bc', 'c ', ' ab', 'abc', 'bc ', ' abc', 'abc ']
   ```
+
 - Order: word by word, then n ascending, then left to right. Duplicates are kept
   (they become counts).
 
@@ -118,15 +119,15 @@ Mirrors scikit-learn's `analyzer='char_wb'`:
 
 Fixed order — this is `numericFeatures` in `weights.json`:
 
-| # | name | formula |
-|---|---|---|
-| 0 | `log_amount` | `log1p(max(amount, 0))` |
-| 1 | `is_weekend`  | `1.0` if ISO weekday is Sat/Sun else `0.0` |
-| 2 | `is_evening`  | `1.0` if `hour >= 18` else `0.0` |
-| 3 | `hour_sin`    | `sin(2π · (hour + minute/60) / 24)` |
-| 4 | `hour_cos`    | `cos(2π · (hour + minute/60) / 24)` |
-| 5 | `dow_sin`     | `sin(2π · dow / 7)`, `dow` = Monday 0 … Sunday 6 |
-| 6 | `dow_cos`     | `cos(2π · dow / 7)` |
+| #   | name         | formula                                          |
+| --- | ------------ | ------------------------------------------------ |
+| 0   | `log_amount` | `log1p(max(amount, 0))`                          |
+| 1   | `is_weekend` | `1.0` if ISO weekday is Sat/Sun else `0.0`       |
+| 2   | `is_evening` | `1.0` if `hour >= 18` else `0.0`                 |
+| 3   | `hour_sin`   | `sin(2π · (hour + minute/60) / 24)`              |
+| 4   | `hour_cos`   | `cos(2π · (hour + minute/60) / 24)`              |
+| 5   | `dow_sin`    | `sin(2π · dow / 7)`, `dow` = Monday 0 … Sunday 6 |
+| 6   | `dow_cos`    | `cos(2π · dow / 7)`                              |
 
 `whenISO` is `YYYY-MM-DD` or `YYYY-MM-DDTHH:MM(:SS)`. A missing time means `12:00`.
 Parse as **local wall-clock**, never UTC-shifted.
@@ -190,10 +191,10 @@ are multi-class, so this is a dormant path; keep it correct anyway.
       "merchantRaw": "RESTAURANT BLAUE ENTE",
       "amount": 148.5,
       "whenISO": "2026-03-14T20:15",
-      "expected": { /* exactly a ClassifyResult, see §5 */ }
-    }
+      "expected": {/* exactly a ClassifyResult, see §5 */},
+    },
     // 60 rows
-  ]
+  ],
 }
 ```
 
@@ -202,16 +203,19 @@ are multi-class, so this is a dormant path; keep it correct anyway.
 ## 5. Classifier TypeScript API — `srv/lib/classifier/index.ts`
 
 ```ts
-export interface Scored { label: string; p: number }
+export interface Scored {
+  label: string
+  p: number
+}
 
 export interface ClassifyResult {
-  category: string            // one of §1.1
-  categoryConfidence: number  // 0..1, probability of the winning label
-  categoryTop3: Scored[]      // descending p, length min(3, nClasses)
-  moment: string              // one of §1.2
+  category: string // one of §1.1
+  categoryConfidence: number // 0..1, probability of the winning label
+  categoryTop3: Scored[] // descending p, length min(3, nClasses)
+  moment: string // one of §1.2
   momentConfidence: number
   momentTop3: Scored[]
-  engine: 'local' | 'remote'  // 'remote' when CLASSIFIER_URL was used
+  engine: 'local' | 'remote' // 'remote' when CLASSIFIER_URL was used
 }
 
 export function classify(
@@ -225,6 +229,7 @@ export function reloadModel(): void
 ```
 
 Behaviour:
+
 - Weights are read **once** and cached (`Float32Array`); `reloadModel()` clears the cache.
 - If `process.env.CLASSIFIER_URL` is set, POST `{merchantRaw, amount, whenISO}` as JSON
   to that URL and return the parsed `ClassifyResult` with `engine: 'remote'`.
@@ -248,13 +253,13 @@ export interface ReceiptLineItem {
 
 export interface ExtractedReceipt {
   merchantRaw: string | null
-  date: string | null        // YYYY-MM-DD
-  time: string | null        // HH:MM, or null
-  amount: number | null      // gross total
-  currency: string           // ISO-4217, defaults to 'CHF'
+  date: string | null // YYYY-MM-DD
+  time: string | null // HH:MM, or null
+  amount: number | null // gross total
+  currency: string // ISO-4217, defaults to 'CHF'
   place: string | null
   lineItems: ReceiptLineItem[]
-  confidence: Record<string, number>   // per header field, 0..1
+  confidence: Record<string, number> // per header field, 0..1
   rawFields: Record<string, unknown>
 }
 ```
@@ -265,7 +270,7 @@ Client surface — `srv/lib/documentai/client.ts`:
 
 ```ts
 export interface DocAiClient {
-  submitJob(image: Buffer, mimeType: string, fileName: string): Promise<string>  // jobId
+  submitJob(image: Buffer, mimeType: string, fileName: string): Promise<string> // jobId
   getJob(jobId: string): Promise<unknown>
   pollJob(jobId: string, opts?: { timeoutMs?: number; intervalMs?: number }): Promise<unknown>
   readonly mode: 'live' | 'mock'
@@ -286,11 +291,11 @@ anything else → restaurant) and waits 800 ms.
 export interface LlmRequest {
   system: string
   prompt: string
-  maxTokens?: number   // default 8000
+  maxTokens?: number // default 8000
 }
 
 export interface LlmProvider {
-  readonly name: string   // 'anthropic' | 'openai-compatible' | 'sap-ai-core' | 'template'
+  readonly name: string // 'anthropic' | 'openai-compatible' | 'sap-ai-core' | 'template'
   generate(req: LlmRequest): Promise<string>
 }
 
@@ -316,20 +321,29 @@ export interface StatementFacts {
   year: number
   partners: { a: string; b: string }
   currency: string
-  totals: { overall: number; byCategory: Record<string, number>; byPartner: Record<string, number>
-            byMoment: Record<string, number> }
-  counts: { expenses: number; dateNights: number; trips: number
-            giftsAToB: number; giftsBToA: number }
+  totals: {
+    overall: number
+    byCategory: Record<string, number>
+    byPartner: Record<string, number>
+    byMoment: Record<string, number>
+  }
+  counts: {
+    expenses: number
+    dateNights: number
+    trips: number
+    giftsAToB: number
+    giftsBToA: number
+  }
   topMerchants: Array<{ merchant: string; total: number; visits: number }>
   longestDateNightStreakWeeks: number
   placesVisited: string[]
   firstMemory: { title: string; date: string } | null
-  lastMemory:  { title: string; date: string } | null
-  quarters: Array<{ quarter: 1|2|3|4; total: number; highlight: string | null }>
+  lastMemory: { title: string; date: string } | null
+  quarters: Array<{ quarter: 1 | 2 | 3 | 4; total: number; highlight: string | null }>
 }
 
 export function aggregateYear(year: number, db?: unknown): Promise<StatementFacts>
-export function renderTemplateStatement(f: StatementFacts): string   // markdown
+export function renderTemplateStatement(f: StatementFacts): string // markdown
 ```
 
 A **trip cluster** = expenses with `moment='trip'` grouped so that consecutive
@@ -341,29 +355,29 @@ The date-night streak counts consecutive ISO weeks containing ≥1 `date_night` 
 ## 9. Totals & periods — `srv/lib/settlement.ts`
 
 **There is no debt in this app.** Nobody owes anybody. An expense records who paid it
-and, optionally, which event it belongs to. Everything downstream is a *sum*, never a
-*balance*. The words "owes", "balance", "net", "owedByA" and "owedByB" must not appear
+and, optionally, which event it belongs to. Everything downstream is a _sum_, never a
+_balance_. The words "owes", "balance", "net", "owedByA" and "owedByB" must not appear
 in the domain, the API, or the UI.
 
 ```ts
 /** One expense row, reduced to only what the arithmetic needs. */
 export interface TotalsInput {
   amount: number
-  paidById: string        // People.ID
-  eventId: string | null  // Events.ID, or null for everyday spending
-  date: string            // YYYY-MM-DD
+  paidById: string // People.ID
+  eventId: string | null // Events.ID, or null for everyday spending
+  date: string // YYYY-MM-DD
 }
 
 export interface PersonTotal {
   personId: string
   name: string
-  paid: number     // what this person actually paid out
-  count: number    // how many postings
-  share: number    // paid / grandTotal, 0..1 — a proportion, NOT a debt
+  paid: number // what this person actually paid out
+  count: number // how many postings
+  share: number // paid / grandTotal, 0..1 — a proportion, NOT a debt
 }
 
 export interface PeriodTotals {
-  period: string          // 'YYYY-MM'
+  period: string // 'YYYY-MM'
   grandTotal: number
   byPerson: PersonTotal[] // descending by paid, then name
   count: number
@@ -373,17 +387,22 @@ export interface EventTotals {
   eventId: string
   name: string
   grandTotal: number
-  perHead: number         // grandTotal / participantCount, for information only
+  perHead: number // grandTotal / participantCount, for information only
   participantCount: number
   byPerson: PersonTotal[]
   count: number
 }
 
-export function summarisePeriod(rows: TotalsInput[], period: string,
-                                people: Array<{ ID: string; name: string }>): PeriodTotals
-export function summariseEvent(rows: TotalsInput[],
-                               event: { ID: string; name: string },
-                               participants: Array<{ ID: string; name: string }>): EventTotals
+export function summarisePeriod(
+  rows: TotalsInput[],
+  period: string,
+  people: Array<{ ID: string; name: string }>,
+): PeriodTotals
+export function summariseEvent(
+  rows: TotalsInput[],
+  event: { ID: string; name: string },
+  participants: Array<{ ID: string; name: string }>,
+): EventTotals
 ```
 
 Rules:
@@ -396,7 +415,7 @@ Rules:
   never as an amount owed. With zero participants it is 0.
 - Money rounds half-up to 2 decimals **once, at the end**, via `srv/lib/money.ts`.
   Never round an intermediate.
-- A **payment run** is now a *period close*: it stamps a `Settlements` row recording the
+- A **payment run** is now a _period close_: it stamps a `Settlements` row recording the
   period's totals so the month can be marked done and reported on later. It moves no
   money and computes no debt. `clearingDocument` stays `CLR-<period>` and `approvedBy`
   stays `'CEO of the household'` — the joke survives; the arithmetic changes.
@@ -424,17 +443,16 @@ Expenses.paidBy : Association to People          // unchanged in spirit, renamed
 
 Placeholders — grep for these to replace with real values:
 
-| Placeholder | Seed value |
-|---|---|
-| `<NAME_A>` | `Partner A` (colour `#0070F2`, isDefault) |
-| `<NAME_B>` | `Partner B` (colour `#F31DED`, isDefault) |
-| `<FIRST_DATE_YYYY-MM-DD>` | `2024-06-15` |
-| `<FIRST_DATE_PLACE>` | `The place where it started` |
-| `<ONE_SENTENCE_FOR_HER>` | `Document #1. Everything since has been a follow-up posting.` |
+| Placeholder               | Seed value                                                    |
+| ------------------------- | ------------------------------------------------------------- |
+| `<NAME_A>`                | `Partner A` (colour `#0070F2`, isDefault)                     |
+| `<NAME_B>`                | `Partner B` (colour `#F31DED`, isDefault)                     |
+| `<FIRST_DATE_YYYY-MM-DD>` | `2024-06-15`                                                  |
+| `<FIRST_DATE_PLACE>`      | `The place where it started`                                  |
+| `<ONE_SENTENCE_FOR_HER>`  | `Document #1. Everything since has been a follow-up posting.` |
 
 Document #1 is `Expenses.documentNumber = 1`, `source='manual'`, `status='confirmed'`,
 `category='Dining'`, `moment='date_night'`, and is **read-only except for `note`**.
-
 
 ---
 
@@ -497,7 +515,6 @@ Rules, in priority order:
 Identity in dev comes from CAP's mocked user; map it to a `People` row by name and fall
 back to the first `isDefault` person so the app never breaks when the mapping misses.
 
-
 ---
 
 ## 12. Groups, accounts, and chat (TWM-ADR-002)
@@ -513,7 +530,7 @@ Normative for the platform change. The full reasoning is in `docs/ARCHITECTURE.m
   is backfilled to the default group `g0000000-0000-4000-8000-000000000001`.
 - **Phase 1:** the session carries `groupId`; `LedgerService` registers ONE handler,
   `scopeToGroup`, on every tenant entity and action:
-  - `before READ`  → `query.where({ group_ID: g })` (narrow the query; never sieve rows)
+  - `before READ` → `query.where({ group_ID: g })` (narrow the query; never sieve rows)
   - `before CREATE/UPDATE/DELETE` → stamp `group_ID = g`; refuse a payload naming another group
   - an id that belongs to another group answers **404**, never 403
 - Composite index `(group_ID, date)` on `Expenses`; `(group_ID, startsOn)` on `Events`.
@@ -574,18 +591,18 @@ labelled region-by-region at build time by `app/scripts/bake-figure.ts`, which w
 `figureData.ts`. Provenance and licence: `app/scripts/NOTICE.md`. Adding a code means
 re-running that script, because the labels are baked, not computed on the phone.
 
-| code | region | code | region |
-|---|---|---|---|
-| `hair` | back and top of the head | `lowerBack` | lower back |
-| `face` | front of the head | `hips` | hips, sides |
-| `lips` | mouth | `glutes` | behind, below the waist |
-| `ears` | both ears | `arms` | upper arms and forearms |
-| `neck` | throat and nape | `hands` | hands |
-| `shoulders` | both shoulders | `thighs` | outer and front thigh |
-| `chest` | chest, front above the waist | `innerThighs` | inward-facing thigh |
-| `stomach` | belly, front below the chest | `calves` | below the knee |
-| `upperBack` | back above the waist | `feet` | feet |
-| | | `intimate` | pelvis, front |
+| code        | region                       | code          | region                  |
+| ----------- | ---------------------------- | ------------- | ----------------------- |
+| `hair`      | back and top of the head     | `lowerBack`   | lower back              |
+| `face`      | front of the head            | `hips`        | hips, sides             |
+| `lips`      | mouth                        | `glutes`      | behind, below the waist |
+| `ears`      | both ears                    | `arms`        | upper arms and forearms |
+| `neck`      | throat and nape              | `hands`       | hands                   |
+| `shoulders` | both shoulders               | `thighs`      | outer and front thigh   |
+| `chest`     | chest, front above the waist | `innerThighs` | inward-facing thigh     |
+| `stomach`   | belly, front below the chest | `calves`      | below the knee          |
+| `upperBack` | back above the waist         | `feet`        | feet                    |
+|             |                              | `intimate`    | pelvis, front           |
 
 Nineteen codes. `intimate` is one zone deliberately: finer anatomy would be drawn detail
 this figure does not have and does not need, and the note field carries anything more
@@ -593,12 +610,12 @@ specific a person wants to say.
 
 ### 13.2 Levels
 
-| value | meaning |
-|---|---|
-| `-1` | rather not |
-| `1` | gently |
-| `2` | yes |
-| `3` | favourite |
+| value | meaning    |
+| ----- | ---------- |
+| `-1`  | rather not |
+| `1`   | gently     |
+| `2`   | yes        |
+| `3`   | favourite  |
 
 There is no `0`. A region somebody has no opinion about carries **no row**, which is a
 different state from one marked `-1`, and the service rejects a write of `0` rather than
@@ -688,9 +705,9 @@ cost   free under_15 c15_30 c30_60 c60_120 over_120
 
 Displayed and ordered by different numbers, on purpose:
 
-| | |
-|---|---|
-| shown | the plain mean, two decimals |
+|         |                                                  |
+| ------- | ------------------------------------------------ |
+| shown   | the plain mean, two decimals                     |
 | ordered | `score = (v·R + m·C) / (v + m)`, rounded to 4 dp |
 
 `v` ratings with mean `R`, global mean `C = 3.9`, prior weight `m = 8`. Rounding to four
@@ -734,3 +751,83 @@ deck to reach three is not.
 - The line under a card names the corpus (`"worked for 12 households"`) and **never a rank**.
 - Google and Apple are **destinations, not stores**: every card carries keyless universal
   links out. Nothing is ever written back to either — neither platform permits it.
+
+---
+
+## 15. The database — SQLite or Postgres (TWM-ADR-002, TWM-ADR-003)
+
+### 15.1 Which one, and how it is chosen
+
+**`DATABASE_URL` decides, and nothing else does.** Set → Postgres; unset → SQLite. There is no
+third setting and no half-configured state: a malformed `DATABASE_URL` is a startup failure,
+never a silent fall back to a SQLite file that would then quietly accumulate rows nobody
+meant to keep. `srv/lib/database.ts` is the only place that reads it.
+
+The dialect is **configuration, never a fork in application code**. Every query in the repo is
+CQN, which CAP compiles for whichever store is configured. Exactly two things cannot be
+dialect-blind, and both branch once, in the open, in `srv/lib/migrate.ts`:
+
+|                 | SQLite                                        | Postgres                                        |
+| --------------- | --------------------------------------------- | ----------------------------------------------- |
+| read the schema | `sqlite_master`, `PRAGMA table_info`          | `information_schema.columns`                    |
+| create a table  | generated from the model, `dialect: 'sqlite'` | generated from the model, `dialect: 'postgres'` |
+
+**The dialect is passed to `cds.compile.to.sql`, never inherited.** Left to ambient
+configuration it emits SQLite spellings — `NVARCHAR`, `TIMESTAMP_TEXT` — for a Postgres
+database, and that DDL runs at boot against the real store. `test/database.test.ts` fails if
+any SQLite-only spelling can reach Postgres.
+
+Postgres folds unquoted identifiers to lower case and CAP creates its tables unquoted, so all
+schema comparison is case-insensitive (`hasTable` / `hasColumn`). Matched case-sensitively,
+`twowaymatch_BodyMaps` looks absent and the migration tries to create a table that already
+holds somebody's answers.
+
+### 15.2 Migrations
+
+Additive, idempotent, applied at boot, recorded once per database in `twm_migrations`. Never
+drops a table, never drops a column, never rewrites a row that has a value. `cds deploy` is
+for development and tests only — **it must never be run against a live store**, because it
+drops every table first.
+
+Portable by construction, and required to stay so: `CREATE TABLE IF NOT EXISTS`,
+`ALTER TABLE … ADD COLUMN`, `CREATE INDEX IF NOT EXISTS`, `VARCHAR`, `TIMESTAMP`.
+
+Indexes live in `COMMONS_INDEXES` and `TENANT_INDEXES` and are re-applied on every new
+migration id, so appending one is a one-line change. One of them is not an optimisation:
+
+```
+UNIQUE (place_ID, authorKey) on twowaymatch_PlaceRatings
+```
+
+§14.3's "one household, one voice" is enforced in the service by reading before writing,
+which is a check-then-act and therefore a race. Two taps on a slow connection can interleave
+and give one household two votes on one place, silently doubling its weight in the ranking.
+The index is the only place that race can actually be closed.
+
+### 15.3 Moving from SQLite to Postgres
+
+One-way, one-shot, offline. `scripts/migrate-to-postgres.ts` copies rows and **does not
+create the schema** — start the app once against the empty database and let `migrate()` build
+it from the model, so that the mechanism which runs at every boot is the one that is right.
+
+Three differences it exists to handle:
+
+1. **Booleans.** SQLite has none; CAP stores `0`/`1`, and Postgres rejects an integer for a
+   `boolean` column. Every value is coerced against the **target column's** declared type read
+   from `information_schema`, never guessed from the value — `0` is a good integer and a good
+   `false`, and only the target knows which was meant.
+2. **Binaries.** `BLOB` → `BYTEA`. `node:sqlite` returns `Uint8Array`; it is wrapped as a
+   `Buffer`, without which a photograph is stored as the text `[object Uint8Array]`.
+3. **Identifier case**, as in §15.1.
+
+It refuses to write on top of a non-empty table without `--force`, and verifies every table
+row-for-row afterwards by reading back. A mismatch fails: everything downstream — a statement,
+a payment run, a year of memories — is a sum over these rows.
+
+### 15.4 Backups
+
+`scripts/backup.ts` snapshots the SQLite **file** through SQLite's online backup API. It
+refuses to run when `DATABASE_URL` is set (`backupIsExternal()`), because against Postgres it
+would produce a reassuring empty tarball every night until the night somebody needed it.
+Managed Postgres backs itself up; the nightly workflow must be turned off at the same time as
+the cutover, not after.

@@ -26,10 +26,12 @@
     "ml:retrain": "npm run ml:export-data && ml/.venv/bin/python ml/train.py --csv ml/data/live_transactions.csv --n-buckets 65536 && npm run ml:export && vitest run test/classifier-parity.test.ts",
     "deploy": "scripts/deploy.sh",
     "backup": "cds-tsx run scripts/backup.ts",
+    "db:to-postgres": "tsx scripts/migrate-to-postgres.ts",
     "hash": "cds-tsx run scripts/hash-password.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.122.0",
+    "@cap-js/postgres": "^3.0.1",
     "@cap-js/sqlite": "^3.0.2",
     "@sap/cds": "^10.0.6",
     "bcryptjs": "^3.0.3",
@@ -44,6 +46,7 @@
     "@cap-js/cds-typer": "^0.41.0",
     "@sap/cds-dk": "^10.0.7",
     "@types/node": "^24.0.0",
+    "@types/pg": "^8.23.1",
     "concurrently": "^10.0.5",
     "prettier": "^3.9.6",
     "tsx": "^4.23.13",

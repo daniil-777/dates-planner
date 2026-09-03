@@ -29,6 +29,8 @@
  * script has no opinion about whether the system tar is GNU or BSD.
  */
 import cds from '@sap/cds'
+
+import { backupIsExternal } from '../srv/lib/database'
 import { DatabaseSync, backup } from 'node:sqlite'
 import { createGzip } from 'node:zlib'
 import { createWriteStream, existsSync, mkdirSync, readFileSync, rmSync, statSync } from 'node:fs'
@@ -100,6 +102,18 @@ const MEDIA_EXTENSIONS: Readonly<Record<string, string>> = {
  * ------------------------------------------------------------------ */
 
 async function main(): Promise<void> {
+  // This snapshots a *file*, through SQLite's own online backup API. Pointed at a Postgres
+  // deployment it would find no file, or an empty stale one, and write a reassuring tarball
+  // every night until the night somebody needed it. Managed Postgres takes its own backups;
+  // refusing loudly is the only honest thing to do here.
+  if (backupIsExternal()) {
+    throw new Error(
+      'This database is Postgres, which backs itself up. `scripts/backup.ts` snapshots the ' +
+        'SQLite file and would produce nothing useful. See docs/RUNBOOK.md for what to do ' +
+        'instead, and turn off the nightly workflow if it is still pointed here.',
+    )
+  }
+
   const outDir = outputDirectory(process.argv.slice(2))
   const source = databaseFile()
 
