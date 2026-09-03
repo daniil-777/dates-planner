@@ -57,3 +57,35 @@ export const CATEGORY_CODES = [
  * exists because an enum in CDS gives no iteration order to the runtime.
  */
 export const MOMENT_CODES = ['everyday', 'date_night', 'trip', 'gift'] as const
+
+/**
+ * The nineteen touch-map regions — CONTRACTS.md §13.1.
+ *
+ * Kept here beside the category and moment codes because it is the same kind of thing: a
+ * closed vocabulary shared across a boundary, where one side inventing a value the other
+ * has never heard of is the failure to prevent. `app/src/pages/intimacy/zones.ts` is the
+ * client's copy, and the two lists must not diverge.
+ */
+export const ZONE_CODES = [
+  'hair',
+  'face',
+  'lips',
+  'ears',
+  'neck',
+  'shoulders',
+  'chest',
+  'stomach',
+  'upperBack',
+  'lowerBack',
+  'hips',
+  'glutes',
+  'arms',
+  'hands',
+  'thighs',
+  'innerThighs',
+  'calves',
+  'feet',
+  'intimate',
+] as const
+
+export type ZoneCode = (typeof ZONE_CODES)[number]

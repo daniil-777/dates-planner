@@ -24,7 +24,8 @@
     "react-dom": "^19.2.0",
     "react-leaflet": "^5.0.0",
     "react-router-dom": "^7.18.3",
-    "recharts": "^3.10.1"
+    "recharts": "^3.10.1",
+    "three": "^0.180.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.62.1",
@@ -33,6 +34,7 @@
     "@types/leaflet": "^1.9.12",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
+    "@types/three": "^0.185.4",
     "@vitejs/plugin-react": "^6.1.1",
     "jsdom": "^26.1.0",
     "typescript": "^5.9.3",

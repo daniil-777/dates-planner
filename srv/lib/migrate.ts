@@ -176,6 +176,47 @@ async function readSchema(db: MigrationDb): Promise<SchemaFacts> {
   return { tables, columns }
 }
 
+/**
+ * Touch maps (CONTRACTS.md §13). Added after the volume already held a household, so
+ * like every other table here these are created in place rather than by `cds deploy`,
+ * which would take the existing rows with it.
+ *
+ * `group_ID` is spelled out rather than left to the phase-0 loop: that loop adds the
+ * column to tables it finds, and these two do not exist when it runs.
+ */
+const TOUCH_MAP_TABLES: ReadonlyArray<{ table: string; ddl: string }> = [
+  {
+    table: 'twowaymatch_BodyMaps',
+    ddl: `CREATE TABLE twowaymatch_BodyMaps (
+  ID NVARCHAR(36) NOT NULL,
+  createdAt TIMESTAMP_TEXT,
+  createdBy NVARCHAR(255),
+  modifiedAt TIMESTAMP_TEXT,
+  modifiedBy NVARCHAR(255),
+  person_ID NVARCHAR(36),
+  form NVARCHAR(10) DEFAULT 'neutral',
+  group_ID NVARCHAR(36),
+  PRIMARY KEY(ID)
+)`,
+  },
+  {
+    table: 'twowaymatch_BodyZones',
+    ddl: `CREATE TABLE twowaymatch_BodyZones (
+  ID NVARCHAR(36) NOT NULL,
+  createdAt TIMESTAMP_TEXT,
+  createdBy NVARCHAR(255),
+  modifiedAt TIMESTAMP_TEXT,
+  modifiedBy NVARCHAR(255),
+  map_ID NVARCHAR(36),
+  zone NVARCHAR(24),
+  level INTEGER,
+  note NVARCHAR(200),
+  group_ID NVARCHAR(36),
+  PRIMARY KEY(ID)
+)`,
+  },
+]
+
 const STEPS: ReadonlyArray<Step> = [
   {
     id: 'adr-002-phase-0-groups',
@@ -212,6 +253,18 @@ const STEPS: ReadonlyArray<Step> = [
         await db.run(`UPDATE ${table} SET group_ID = '${DEFAULT_GROUP}' WHERE group_ID IS NULL`)
       }
       done.push('assigned every existing row to it')
+      return done
+    },
+  },
+  {
+    id: 'touch-maps',
+    async run(db, has) {
+      const done: string[] = []
+      for (const { table, ddl } of TOUCH_MAP_TABLES) {
+        if (has.tables.has(table)) continue
+        await db.run(ddl)
+        done.push(`created ${table}`)
+      }
       return done
     },
   },

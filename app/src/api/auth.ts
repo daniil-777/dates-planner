@@ -216,6 +216,8 @@ export interface Session {
   kind: string | null
   role: 'owner' | 'member' | null
   personName: string | null
+  /** The caller's roster row in the active household — what a first-person write is keyed on. */
+  personId: string | null
   memberships: Membership[]
 }
 
@@ -241,6 +243,7 @@ export async function session(): Promise<Session> {
     kind: text(record.kind),
     role: record.role === 'owner' || record.role === 'member' ? record.role : null,
     personName: text(record.personName),
+    personId: text(record.personId),
     memberships: Array.isArray(record.memberships)
       ? record.memberships.filter(isRecord).map(row => ({
           groupId: String(row.groupId ?? ''),

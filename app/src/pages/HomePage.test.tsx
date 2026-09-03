@@ -237,6 +237,7 @@ describe('the home grid', () => {
     expect(HOME_TILES.map(spec => spec.to)).toEqual([
       '/scan',
       '/mood',
+      '/intimacy',
       '/ledger',
       '/events',
       '/calendar',
@@ -257,7 +258,7 @@ describe('the home grid', () => {
     expect(screen.getAllByTestId(/^home-tile-/)).toHaveLength(HOME_TILES.length)
   })
 
-  it('gives every tile its own accent from the palette, and never invents one', () => {
+  it('gives every tile its own accent from the palette, and invents only the one', () => {
     // CONTRACTS §1.1 fixes these ten; §8 asks for tiles that are not a wall of one blue.
     const palette = new Set([
       '#0070F2',
@@ -271,8 +272,22 @@ describe('the home grid', () => {
       '#C87200',
       '#256F3A',
     ])
+    // "Between us" is the one exception, and it is named here rather than waved through
+    // by loosening the check: there are ten category colours and they were all spoken for
+    // by the time an eleventh tile arrived. Naming it keeps the rule enforced for every
+    // other tile and makes a second invented hue fail this test, which is the point.
+    const invented = new Map([['intimacy', '#B02A6F']])
+
+    for (const spec of HOME_TILES) {
+      const allowed = invented.get(spec.id)
+      if (allowed !== undefined) {
+        expect(spec.accent, `${spec.id} may only use its documented exception`).toBe(allowed)
+        continue
+      }
+      expect(palette.has(spec.accent), `${spec.id} invented ${spec.accent}`).toBe(true)
+    }
+
     const accents = HOME_TILES.map(spec => spec.accent)
-    for (const accent of accents) expect(palette.has(accent)).toBe(true)
     expect(new Set(accents).size).toBe(HOME_TILES.length)
   })
 
@@ -355,12 +370,17 @@ describe('the home grid', () => {
     // on either would be a lie.
     // ...and the chat tile, whose figure is an invitation too: there is no unread count
     // until the app keeps a read marker.
-    const STATIC_FIGURES = new Set(['howItWorks', 'mood', 'chat'])
+    // ...and "Between us", which carries no figure at all. That one is not a design
+    // preference but CONTRACTS.md §13.4: a count of marked regions on the household's
+    // first screen would put the most private thing in the app on its most public
+    // surface. If a figure ever appears on this tile, this test should fail.
+    const STATIC_FIGURES = new Set(['howItWorks', 'mood', 'chat', 'intimacy'])
     const awaited = HOME_TILES.filter(spec => !STATIC_FIGURES.has(spec.id))
     expect(screen.getAllByTestId('home-tile-shimmer')).toHaveLength(awaited.length)
     expect(tile('howItWorks')).not.toHaveAttribute('aria-busy', 'true')
     expect(tile('mood')).not.toHaveAttribute('aria-busy', 'true')
     expect(tile('chat')).not.toHaveAttribute('aria-busy', 'true')
+    expect(tile('intimacy')).not.toHaveAttribute('aria-busy', 'true')
     // The destinations are reachable while their numbers are still in the post.
     expect(tile('ledger')).toHaveAttribute('href', '/ledger')
     expect(tile('ledger')).toHaveAttribute('aria-busy', 'true')

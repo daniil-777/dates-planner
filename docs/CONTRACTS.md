@@ -556,3 +556,76 @@ No orientation label, no "couple type" enum on People or Users. `Groups.kind` is
 that sets roster size and copy. `Users.gender` is optional free text a person writes
 about themself and is never used for logic. This is a GDPR Art. 9 / FADP decision, not a
 style choice — see ADR-002 §6.
+
+## 13. Touch maps — `BodyMaps` / `BodyZones`
+
+A private, first-person map of where somebody likes being touched, drawn on a rotatable
+3D mannequin. Two people in a household each keep one and can read the other's; that
+reading is the entire point of the feature.
+
+### 13.1 Zone codes
+
+Shared by CDS, the service guard, and `app/src/pages/intimacy/zones.ts`. The renderer
+assigns every vertex of the figure exactly one of these, so a code that is not on this
+list can never be picked, and a code removed from it orphans stored rows. **Additive
+changes only.**
+
+| code | region | code | region |
+|---|---|---|---|
+| `hair` | back and top of the head | `lowerBack` | lower back |
+| `face` | front of the head | `hips` | hips, sides |
+| `lips` | mouth | `glutes` | behind, below the waist |
+| `ears` | both ears | `arms` | upper arms and forearms |
+| `neck` | throat and nape | `hands` | hands |
+| `shoulders` | both shoulders | `thighs` | outer and front thigh |
+| `chest` | chest, front above the waist | `innerThighs` | inward-facing thigh |
+| `stomach` | belly, front below the chest | `calves` | below the knee |
+| `upperBack` | back above the waist | `feet` | feet |
+| | | `intimate` | pelvis, front |
+
+Nineteen codes. `intimate` is one zone deliberately: finer anatomy would be drawn detail
+this figure does not have and does not need, and the note field carries anything more
+specific a person wants to say.
+
+### 13.2 Levels
+
+| value | meaning |
+|---|---|
+| `-1` | rather not |
+| `1` | gently |
+| `2` | yes |
+| `3` | favourite |
+
+There is no `0`. A region somebody has no opinion about carries **no row**, which is a
+different state from one marked `-1`, and the service rejects a write of `0` rather than
+storing an ambiguous one. The negative end exists because "not here" is the more
+important half of what a map like this is for.
+
+### 13.3 Who may read and who may write
+
+Read is household-wide: a map only its author could see would have no reader. Write is
+first-person only — `guardBodyMapWrite` refuses any CREATE, UPDATE or DELETE that lands
+on another roster member's map, checking the **stored** owner rather than the payload, so
+re-pointing `person` at yourself on the way past does not help. Filtered updates are
+covered too, via `readSubjectRows`.
+
+### 13.4 What never happens to these rows
+
+They are Art. 9 / FADP special-category data, and they are the only rows in the database
+that would embarrass somebody if they leaked.
+
+- **Never sent to a model.** `srv/lib/statement.ts` reads a hard allowlist of five tables
+  (`Expenses`, `Memories`, `People`, `Events`, `EventParticipants`). Touch maps are not on
+  it and must not be added; nothing here reaches an LLM prompt, a generated statement, or
+  the retraining export.
+- **Never on a shared surface.** No home-tile figure, no statement line, no memory, no
+  notification body.
+- Tenant-scoped like every other household entity, and included in "Export everything"
+  because it is the person's own data.
+
+### 13.5 `form`
+
+`feminine` | `masculine` | `neutral` — which mannequin to draw, chosen per person for
+their own map. The pairing anybody sees (two women, two men, a man and a woman) is the
+two individual choices side by side. This is **not** an orientation field and must not be
+turned into one; see §12.4 and ADR-002 §6.

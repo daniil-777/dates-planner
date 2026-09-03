@@ -22,6 +22,13 @@
  * | Chat | `#D20A0A` | Health |
  * | How it works | `#A45D00` | Cafes |
  *
+ * | Between us | `#B02A6F` | **not from that palette** — see below |
+ *
+ * `Between us` is the one exception, and it is a deliberate one: the ten category colours
+ * were all spoken for by the time it arrived, and this tile is not a spending category
+ * with a colour waiting for it. The rose is picked to sit beside Gifts' magenta without
+ * reading as it. If an eleventh category is ever added, it does not get this hue.
+ *
  * A tile's accent is passed to CSS as `--home-accent` and used for the icon, the rule
  * across the top and the hover border — never for text, which stays on the theme's own
  * colours so contrast survives sap_horizon_dark.
@@ -30,6 +37,7 @@
 export type HomeTileId =
   | 'scan'
   | 'mood'
+  | 'intimacy'
   | 'ledger'
   | 'events'
   | 'calendar'
@@ -72,6 +80,14 @@ export const HOME_TILES: readonly HomeTileSpec[] = [
     icon: 'da',
     accent: '#C87200',
     hint: 'How are you doing today?',
+  },
+  {
+    id: 'intimacy',
+    to: '/intimacy',
+    label: 'Between us',
+    icon: 'private',
+    accent: '#B02A6F',
+    hint: 'Where you like being touched',
   },
   {
     id: 'ledger',

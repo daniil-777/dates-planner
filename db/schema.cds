@@ -538,3 +538,60 @@ entity Corrections: cuid, tenant {
   corrected : String(50);
   createdAt : Timestamp @cds.on.insert: $now;
 }
+
+/**
+ * A person's touch map (CONTRACTS.md §13).
+ *
+ * ## Why this is modelled per person, not per couple
+ *
+ * The figure is one someone picks for *themselves*, and the preferences on it are
+ * theirs. Two people in a household each keep their own map; the pairing anybody
+ * wants to see — two women, two men, a man and a woman — falls out of the two
+ * individual choices rather than being stored as a property of the couple. That is
+ * deliberate: a "couple type" column would be an orientation field wearing a hat,
+ * and TWM-ADR-002 §4 rules those out. `form` says which mannequin to draw and
+ * nothing else.
+ *
+ * ## The most sensitive rows in the database
+ *
+ * This is Article 9 / FADP special-category data. Three consequences, all enforced
+ * elsewhere and recorded here so the next reader does not have to rediscover them:
+ * it is tenant-scoped like everything else; `guardBodyMapWrite` refuses a write to
+ * anybody else's map, so the roster cannot be edited on someone's behalf; and it is
+ * absent from `srv/lib/statement.ts`, whose five-table allowlist is what keeps
+ * household facts out of LLM prompts. Nothing here is ever sent to a model.
+ */
+entity BodyMaps: cuid, managed, tenant {
+  person : Association to People;
+  /**
+   * Which mannequin to draw. Not a statement about the person beyond the drawing —
+   * see the entity doc.
+   */
+  @assert.range
+  form   : String(10) enum {
+    feminine;
+    masculine;
+    neutral;
+  } default 'neutral';
+  zones  : Composition of many BodyZones
+             on zones.map = $self;
+}
+
+/**
+ * One region of one person's map. A region with no row is one they have not said
+ * anything about, which is different from a region they have marked `-1`.
+ */
+entity BodyZones: cuid, managed, tenant {
+  map   : Association to BodyMaps;
+  /** A code from the fixed list in CONTRACTS.md §13.1. */
+  @mandatory
+  zone  : String(24);
+  /**
+   * -1 rather not · 1 gently · 2 yes · 3 favourite. There is no 0: a region with no
+   * opinion carries no row. The negative end exists because "not here" is the more
+   * important half of what this feature is for.
+   */
+  @mandatory @assert.range: [-1, 3]
+  level : Integer;
+  note  : String(200);
+}

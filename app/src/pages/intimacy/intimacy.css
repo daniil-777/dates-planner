@@ -1,0 +1,304 @@
+/**
+ * Between us.
+ *
+ * Colours come from the UI5 theme variables the rest of the app uses, so this follows
+ * sap_horizon and sap_horizon_dark without a second palette. The two literals are the
+ * level ramp — which lives in `zones.ts`, because the figure needs the same values and a
+ * mark's colour has to be one number in one place — and the rose accent this page is
+ * titled in.
+ */
+
+.intimacy {
+  display: flex;
+  flex-direction: column;
+  gap: var(--twm-space-l);
+  padding: var(--twm-space-l);
+  max-width: var(--twm-content-max);
+  margin: 0 auto;
+  width: 100%;
+}
+
+.intimacy--loading {
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+}
+
+.intimacy__title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--sapTitleColor, #1d2d3e);
+}
+
+.intimacy__sub {
+  margin: 0.35rem 0 0;
+  max-width: 44rem;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: var(--twm-muted);
+}
+
+/* ------------------------------------------------------------ whose map */
+
+.intimacy__people {
+  display: flex;
+  gap: var(--twm-space-s);
+  flex-wrap: wrap;
+}
+
+.intimacy__person {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: var(--twm-touch);
+  padding: 0 var(--twm-space-l);
+  border: 1px solid var(--twm-border);
+  border-radius: var(--twm-radius-pill);
+  background: var(--twm-surface);
+  color: var(--sapTextColor, #1d2d3e);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.intimacy__person[aria-pressed='true'] {
+  border-color: #b02a6f;
+  background: color-mix(in srgb, #b02a6f 12%, var(--twm-surface));
+}
+
+.intimacy__person:focus-visible,
+.tmap__form:focus-visible,
+.tmap__level:focus-visible,
+.tmap__zone:focus-visible {
+  outline: 2px solid var(--sapContent_FocusColor, #0032a5);
+  outline-offset: 2px;
+}
+
+.intimacy__dot {
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+}
+
+.intimacy__footnote {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--twm-muted);
+  border-inline-start: 3px solid #b02a6f;
+  padding: var(--twm-space-s) var(--twm-space-l);
+}
+
+/* ------------------------------------------------------------- the card */
+
+.tmap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--twm-space-l);
+  padding: var(--twm-space-l);
+  border: 1px solid var(--twm-border);
+  border-radius: var(--twm-radius-l);
+  background: var(--twm-surface);
+}
+
+.tmap__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--twm-space-m);
+  flex-wrap: wrap;
+}
+
+.tmap__who {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--sapTitleColor, #1d2d3e);
+}
+
+.tmap__sub {
+  font-size: 0.82rem;
+  color: var(--twm-muted);
+}
+
+.tmap__forms {
+  display: flex;
+  border: 1px solid var(--twm-border);
+  border-radius: var(--twm-radius-pill);
+  overflow: hidden;
+}
+
+.tmap__form {
+  min-height: var(--twm-touch);
+  padding: 0 var(--twm-space-m);
+  border: 0;
+  background: transparent;
+  color: var(--sapTextColor, #1d2d3e);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.tmap__form[aria-pressed='true'] {
+  background: #b02a6f;
+  color: #fff;
+  font-weight: 600;
+}
+
+/* ---------------------------------------------------------- the figure */
+
+.tmap__figure {
+  position: relative;
+  border-radius: var(--twm-radius-m);
+  /* A soft vertical wash rather than a flat fill: it gives the mannequin a ground to
+     stand against, which is most of what stops a lit 3D object reading as a sticker. */
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, #b02a6f 7%, var(--sapBackgroundColor, #f5f6f7)),
+    var(--sapBackgroundColor, #f5f6f7)
+  );
+  overflow: hidden;
+}
+
+.figure__canvas {
+  width: 100%;
+  /* Tall enough that a whole standing body is legible on a phone without scrolling, and
+     capped so it does not swallow a desktop window. */
+  height: min(62vh, 30rem);
+  touch-action: none;
+}
+
+.tmap__hint {
+  position: absolute;
+  left: 50%;
+  bottom: 0.5rem;
+  transform: translateX(-50%);
+  margin: 0;
+  font-size: 0.72rem;
+  color: var(--twm-muted);
+  pointer-events: none;
+}
+
+/* ---------------------------------------------------------- the editor */
+
+.tmap__editor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--twm-space-s);
+  padding: var(--twm-space-m);
+  border: 1px solid var(--twm-border);
+  border-radius: var(--twm-radius-m);
+  background: var(--sapBackgroundColor, #f5f6f7);
+}
+
+.tmap__editorHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--twm-space-m);
+}
+
+.tmap__editorZone {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--sapTitleColor, #1d2d3e);
+}
+
+.tmap__levels {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(6.5rem, 1fr));
+  gap: var(--twm-space-s);
+}
+
+.tmap__level {
+  min-height: var(--twm-touch);
+  padding: 0 var(--twm-space-s);
+  border: 1px solid var(--twm-border);
+  border-radius: var(--twm-radius-s);
+  background: var(--twm-surface);
+  color: var(--sapTextColor, #1d2d3e);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.tmap__clear {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--twm-muted);
+}
+
+/* ----------------------------------------------------------- the list */
+
+.tmap__zonesLabel {
+  margin: 0 0 var(--twm-space-s);
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--twm-muted);
+}
+
+.tmap__list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tmap__zone {
+  display: flex;
+  align-items: center;
+  gap: var(--twm-space-s);
+  width: 100%;
+  min-height: var(--twm-touch);
+  padding: 0 var(--twm-space-s);
+  border: 0;
+  border-radius: var(--twm-radius-s);
+  background: transparent;
+  color: var(--sapTextColor, #1d2d3e);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.tmap__zone:disabled {
+  cursor: default;
+}
+
+.tmap__zone:not(:disabled):hover,
+.tmap__zone[aria-pressed='true'] {
+  background: var(--sapList_Hover_Background, #f2f2f2);
+}
+
+.tmap__swatch {
+  flex: 0 0 auto;
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  /* An unmarked region is a hollow ring, not a grey dot: absence should not look like a
+     fifth level. */
+  border: 1px solid var(--twm-border);
+}
+
+.tmap__zoneName {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 0.9rem;
+}
+
+.tmap__zoneLevel {
+  flex: 0 0 auto;
+  font-size: 0.78rem;
+  color: var(--twm-muted);
+}
+
+.tmap__empty {
+  margin: var(--twm-space-s) 0 0;
+  font-size: 0.85rem;
+  color: var(--twm-muted);
+}

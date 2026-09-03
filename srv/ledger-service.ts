@@ -57,7 +57,7 @@ import type {
 
 import { classify as runClassifier } from './lib/classifier'
 import { normaliseMerchant } from './lib/classifier/features'
-import { NEEDS_REVIEW_THRESHOLD } from './lib/constants'
+import { NEEDS_REVIEW_THRESHOLD, ZONE_CODES } from './lib/constants'
 import { addDays, daysBetween, periodOf, todayISO } from './lib/dates'
 import { getDocAiClient, mapJobResult } from './lib/documentai'
 import type { ExtractedReceipt } from './lib/documentai'
@@ -238,11 +238,16 @@ const TENANT_ENTITIES = [
   'Corrections',
   'Conversations',
   'Messages',
+  'BodyMaps',
+  'BodyZones',
 ] as const
 
 const MEMBERSHIPS = 'twowaymatch.Memberships'
 const CONVERSATIONS = 'LedgerService.Conversations'
 const MESSAGES = 'LedgerService.Messages'
+const BODY_MAPS = 'LedgerService.BodyMaps'
+const BODY_ZONES = 'LedgerService.BodyZones'
+const ZONE_CODE_SET: ReadonlySet<string> = new Set(ZONE_CODES)
 
 /** A message is a note, not an essay; the column is 4000 and this is well inside it. */
 const MAX_MESSAGE_CHARS = 2000
@@ -395,6 +400,15 @@ function personIdOf(entry: Record<string, unknown>): string | null {
   return null
 }
 
+/** The map a zone payload names, however the client chose to write it. */
+function mapIdOf(entry: Record<string, unknown>): string | null {
+  const direct = entry.map_ID
+  if (typeof direct === 'string' && direct !== '') return direct
+  const nested = entry.map
+  if (isRecord(nested) && typeof nested.ID === 'string' && nested.ID !== '') return nested.ID
+  return null
+}
+
 /** `1 posting` / `4 postings`, so the refusal below reads like a sentence. */
 function postingCount(count: number): string {
   return count === 1 ? '1 posting' : `${count} postings`
@@ -526,6 +540,13 @@ export default class LedgerService extends cds.ApplicationService {
     this.before('CREATE', 'EventParticipants', req => this.validateParticipantWrite(req))
     this.before(['CREATE', 'UPDATE'], 'EventPhotos', req => this.guardRawPhotoWrite(req))
     this.before(['CREATE', 'UPDATE'], 'Messages', req => this.guardRawMessageWrite(req))
+
+    // Touch maps: read is household-wide, write is first-person only (CONTRACTS.md §13.3).
+    for (const entity of ['BodyMaps', 'BodyZones'] as const) {
+      this.before(['CREATE', 'UPDATE', 'DELETE'], entity, req =>
+        this.guardBodyMapWrite(req, entity),
+      )
+    }
 
     /* ------------------------------------------------- group isolation */
 
@@ -2237,6 +2258,8 @@ export default class LedgerService extends cds.ApplicationService {
     'LedgerService.Corrections',
     'LedgerService.Conversations',
     'LedgerService.Messages',
+    'LedgerService.BodyMaps',
+    'LedgerService.BodyZones',
   ] as const
 
   /**
@@ -2463,6 +2486,106 @@ export default class LedgerService extends cds.ApplicationService {
    * A raw CREATE on `Messages` is refused, so every message goes through the action above
    * and therefore through its limits. Same rule, same reason, as `EventPhotos`.
    */
+
+  /**
+   * Refuse a write that lands on somebody else's touch map (CONTRACTS.md §13.3).
+   *
+   * Read of these rows is household-wide, because telling your partner what you like is
+   * the whole feature. Write is not, and the asymmetry is the point: a map is a statement
+   * in the first person, and one roster member filling in another's would make it
+   * worthless as one. No screen tries to — this refuses the request somebody could still
+   * send by hand.
+   *
+   * Ownership is read from the stored rows rather than trusted from the payload, so
+   * re-pointing `person` at yourself on the way past does not help: the row you are
+   * editing has to be yours *and* the row you would turn it into has to be yours.
+   * `readSubjectRows` is what makes that hold for a filtered UPDATE or DELETE, which
+   * names its targets in a where-clause rather than a key.
+   */
+  private async guardBodyMapWrite(req: Request, entity: 'BodyMaps' | 'BodyZones'): Promise<void> {
+    const me = await this.viewer(req)
+    if (me === null) return
+    const refuse = (): void => {
+      req.reject(403, 'a touch map can only be written by the person it belongs to.')
+    }
+
+    // What the payload is asking for.
+    for (const data of payloadRows(req.data)) {
+      const claimed = personIdOf(data)
+      if (entity === 'BodyMaps' && claimed !== null && claimed !== me.ID) refuse()
+      if (isSet(data.level) && Number(data.level) === 0) {
+        req.reject(400, 'a region with no opinion carries no row — delete it instead of storing 0.')
+      }
+      // The zone vocabulary is closed (§13.1). Without this the column takes any string,
+      // and a typo becomes a row that is stored, counted, and never drawn — the client
+      // drops codes it does not know, so the write would look like it worked.
+      if (isSet(data.zone) && !ZONE_CODE_SET.has(String(data.zone))) {
+        req.reject(400, `"${String(data.zone)}" is not a region of the body this app knows.`)
+      }
+    }
+
+    // One map per person. Two would not break anything visibly — the client reads the
+    // first — which is exactly why it is worth refusing: the marks would silently split
+    // across two rows and half of them would stop appearing.
+    if (entity === 'BodyMaps' && req.event === 'CREATE') {
+      for (const data of payloadRows(req.data)) {
+        const owner = personIdOf(data) ?? me.ID
+        const existing = await SELECT.one.from(BODY_MAPS).columns('ID').where({ person_ID: owner })
+        if (existing != null) req.reject(409, 'this person already has a map.')
+      }
+    }
+
+    // One row per region, for the same reason. Two taps on the same region in quick
+    // succession can both believe it is unmarked — the second reads state the first has
+    // not finished updating — and insert twice. The client serialises its saves to make
+    // that unlikely; this makes it impossible, which is the half that still holds when
+    // the second tap comes from somebody's other device.
+    if (entity === 'BodyZones' && req.event === 'CREATE') {
+      for (const data of payloadRows(req.data)) {
+        const mapId = mapIdOf(data)
+        if (mapId === null || !isSet(data.zone)) continue
+        const clash = await SELECT.one
+          .from(BODY_ZONES)
+          .columns('ID')
+          .where({ map_ID: mapId, zone: String(data.zone) })
+        if (clash != null) {
+          req.reject(409, `this map already says something about "${String(data.zone)}".`)
+        }
+      }
+    }
+
+    // What it would actually touch. A CREATE has no subject rows, so this is a no-op
+    // there and the payload check above is the whole guard.
+    if (req.event === 'CREATE') {
+      if (entity !== 'BodyZones') return
+      for (const data of payloadRows(req.data)) {
+        const map = mapIdOf(data)
+        if (map !== null && (await this.mapOwner(map)) !== me.ID) refuse()
+      }
+      return
+    }
+
+    if (entity === 'BodyMaps') {
+      const rows = await readSubjectRows<{ person_ID?: string | null }>(req, ['person_ID'])
+      if (rows.some(row => row.person_ID != null && String(row.person_ID) !== me.ID)) refuse()
+      return
+    }
+
+    const rows = await readSubjectRows<{ map_ID?: string | null }>(req, ['map_ID'])
+    for (const row of rows) {
+      if (row.map_ID == null) continue
+      if ((await this.mapOwner(String(row.map_ID))) !== me.ID) refuse()
+    }
+  }
+
+  /** Whose map this is, or null if there is no such map. */
+  private async mapOwner(mapId: string): Promise<string | null> {
+    const row = (await SELECT.one.from(BODY_MAPS).columns('person_ID').where({ ID: mapId })) as {
+      person_ID?: string | null
+    } | null
+    return row?.person_ID == null ? null : String(row.person_ID)
+  }
+
   private guardRawMessageWrite(req: Request): void {
     for (const data of payloadRows(req.data)) {
       if (isSet(data.media) || isSet(data.body)) {

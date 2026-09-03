@@ -91,6 +91,18 @@ service LedgerService @(path: '/api/ledger') {
 
   entity Messages          as projection on twm.Messages;
 
+  /**
+   * Touch maps — the most sensitive rows the service exposes (CONTRACTS.md §13).
+   *
+   * Read is household-wide on purpose: telling the person you sleep with what you like
+   * is the entire feature, and a map only they could see would have no reader. Write is
+   * not: `guardBodyMapWrite` refuses any insert or update that lands on somebody else's
+   * map, so a roster nobody polices cannot be filled in on their behalf.
+   */
+  entity BodyMaps          as projection on twm.BodyMaps;
+
+  entity BodyZones         as projection on twm.BodyZones;
+
   /* ------------------------------------------------------------- posting */
 
   /**

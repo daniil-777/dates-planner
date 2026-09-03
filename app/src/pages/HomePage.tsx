@@ -134,6 +134,11 @@ export function HomePage() {
     },
     // The write-up is a static asset, so its figure never loads and never fails —
     // it is simply what the article is.
+    // Deliberately figureless. Every other tile carries a live number, and a count of
+    // marked regions on the household's first screen would put the one thing in this app
+    // that is nobody else's business onto the surface most likely to be read over a
+    // shoulder — CONTRACTS.md §13.4. The tile shows its hint and nothing else.
+    intimacy: { status: 'unavailable' },
     howItWorks: {
       status: 'ready',
       figure: { kind: 'text', value: '10 sections', emphasis: 'number', caption: 'and a PDF' },
