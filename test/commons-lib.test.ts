@@ -6,9 +6,10 @@
  * geohash is what makes it fast, the author key is what keeps it anonymous, and the
  * vocabulary is the contract three layers share.
  */
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { authorKey, requireAuthorSecret, sameAuthor } from '../srv/lib/commons/author'
+import { clearPlaceCache, kindOf, searchPlaces, toCandidate } from '../srv/lib/commons/places'
 import { bounds, distanceMetres, geohash, mapLinks, neighbours } from '../srv/lib/commons/geo'
 import {
   DEFAULT_GLOBAL_MEAN,
@@ -272,5 +273,110 @@ describe('the author key', () => {
   it('still works with an empty .env, because the app has to', () => {
     expect(() => requireAuthorSecret({} as NodeJS.ProcessEnv)).not.toThrow()
     expect(authorKey(group, {} as NodeJS.ProcessEnv)).toMatch(/^[0-9a-f]{64}$/)
+  })
+})
+
+describe('finding a place', () => {
+  beforeEach(() => {
+    clearPlaceCache()
+  })
+
+  it('reduces OpenStreetMap’s classification to the eight kinds this app has', () => {
+    expect(kindOf('amenity', 'restaurant')).toBe('restaurant')
+    expect(kindOf('amenity', 'cafe')).toBe('cafe')
+    expect(kindOf('amenity', 'pub')).toBe('bar')
+    expect(kindOf('tourism', 'museum')).toBe('culture')
+    expect(kindOf('amenity', 'cinema')).toBe('culture')
+    expect(kindOf('leisure', 'park')).toBe('outdoors')
+    expect(kindOf('shop', 'bakery')).toBe('shop')
+    // Anything unrecognised is still a place somebody may want to rate.
+    expect(kindOf('man_made', 'obelisk')).toBe('other')
+    expect(kindOf(undefined, undefined)).toBe('other')
+  })
+
+  it('keeps the name and the address apart, so two identical cafés can be told apart', () => {
+    const candidate = toCandidate({
+      name: 'Kafi Dihei',
+      display_name: 'Kafi Dihei, Langstrasse 1, Zürich, 8004, Switzerland',
+      lat: '47.3769',
+      lon: '8.5417',
+      category: 'amenity',
+      type: 'cafe',
+      osm_type: 'node',
+      osm_id: 12345,
+      address: { city: 'Zürich', country_code: 'ch' },
+    })
+    expect(candidate).toMatchObject({
+      name: 'Kafi Dihei',
+      city: 'Zürich',
+      country: 'CH',
+      kind: 'cafe',
+      osmType: 'node',
+      osmId: '12345',
+    })
+    expect(candidate?.label).toContain('Langstrasse')
+  })
+
+  it('falls back to the first line of the address when a place has no name', () => {
+    const candidate = toCandidate({
+      display_name: 'Langstrasse 1, Zürich, Switzerland',
+      lat: '47.3',
+      lon: '8.5',
+    })
+    expect(candidate?.name).toBe('Langstrasse 1')
+  })
+
+  it('drops a row with no usable coordinates rather than pinning it at zero', () => {
+    expect(toCandidate({ display_name: 'Nowhere', lat: 'x', lon: 'y' })).toBeNull()
+    expect(toCandidate({ lat: '1', lon: '2' })).toBeNull()
+  })
+
+  it('does not call out for a query too short to mean anything', async () => {
+    const fetchImpl = vi.fn()
+    expect(await searchPlaces('ka', { fetchImpl: fetchImpl as unknown as typeof fetch })).toEqual(
+      [],
+    )
+    expect(fetchImpl).not.toHaveBeenCalled()
+  })
+
+  it('identifies the application, which Nominatim’s policy requires', async () => {
+    const fetchImpl = vi.fn(async () => new Response('[]', { status: 200 }))
+    await searchPlaces('kafi dihei', { fetchImpl: fetchImpl as unknown as typeof fetch })
+
+    const [, init] = fetchImpl.mock.calls[0] as unknown as [URL, RequestInit]
+    const agent = (init.headers as Record<string, string>)['user-agent']
+    expect(agent).toMatch(/TwoWayMatch/)
+  })
+
+  it('asks once for a query it has already answered', async () => {
+    const body = JSON.stringify([
+      { name: 'Kafi', display_name: 'Kafi, Zürich', lat: '47.3', lon: '8.5' },
+    ])
+    const fetchImpl = vi.fn(async () => new Response(body, { status: 200 }))
+    const options = { fetchImpl: fetchImpl as unknown as typeof fetch }
+
+    const first = await searchPlaces('kafi dihei', options)
+    const again = await searchPlaces('  Kafi   Dihei ', options)
+
+    expect(first).toHaveLength(1)
+    expect(again).toEqual(first)
+    // Normalised and cached: the second spelling is the same question.
+    expect(fetchImpl).toHaveBeenCalledTimes(1)
+  })
+
+  it('answers with an empty list when the geocoder is unhappy, and never throws', async () => {
+    const failing = vi.fn(async () => new Response('nope', { status: 503 }))
+    expect(
+      await searchPlaces('somewhere', { fetchImpl: failing as unknown as typeof fetch }),
+    ).toEqual([])
+
+    const exploding = vi.fn(async () => {
+      throw new Error('network')
+    })
+    // A place search that threw would take down the sheet somebody is typing into, and
+    // typing the name by hand is a perfectly good way to add a place.
+    expect(
+      await searchPlaces('elsewhere', { fetchImpl: exploding as unknown as typeof fetch }),
+    ).toEqual([])
   })
 })

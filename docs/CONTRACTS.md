@@ -752,6 +752,46 @@ deck to reach three is not.
 - Google and Apple are **destinations, not stores**: every card carries keyless universal
   links out. Nothing is ever written back to either — neither platform permits it.
 
+### 14.7 Finding a place
+
+`search(q, lat?, lon?)` proxies OpenStreetMap's Nominatim from the **server**
+(`srv/lib/commons/places.ts`). It used to run in the browser and was correct there; it is
+wrong there now for one reason — **a queue in a browser tab is a queue per tab.** One
+household with a phone and a laptop is two queues; a hundred households is a hundred, and the
+policy asks for one request a second from an _application_.
+
+Held here, and required to stay: at most one request per second process-wide, a `User-Agent`
+naming the app (`COMMONS_CONTACT` for an address somebody reads), a 10-minute cache keyed on
+the query and a coordinate rounded to about a kilometre, and no bulk endpoint. Nothing about
+the caller goes upstream — a typed string and, if they allowed it, roughly where they are; no
+cookie, no session, no id.
+
+Failure returns `[]` and never throws: a search that threw would take down the sheet somebody
+is typing into, and typing a name by hand is a perfectly good way to add a place.
+
+Nominatim's public instance is explicitly not for heavy use. The cutover — self-hosted
+Nominatim, Photon, Pelias — is this one file.
+
+---
+
+## 14A. The commons on screen (FRONTEND-CONTRACT §10)
+
+- `/tonight`, `/places`, `/ideas`, behind **one** launcher tile. Places and Ideas answer the
+  question Tonight asks rather than three separate questions, and fourteen tiles is a wall.
+- **Below the threshold a card shows no rating at all** — not `0.0`, not five empty outlines,
+  both of which read as "everybody hated it". It shows how many more households are needed.
+  `stars` stays `null` from the wire to the component; the obvious `stars ?? 0` is one
+  character and is the bug this rule exists to prevent.
+- **No surface may filter or label by who rated a place.** Not a chip, not a filter, not a
+  tag label. ADR-002 §6 and ADR-003 §5; `app/src/pages/places/commons.test.tsx` fails if a
+  label ever describes people rather than places.
+- **Cost is always per person.** Every band label ends in "each"; "for two" is a bug.
+- The base map is Leaflet on OpenStreetMap tiles. Google's would cost `script-src 'self'`,
+  the offline map and the promise that nothing about where a household goes leaves the app —
+  and buys nothing, because the pins, stars and cards are ours either way. Swapping it is
+  `PlacesMap.tsx` alone; everything around it takes `PlaceCard[]`.
+- Map links carry no key, no token and `rel="noreferrer"`.
+
 ---
 
 ## 15. The database — SQLite or Postgres (TWM-ADR-002, TWM-ADR-003)

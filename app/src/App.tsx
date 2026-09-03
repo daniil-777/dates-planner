@@ -33,6 +33,11 @@ function lazyPage(load: () => Promise<unknown>, named: string) {
 // flashes a skeleton on every cold start. It costs little — a tile grid, and the pure date
 // and roll-up helpers the Events and Memories pages already ship.
 const ScanPage = lazyPage(() => import('./pages/ScanPage'), 'ScanPage')
+// The commons pages drag in Leaflet and the whole rating surface, and none of it is wanted
+// until somebody asks what is good nearby.
+const TonightPage = lazyPage(() => import('./pages/TonightPage'), 'TonightPage')
+const PlacesPage = lazyPage(() => import('./pages/PlacesPage'), 'PlacesPage')
+const IdeasPage = lazyPage(() => import('./pages/IdeasPage'), 'IdeasPage')
 const LedgerPage = lazyPage(() => import('./pages/LedgerPage'), 'LedgerPage')
 const EventsPage = lazyPage(() => import('./pages/EventsPage'), 'EventsPage')
 const CalendarPage = lazyPage(() => import('./pages/CalendarPage'), 'CalendarPage')
@@ -100,6 +105,9 @@ export function App() {
               <Route path="/intimacy" element={<IntimacyPage />} />
               <Route path="/statement/*" element={<StatementPage />} />
               <Route path="/settings/*" element={<SettingsPage />} />
+              <Route path="/tonight" element={<TonightPage />} />
+              <Route path="/places" element={<PlacesPage />} />
+              <Route path="/ideas" element={<IdeasPage />} />
               <Route path="/chat" element={<ChatPage />} />
               <Route path="/how-it-works" element={<HowItWorksPage />} />
               <Route path="*" element={<Navigate to="/" replace />} />

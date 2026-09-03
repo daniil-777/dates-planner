@@ -36,6 +36,7 @@ import type { Request } from '@sap/cds'
 import { authorKey, requireAuthorSecret } from './lib/commons/author'
 import { dealEvenings, type DealtIdea, type DealtPlace } from './lib/commons/evening'
 import { distanceMetres, geohash, mapLinks, neighbours } from './lib/commons/geo'
+import { searchPlaces } from './lib/commons/places'
 import {
   applyStar,
   bayesianScore,
@@ -148,6 +149,7 @@ export default class CommonsService extends cds.ApplicationService {
     this.on('placeDetail', req => this.onPlaceDetail(req))
     this.on('tonight', req => this.onTonight(req))
     this.on('deck', req => this.onDeck(req))
+    this.on('search', req => this.onSearch(req))
     this.on('rate', req => this.onRate(req))
     this.on('withdrawRating', req => this.onWithdrawRating(req))
     this.on('reportTip', req => this.onReportTip(req))
@@ -359,6 +361,37 @@ export default class CommonsService extends cds.ApplicationService {
         .split(',')
         .map(tag => tag.trim())
         .filter(isPlaceTag),
+    }))
+  }
+
+  /**
+   * Somewhere to rate, by name.
+   *
+   * Each candidate is checked against the corpus by its OSM identity, so a place three
+   * households have already rated arrives with its `placeID` and the sheet can open on what
+   * they said rather than on an empty form. That lookup is one indexed query for the whole
+   * page of results, not one per result.
+   */
+  private async onSearch(req: Request): Promise<unknown[]> {
+    const query = String(req.data.q ?? '')
+    const lat = numberOf(req.data.lat)
+    const lon = numberOf(req.data.lon)
+    const candidates = await searchPlaces(query, { lat, lon })
+    if (candidates.length === 0) return []
+
+    const identified = candidates.filter(one => one.osmType !== null && one.osmId !== null)
+    const known = (await SELECT.from(PLACES)
+      .columns('ID', 'osmType', 'osmId')
+      .where({ osmId: { in: identified.map(one => one.osmId) } })) as Array<{
+      ID: string
+      osmType?: string | null
+      osmId?: string | null
+    }>
+
+    return candidates.map(one => ({
+      ...one,
+      placeID:
+        known.find(row => row.osmType === one.osmType && row.osmId === one.osmId)?.ID ?? null,
     }))
   }
 

@@ -1,6 +1,6 @@
 # TWM-ADR-003 — The commons: shared places, ratings and date cards
 
-**Status:** accepted. Phase 0 shipped; phases 1–3 outstanding. Extends ADR-002.
+**Status:** accepted. Phases 0–3 shipped. Extends ADR-002.
 **Normative contract:** `docs/CONTRACTS.md` §14.
 
 Every household using this app already records where it went, what it cost and whether it

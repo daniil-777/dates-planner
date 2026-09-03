@@ -120,6 +120,18 @@ export function HomePage() {
         caption: t('tile.mood.caption', 'two seconds'),
       },
     },
+    // Static, like `mood` above and for the same reason: the commons is arranged by where
+    // somebody is, and asking a home tile to locate them before they have opened the page
+    // would fire a permission prompt nobody asked for.
+    tonight: {
+      status: 'ready',
+      figure: {
+        kind: 'text',
+        value: t('tile.tonight.value', 'Three'),
+        emphasis: 'number',
+        caption: t('tile.tonight.caption', 'evenings that worked'),
+      },
+    },
     ledger: figureFrom<PeriodTotals>(periodQuery, monthFigure),
     events: figureFrom<Event[]>(eventsQuery, events => eventsFigure(events, today)),
     calendar: figureFrom<CalendarEntry[]>(upcomingQuery, () => calendarFigure(scheduled)),

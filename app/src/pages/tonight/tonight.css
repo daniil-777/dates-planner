@@ -1,0 +1,252 @@
+/*
+ * Tonight.
+ *
+ * The cards are the product, so they get the one piece of real visual weight in the app: a
+ * soft accent wash at the top, a rule with "then" in it separating the two halves, and enough
+ * padding that a card reads as an object rather than a row in a list.
+ *
+ * Three accents, cycled by position rather than by content. They are there to make three
+ * cards distinguishable at a glance on a phone — not to encode anything, because a colour
+ * that means something is a colour somebody has to learn.
+ *
+ * `places.css` is imported alongside this: chips, stars and the map-link row are shared, and
+ * a second copy of them here would be a second copy to keep in step.
+ */
+
+.tonight {
+  display: flex;
+  flex-direction: column;
+  gap: var(--twm-space-m);
+  padding-bottom: calc(var(--twm-bottomnav-height) + var(--twm-safe-bottom) + var(--twm-space-xl));
+}
+
+.tonight__lede {
+  margin: var(--twm-space-xs) 0 0;
+  color: var(--twm-muted);
+  font-size: 0.875rem;
+}
+
+.tonight__filter {
+  display: flex;
+  gap: var(--twm-space-xs);
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+}
+
+.tonight__filter::-webkit-scrollbar {
+  display: none;
+}
+
+.tonight__deck {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--twm-space-l);
+}
+
+.evening {
+  position: relative;
+  background: var(--twm-surface);
+  border: 1px solid var(--twm-border);
+  border-radius: var(--twm-radius-l);
+  padding: var(--twm-space-l);
+  display: flex;
+  flex-direction: column;
+  gap: var(--twm-space-s);
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 8%);
+}
+
+/* The accent wash. `color-mix` keeps it a tint of the theme's own colour rather than a second
+   palette, so it follows sap_horizon into dark mode without a separate rule. */
+.evening::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 5px;
+  background: var(--evening-accent, #0070f2);
+}
+
+.evening--0 {
+  --evening-accent: #0070f2;
+}
+
+.evening--1 {
+  --evening-accent: #c87200;
+}
+
+.evening--2 {
+  --evening-accent: #256f3a;
+}
+
+.evening__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--twm-space-s);
+}
+
+.evening__cost {
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--evening-accent, #0070f2);
+}
+
+.evening__distance {
+  font-size: 0.8125rem;
+  color: var(--twm-muted);
+}
+
+.evening__half {
+  display: flex;
+  flex-direction: column;
+  gap: var(--twm-space-xs);
+}
+
+.evening__kicker {
+  margin: 0;
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--twm-muted);
+}
+
+.evening__name {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.evening__meta,
+.evening__summary {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--twm-muted);
+}
+
+.evening__summary {
+  color: var(--sapTextColor, #1d2d3e);
+}
+
+/* A rule with a word in it. The order is part of the suggestion — a walk after dinner is a
+   different evening from dinner after a walk — so the divider says which way round. */
+.evening__then {
+  display: flex;
+  align-items: center;
+  gap: var(--twm-space-s);
+  margin: var(--twm-space-xs) 0;
+  color: var(--twm-muted);
+  font-size: 0.75rem;
+  font-style: italic;
+}
+
+.evening__then::before,
+.evening__then::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--twm-border);
+}
+
+.evening__foot {
+  display: flex;
+  flex-direction: column;
+  gap: var(--twm-space-s);
+  margin-top: var(--twm-space-xs);
+}
+
+/* "Worked for 12 households" — a fact with its denominator, never a rank. */
+.evening__because {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--twm-muted);
+}
+
+.evening__plan {
+  all: unset;
+  cursor: pointer;
+  min-height: var(--twm-touch);
+  padding: 0 var(--twm-space-l);
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--twm-radius-pill);
+  background: var(--sapButton_Emphasized_Background, #0070f2);
+  color: var(--sapButton_Emphasized_TextColor, #fff);
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.evening__plan:focus-visible {
+  outline: 2px solid var(--sapContent_FocusColor, #0032a5);
+  outline-offset: 2px;
+}
+
+.tonight__footnote,
+.tonight__actions {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--twm-muted);
+}
+
+.tonight__actions {
+  display: flex;
+  justify-content: center;
+}
+
+/* --------------------------------------------------------------- the deck */
+
+.ideas {
+  display: flex;
+  flex-direction: column;
+  gap: var(--twm-space-m);
+  padding-bottom: calc(var(--twm-bottomnav-height) + var(--twm-safe-bottom) + var(--twm-space-xl));
+}
+
+.ideas__grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  /* One column on a phone, two the moment there is room. `auto-fill` rather than a media
+     query so it also does the right thing in a split view. */
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: var(--twm-space-m);
+}
+
+.idea {
+  background: var(--twm-surface);
+  border: 1px solid var(--twm-border);
+  border-radius: var(--twm-radius-m);
+  padding: var(--twm-space-m);
+  display: flex;
+  flex-direction: column;
+  gap: var(--twm-space-xs);
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.idea__title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.idea__summary {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+.idea__meta {
+  margin: auto 0 0;
+  padding-top: var(--twm-space-s);
+  font-size: 0.75rem;
+  color: var(--twm-muted);
+  display: flex;
+  gap: var(--twm-space-s);
+  flex-wrap: wrap;
+}

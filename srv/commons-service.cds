@@ -138,6 +138,29 @@ service CommonsService @(path: '/api/commons') {
     tags     : array of String(24);
   };
 
+  /**
+   * Look somewhere up by name, so a household can rate a place the corpus has never heard of.
+   *
+   * A proxy onto OpenStreetMap's Nominatim, with the rate limit and the cache held here
+   * rather than in a browser tab — one queue per tab is not one queue (§14.7). Nothing about
+   * the caller goes upstream: a string somebody typed and, if they allowed it, roughly where
+   * they are.
+   */
+  function search(q : String(120), lat : Double, lon : Double) returns array of {
+    name    : String(200);
+    /** The whole address line, for telling two identically named cafés apart. */
+    label   : String(300);
+    lat     : Double;
+    lon     : Double;
+    city    : String(120);
+    country : String(2);
+    kind    : String(20);
+    osmType : String(10);
+    osmId   : String(24);
+    /** Set when this place is already in the corpus, so the sheet can open on its ratings. */
+    placeID : UUID;
+  };
+
   /* ----------------------------------------------------------------- write */
 
   /**

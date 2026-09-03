@@ -238,6 +238,7 @@ describe('the home grid', () => {
       '/scan',
       '/mood',
       '/intimacy',
+      '/tonight',
       '/ledger',
       '/events',
       '/calendar',
@@ -276,7 +277,12 @@ describe('the home grid', () => {
     // by loosening the check: there are ten category colours and they were all spoken for
     // by the time an eleventh tile arrived. Naming it keeps the rule enforced for every
     // other tile and makes a second invented hue fail this test, which is the point.
-    const invented = new Map([['intimacy', '#B02A6F']])
+    const invented = new Map([
+      ['intimacy', '#B02A6F'],
+      // The second, and named for the same reason: the ten category colours were all spoken
+      // for. Amber ties the tile to the stars the commons is built on.
+      ['tonight', '#F5A623'],
+    ])
 
     for (const spec of HOME_TILES) {
       const allowed = invented.get(spec.id)
@@ -374,7 +380,7 @@ describe('the home grid', () => {
     // preference but CONTRACTS.md §13.4: a count of marked regions on the household's
     // first screen would put the most private thing in the app on its most public
     // surface. If a figure ever appears on this tile, this test should fail.
-    const STATIC_FIGURES = new Set(['howItWorks', 'mood', 'chat', 'intimacy'])
+    const STATIC_FIGURES = new Set(['howItWorks', 'mood', 'chat', 'intimacy', 'tonight'])
     const awaited = HOME_TILES.filter(spec => !STATIC_FIGURES.has(spec.id))
     expect(screen.getAllByTestId('home-tile-shimmer')).toHaveLength(awaited.length)
     expect(tile('howItWorks')).not.toHaveAttribute('aria-busy', 'true')

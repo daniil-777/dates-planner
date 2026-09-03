@@ -32,7 +32,13 @@ export type ExpenseStatus = 'draft' | 'confirmed'
 export type ExpenseSource = 'scan' | 'import' | 'manual'
 export type MemoryKind = 'date_night' | 'trip' | 'gift' | 'anniversary' | 'other'
 
-export interface Person { ID: string; name: string; colour: string; email?: string; isDefault: boolean }
+export interface Person {
+  ID: string
+  name: string
+  colour: string
+  email?: string
+  isDefault: boolean
+}
 
 export interface Event {
   ID: string
@@ -41,58 +47,107 @@ export interface Event {
   endsOn: string | null
   place: string | null
   note: string | null
-  participants: Person[]        // expanded; never just ids in the UI layer
+  participants: Person[] // expanded; never just ids in the UI layer
 }
-export interface Category { code: string; name: string; icon: string; colour: string; sortOrder: number }
+export interface Category {
+  code: string
+  name: string
+  icon: string
+  colour: string
+  sortOrder: number
+}
 
 export interface Expense {
   ID: string
-  date: string; time: string | null
-  merchantRaw: string; merchantNorm: string | null
-  amount: number; currency: string
-  category_code: string | null; categoryConfidence: number | null
-  moment: MomentCode | null; momentConfidence: number | null
+  date: string
+  time: string | null
+  merchantRaw: string
+  merchantNorm: string | null
+  amount: number
+  currency: string
+  category_code: string | null
+  categoryConfidence: number | null
+  moment: MomentCode | null
+  momentConfidence: number | null
   paidBy_ID: string | null
-  event_ID: string | null       // null = everyday spending, not part of an event
-  status: ExpenseStatus; source: ExpenseSource
-  note: string | null; place: string | null
-  lat: number | null; lon: number | null
+  event_ID: string | null // null = everyday spending, not part of an event
+  status: ExpenseStatus
+  source: ExpenseSource
+  note: string | null
+  place: string | null
+  lat: number | null
+  lon: number | null
   receipt_ID: string | null
   documentNumber: number | null
   settlement_ID: string | null
 }
 
-export interface Photo { ID: string; mediaType: string; caption: string | null }
+export interface Photo {
+  ID: string
+  mediaType: string
+  caption: string | null
+}
 export interface Memory {
-  ID: string; expense_ID: string | null; title: string; note: string | null
-  occurredOn: string; kind: MemoryKind; pinned: boolean
-  place: string | null; lat: number | null; lon: number | null
+  ID: string
+  expense_ID: string | null
+  title: string
+  note: string | null
+  occurredOn: string
+  kind: MemoryKind
+  pinned: boolean
+  place: string | null
+  lat: number | null
+  lon: number | null
   photos?: Photo[]
 }
 
 /** A closed period. It records what was spent; it moves no money. */
 export interface Settlement {
-  ID: string; period: string
+  ID: string
+  period: string
   grandTotal: number
-  status: 'open' | 'settled'; settledAt: string | null
-  clearingDocument: string; approvedBy: string
+  status: 'open' | 'settled'
+  settledAt: string | null
+  clearingDocument: string
+  approvedBy: string
 }
 
 export interface PersonTotal {
-  personId: string; name: string
-  paid: number; count: number
-  share: number                 // proportion of the total, 0..1 — NOT a debt
+  personId: string
+  name: string
+  paid: number
+  count: number
+  share: number // proportion of the total, 0..1 — NOT a debt
 }
 
-export interface PeriodTotals { period: string; grandTotal: number; count: number; byPerson: PersonTotal[] }
+export interface PeriodTotals {
+  period: string
+  grandTotal: number
+  count: number
+  byPerson: PersonTotal[]
+}
 export interface EventTotals {
-  eventId: string; name: string; grandTotal: number
-  perHead: number; participantCount: number
-  count: number; byPerson: PersonTotal[]
+  eventId: string
+  name: string
+  grandTotal: number
+  perHead: number
+  participantCount: number
+  count: number
+  byPerson: PersonTotal[]
 }
 
-export interface Statement { ID: string; year: number; contentMarkdown: string; generatedAt: string; engine: string }
-export interface MonthlyTotal { period: string; category: string; total: number }
+export interface Statement {
+  ID: string
+  year: number
+  contentMarkdown: string
+  generatedAt: string
+  engine: string
+}
+export interface MonthlyTotal {
+  period: string
+  category: string
+  total: number
+}
 
 /** scanReceipt returns a draft Expense plus review metadata. */
 export interface ScanResult extends Expense {
@@ -220,11 +275,10 @@ Bottom navigation order on mobile: Scan · Ledger · Events · Memories · More
 - Person colours come from `Person.colour`. Never assume two people; the roster is a list.
 - **No debt anywhere.** The UI never says "owes", "balance", "net" or "settle up with".
   It shows what each person paid and what a period or event totalled. A payment run
-  *closes a period*; it does not square anybody up.
+  _closes a period_; it does not square anybody up.
 - Product tone is Concur/Ariba deadpan: "Post", "Payment run", "Clearing document",
   "Verify", "Needs review" — warm underneath, never cutesy.
 - Every list has a real `EmptyState` with `IllustratedMessage`, never a blank screen.
-
 
 ---
 
@@ -238,15 +292,15 @@ Bottom navigation order on mobile: Scan · Ledger · Events · Memories · More
 - Every tile shows a **live figure**, not just a label — a launcher that tells you
   something is worth returning to:
 
-  | Tile | Live figure |
-  |---|---|
-  | Scan | "Post a receipt" (or the number of drafts needing review) |
-  | Ledger | this month's total |
-  | Events | count of current/upcoming events |
-  | Calendar | the next reminder, or the next event |
-  | Memories | number of entries |
-  | Statement | the latest year generated |
-  | Settings | number of people |
+  | Tile      | Live figure                                               |
+  | --------- | --------------------------------------------------------- |
+  | Scan      | "Post a receipt" (or the number of drafts needing review) |
+  | Ledger    | this month's total                                        |
+  | Events    | count of current/upcoming events                          |
+  | Calendar  | the next reminder, or the next event                      |
+  | Memories  | number of entries                                         |
+  | Statement | the latest year generated                                 |
+  | Settings  | number of people                                          |
 
 - Below the grid: a **next-up strip** — the nearest reminder or anniversary, with its
   countdown. Document #1's anniversary appears here when it is near.
@@ -267,7 +321,6 @@ Bottom navigation order on mobile: Scan · Ledger · Events · Memories · More
 - Surprises the current person created show with the "Only you" badge; surprises created
   by anybody else are simply absent (§11.3).
 - Reminder creation from an event: lead time in days plus an optional note.
-
 
 ---
 
@@ -293,10 +346,36 @@ Bottom navigation order on mobile: Scan · Ledger · Events · Memories · More
 ## 11. Registration and groups
 
 - `/login` gains **Create account** and **Join with a code**. Creating asks for name and
-  kind — *Two of us*, *A household*, *Friends*, *Family* — nothing else.
+  kind — _Two of us_, _A household_, _Friends_, _Family_ — nothing else.
 - Settings → **Group**: name, members with roles, the invite code with "Show once / rotate",
   leave group, and (owner only) delete group with a two-step confirm that spells out erasure.
 - The ShellBar person switcher becomes a **group switcher** when a user has more than one
   membership; with one, it stays as it is.
 - No screen anywhere asks about orientation. `gender` on the profile is an optional
   free-text field labelled "How you describe yourself (optional)".
+
+---
+
+## 10. The commons — Tonight, Places, Ideas
+
+Normative detail is `CONTRACTS.md` §14 and §14A; this is the frontend's half.
+
+**Two clients, never one.** `api` (`src/api/client.ts`) speaks to the household's own ledger
+at `/api/ledger`; `commons` (`src/api/commons.ts`) speaks to the shared corpus at
+`/api/commons`. They have opposite rules — everything in the ledger is private to one
+household, everything in the commons is shared by all of them — so one client that could
+reach both is one refactor away from mixing them up. Query keys are namespaced the same way:
+everything in `commonsHooks.ts` starts with `'commons'`, so an invalidation of the ledger
+cannot reach the corpus.
+
+**Location is never requested on load.** `useHere` opens on the last known point or on
+nothing, and the browser prompt fires only from a press. A refusal is answered with the
+alternative — type a place — and never with the same request again.
+
+**`tonight` is cached for the day** and never refetched on window focus: the server deals from
+a seed of the date and the household, so the answer does not change, and a deck that
+reshuffles mid-decision is one nobody can choose from.
+
+**Rating invalidates the whole `'commons'` tree.** One rating can publish a place for the
+first time, move it in every list and change what `tonight` deals; enumerating that is harder
+to keep right than one refetch of a small payload.

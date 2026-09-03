@@ -38,6 +38,7 @@ export type HomeTileId =
   | 'scan'
   | 'mood'
   | 'intimacy'
+  | 'tonight'
   | 'ledger'
   | 'events'
   | 'calendar'
@@ -88,6 +89,26 @@ export const HOME_TILES: readonly HomeTileSpec[] = [
     icon: 'private',
     accent: '#B02A6F',
     hint: 'Where you like being touched',
+  },
+  {
+    /*
+     * One tile for the whole commons, not three.
+     *
+     * Places and Ideas are ways of answering the question this tile asks rather than separate
+     * questions, and they are one tap away inside it. Three tiles would also have taken the
+     * launcher to fourteen, which is a wall rather than a menu: a grid meant to be read at a
+     * glance stops being read past about a dozen and starts being hunted through.
+     *
+     * The accent is the second documented exception to the ten category colours, after
+     * "Between us" — they were all spoken for. Amber ties the tile to the stars the commons
+     * is built on.
+     */
+    id: 'tonight',
+    to: '/tonight',
+    label: 'Tonight',
+    icon: 'lightbulb',
+    accent: '#F5A623',
+    hint: 'Three evenings that worked',
   },
   {
     id: 'ledger',
