@@ -41,6 +41,7 @@ template until an LLM key is configured — so the whole app works with no cloud
 ## Documentation
 
 - **[docs/PRODUCT-BUSINESS-RESEARCH.html](docs/PRODUCT-BUSINESS-RESEARCH.html)** — visual product dossier, market analysis, business plan, growth strategy and new-feature roadmap.
+- **[docs/PRODUCT.md](docs/PRODUCT.md)** — every feature, the goal behind them, and what is deliberately not built. Start here for design or brainstorming.
 - **[docs/CONTRACTS.md](docs/CONTRACTS.md)** — the authoritative interface spec. Read this first.
 - [docs/API.md](docs/API.md) — the OData service with curl examples
 - [docs/MODEL.md](docs/MODEL.md) — how the classifier works and how to retrain it

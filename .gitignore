@@ -28,3 +28,10 @@ app/src/**/*.js.map
 app/vite.config.js
 app/e2e/**/*.js
 app/tsconfig.tsbuildinfo
+
+# Contact sheets from scripts/preview-figure.ts — a look at the figure, not a build output.
+.preview/
+
+# MakeHuman source files the figure is baked from — a download cache, not a source.
+# `app/scripts/bake-figure.ts` refetches them on demand; see app/scripts/NOTICE.md.
+app/scripts/.mh-cache/

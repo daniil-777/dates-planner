@@ -565,10 +565,14 @@ reading is the entire point of the feature.
 
 ### 13.1 Zone codes
 
-Shared by CDS, the service guard, and `app/src/pages/intimacy/zones.ts`. The renderer
-assigns every vertex of the figure exactly one of these, so a code that is not on this
-list can never be picked, and a code removed from it orphans stored rows. **Additive
-changes only.**
+Shared by CDS, the service guard, and `app/src/pages/intimacy/zones.ts`. Every vertex of
+the figure carries exactly one of these, so a code that is not on this list can never be
+picked, and a code removed from it orphans stored rows. **Additive changes only.**
+
+The figure itself is MakeHuman's `hm08` base mesh (CC0), morphed to the three forms and
+labelled region-by-region at build time by `app/scripts/bake-figure.ts`, which writes
+`figureData.ts`. Provenance and licence: `app/scripts/NOTICE.md`. Adding a code means
+re-running that script, because the labels are baked, not computed on the phone.
 
 | code | region | code | region |
 |---|---|---|---|

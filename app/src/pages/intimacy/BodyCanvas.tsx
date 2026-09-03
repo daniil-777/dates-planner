@@ -253,7 +253,12 @@ export function BodyCanvas({ form, marks, highlighted, onPick, baseColour }: Bod
   useEffect(() => {
     const mesh = meshRef.current
     if (mesh === null) return
-    figureRef.current?.geometry.dispose()
+    // Deliberately *not* disposing the outgoing geometry. `buildFigure` memoises one mesh
+    // per form and hands out the same object every time, so disposing on a form change
+    // would free a buffer that is about to be handed back — the figure would render once,
+    // then come back empty the second time somebody chose that form. The three geometries
+    // are a few megabytes and live as long as the page does; the teardown effect that owns
+    // the renderer is where anything gets freed.
     const figure = buildFigure(form)
     figureRef.current = figure
     mesh.geometry = figure.geometry
