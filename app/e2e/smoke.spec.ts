@@ -417,3 +417,47 @@ test.describe('fixed defects · production only', () => {
     expect(font.status(), '/fonts/72-Regular.woff2 must be served same-origin').toBe(200)
   })
 })
+
+/**
+ * The two screens the rest of this suite never opens.
+ *
+ * Mood and "Between us" had no component tests and no end-to-end coverage at all — the only
+ * tests near them check a colour palette and a mesh decoder. So a page that threw on mount, or
+ * a WebGL canvas that failed to initialise, would have reached a deployment with everything
+ * green.
+ *
+ * These are deliberately shallow. Both screens are being redesigned, so anything that asserted
+ * on their layout would be rewritten within the week — and a smoke test that has to be
+ * rewritten whenever the design changes is a smoke test people delete. What is asserted here
+ * is only what must be true of them in any design: they render, they name themselves, and they
+ * do not log errors.
+ */
+test.describe('the private screens still come up', () => {
+  test('mood renders and logs nothing', async ({ page }) => {
+    const problems = watchForErrors(page)
+    await open(page, '/mood')
+
+    // The five faces are the control that must exist whatever else changes: the manual picker
+    // is the half of this screen that works with no key, no camera and no permission.
+    await expect(page.getByRole('radiogroup')).toBeVisible()
+    expect(problems, '/mood logged errors').toEqual([])
+  })
+
+  test('between us renders its figure and logs nothing', async ({ page }) => {
+    const problems = watchForErrors(page)
+    await open(page, '/intimacy')
+
+    await expect(page.getByRole('heading', { name: 'Between us' })).toBeVisible()
+
+    // The region list is the accessible control surface — the WebGL canvas is aria-hidden and
+    // cannot be driven from a keyboard, so this list is the ONLY way somebody using one can
+    // reach a zone. It must survive any redesign of the figure.
+    await expect(page.getByRole('button', { name: /shoulders/i }).first()).toBeVisible({
+      timeout: 20_000,
+    })
+
+    // Three.js is lazily loaded here and is the largest dependency in the app; a failure to
+    // initialise WebGL shows up as a console error rather than as a visible break.
+    expect(problems, '/intimacy logged errors').toEqual([])
+  })
+})
