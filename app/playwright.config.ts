@@ -66,8 +66,15 @@ import { defineConfig, devices } from '@playwright/test'
  * `vite build`) and has no hot reload, which is why it is not the default.
  */
 
-/** Fixed by app/vite.config.ts, which proxies /ledger to this port. */
-const CAP_PORT = 4004
+/**
+ * Where CAP listens.
+ *
+ * `app/vite.config.ts` reads `TWM_CAP_URL` and is told this below, so moving both ports puts
+ * the whole suite beside a running dev server instead of refusing to start next to it:
+ *
+ *     E2E_CAP_PORT=4104 E2E_WEB_PORT=5273 npx playwright test
+ */
+const CAP_PORT = Number(process.env.E2E_CAP_PORT ?? 4004)
 const CAP_URL = `http://localhost:${CAP_PORT}`
 
 /**
@@ -206,6 +213,9 @@ export default defineConfig({
           {
             command: `npm run dev -- --port ${WEB_PORT} --strictPort`,
             url: WEB_URL,
+            // So the proxy points at the CAP this config started, not at whichever one
+            // happens to be on 4004.
+            env: { TWM_CAP_URL: CAP_URL },
             reuseExistingServer: process.env.E2E_REUSE_WEB === '1',
             timeout: 120_000,
             stdout: 'pipe' as const,

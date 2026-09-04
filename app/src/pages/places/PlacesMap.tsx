@@ -90,7 +90,10 @@ function Fitter({ places, here }: { places: readonly PlaceCard[]; here: Here | n
       map.setView(points[0]!, 15)
       return
     }
-    map.fitBounds(latLngBounds(points).pad(0.15), { animate: false })
+    // `maxZoom` matters more than it looks: three places on one street produce a bounding box
+    // a few metres across, and an uncapped fit zooms to building level, where the map shows a
+    // roof and no context at all.
+    map.fitBounds(latLngBounds(points).pad(0.15), { animate: false, maxZoom: 16 })
   }, [map, places, here])
 
   return null

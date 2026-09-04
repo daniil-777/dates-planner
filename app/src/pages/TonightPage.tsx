@@ -31,6 +31,7 @@ import '@ui5/webcomponents-icons/dist/refresh.js'
 import { useNavigate } from 'react-router-dom'
 
 import { useTonight } from '@/api/commonsHooks'
+import { useI18n } from '@/i18n'
 import type { Evening } from '@/api/commons'
 import { ErrorState } from '@/components/ErrorState'
 import { LoadingSkeleton } from '@/components/LoadingSkeleton'
@@ -40,9 +41,14 @@ import { HerePrompt } from './places/HerePrompt'
 import { RateSheet } from './places/RateSheet'
 import { useHere } from './places/useHere'
 import { COST_BANDS, costLabel, type CostBand } from './places/vocabulary'
+// Both: the cards are styled by `tonight.css`, but every shared piece on them — the nav, the
+// chips, the stars, the map links — is styled by `places.css`. Importing only the first is
+// what left the nav rendering as three run-together underlined links.
+import './places/places.css'
 import './tonight/tonight.css'
 
 export function TonightPage(): React.ReactElement {
+  const { t } = useI18n()
   const { here, status, locate, setHere } = useHere()
   const [ceiling, setCeiling] = useState<CostBand | null>(null)
   const [rating, setRating] = useState(false)
@@ -55,9 +61,9 @@ export function TonightPage(): React.ReactElement {
     <section className="tonight">
       <CommonsNav />
       <header className="tonight__head">
-        <Title level="H2">Tonight</Title>
+        <Title level="H2">{t('commons.tonight', 'Tonight')}</Title>
         <p className="tonight__lede">
-          Three evenings other households said worked. Pick one, or none.
+          {t('tonight.lede', 'Three evenings other households said worked. Pick one, or none.')}
         </p>
       </header>
 
@@ -65,14 +71,18 @@ export function TonightPage(): React.ReactElement {
         <HerePrompt status={status} onLocate={locate} onPick={setHere} />
       ) : (
         <>
-          <div className="tonight__filter" role="group" aria-label="Spend at most, each">
+          <div
+            className="tonight__filter"
+            role="group"
+            aria-label={t('tonight.budget', 'Spend at most, each')}
+          >
             <button
               type="button"
               aria-pressed={ceiling === null}
               className={`tonight__chip${ceiling === null ? ' tonight__chip--on' : ''}`}
               onClick={() => setCeiling(null)}
             >
-              Any
+              {t('tonight.any', 'Any')}
             </button>
             {COST_BANDS.slice(1).map(band => (
               <button
@@ -94,7 +104,7 @@ export function TonightPage(): React.ReactElement {
 
           {!tonight.isPending && !tonight.isError && evenings.length === 0 && (
             <div className="tonight__empty">
-              <p className="tonight__empty-line">Nothing to deal yet.</p>
+              <p className="tonight__empty-line">{t('tonight.empty', 'Nothing to deal yet.')}</p>
               <p className="tonight__empty-hint">
                 {/* The honest empty state: this is a corpus, and a corpus with nothing in it
                     has nothing to say. Saying so is better than inventing three cards. */}
@@ -102,7 +112,7 @@ export function TonightPage(): React.ReactElement {
                 like and it starts filling up — yours included.
               </p>
               <Button design="Emphasized" icon="add" onClick={() => setRating(true)}>
-                Rate a place
+                {t('commons.rate', 'Rate a place')}
               </Button>
             </div>
           )}
@@ -133,11 +143,15 @@ export function TonightPage(): React.ReactElement {
             </>
           )}
 
-          <div className="tonight__actions">
-            <Button design="Transparent" icon="add" onClick={() => setRating(true)}>
-              Rate a place
-            </Button>
-          </div>
+          {/* Only when there is a deck. The empty state carries its own, and showing both put
+              the same call to action on the screen twice. */}
+          {evenings.length > 0 && (
+            <div className="tonight__actions">
+              <Button design="Transparent" icon="add" onClick={() => setRating(true)}>
+                {t('commons.rate', 'Rate a place')}
+              </Button>
+            </div>
+          )}
         </>
       )}
 

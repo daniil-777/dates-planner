@@ -289,6 +289,13 @@ Bottom navigation order on mobile: Scan · Ledger · Events · Memories · More
 
 - A grid of large tiles: **2 columns below 40rem, 3 above**. Square-ish, generous touch
   targets, each carrying its own accent from the existing palette.
+- **Grouped into the four sections of `HOME_SECTIONS`** — the money, time together, each
+  other, the app — each with a small upper-case heading. Twelve tiles in a flat grid is past
+  the point where a launcher is scanned rather than hunted through, and chunking only helps
+  when the grouping matches a model the reader already has, so the four are the app's own
+  account of itself (the same four `docs/PRODUCT.md` uses) rather than four new words.
+  Adding a tile means choosing its section; `HomePage.test.tsx` fixes the reading order, so
+  one moved between groups fails a test rather than moving by accident.
 - Every tile shows a **live figure**, not just a label — a launcher that tells you
   something is worth returning to:
 

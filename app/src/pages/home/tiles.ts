@@ -48,8 +48,31 @@ export type HomeTileId =
   | 'chat'
   | 'howItWorks'
 
+/**
+ * The four things this app is for.
+ *
+ * Twelve tiles is past the point where a flat grid is read: people stop scanning it and
+ * start hunting through it. Chunking fixes that — but only when the grouping matches a model
+ * the reader already has, otherwise it is twelve tiles plus four labels to learn.
+ *
+ * So the groups are not invented here. They are the app's own account of itself, the same
+ * four `docs/PRODUCT.md` uses to describe what it does: the money, the time spent together,
+ * each other, and the machinery. Anybody who has used the app for a week already has this
+ * model, whether or not they could name it.
+ */
+export const HOME_SECTIONS = [
+  { id: 'money', heading: 'The money' },
+  { id: 'together', heading: 'Time together' },
+  { id: 'us', heading: 'Each other' },
+  { id: 'app', heading: 'The app' },
+] as const
+
+export type HomeSectionId = (typeof HOME_SECTIONS)[number]['id']
+
 export interface HomeTileSpec {
   id: HomeTileId
+  /** Which of the four it belongs under. */
+  section: HomeSectionId
   /** Route this tile launches. */
   to: string
   label: string
@@ -68,6 +91,7 @@ export interface HomeTileSpec {
 export const HOME_TILES: readonly HomeTileSpec[] = [
   {
     id: 'scan',
+    section: 'money',
     to: '/scan',
     label: 'Scan',
     icon: 'camera',
@@ -75,20 +99,22 @@ export const HOME_TILES: readonly HomeTileSpec[] = [
     hint: 'Photograph a receipt',
   },
   {
-    id: 'mood',
-    to: '/mood',
-    label: 'Mood',
-    icon: 'da',
-    accent: '#C87200',
-    hint: 'How are you doing today?',
+    id: 'ledger',
+    section: 'money',
+    to: '/ledger',
+    label: 'Expenses',
+    icon: 'money-bills',
+    accent: '#0070F2',
+    hint: 'Postings and payment runs',
   },
   {
-    id: 'intimacy',
-    to: '/intimacy',
-    label: 'Between us',
-    icon: 'private',
-    accent: '#B02A6F',
-    hint: 'Where you like being touched',
+    id: 'statement',
+    section: 'money',
+    to: '/statement',
+    label: 'Statement',
+    icon: 'newspaper',
+    accent: '#256F3A',
+    hint: 'The Statement of Us',
   },
   {
     /*
@@ -104,6 +130,7 @@ export const HOME_TILES: readonly HomeTileSpec[] = [
      * is built on.
      */
     id: 'tonight',
+    section: 'together',
     to: '/tonight',
     label: 'Tonight',
     icon: 'lightbulb',
@@ -111,23 +138,8 @@ export const HOME_TILES: readonly HomeTileSpec[] = [
     hint: 'Three evenings that worked',
   },
   {
-    id: 'ledger',
-    to: '/ledger',
-    label: 'Expenses',
-    icon: 'money-bills',
-    accent: '#0070F2',
-    hint: 'Postings and payment runs',
-  },
-  {
-    id: 'events',
-    to: '/events',
-    label: 'Events',
-    icon: 'travel-itinerary',
-    accent: '#049F9A',
-    hint: 'Trips, dinners, parties',
-  },
-  {
     id: 'calendar',
+    section: 'together',
     to: '/calendar',
     label: 'Calendar',
     icon: 'appointment-2',
@@ -135,7 +147,17 @@ export const HOME_TILES: readonly HomeTileSpec[] = [
     hint: 'The month, and what is on it',
   },
   {
+    id: 'events',
+    section: 'together',
+    to: '/events',
+    label: 'Events',
+    icon: 'travel-itinerary',
+    accent: '#049F9A',
+    hint: 'Trips, dinners, parties',
+  },
+  {
     id: 'memories',
+    section: 'together',
     to: '/memories',
     label: 'Memories',
     icon: 'heart',
@@ -143,23 +165,8 @@ export const HOME_TILES: readonly HomeTileSpec[] = [
     hint: 'The timeline',
   },
   {
-    id: 'statement',
-    to: '/statement',
-    label: 'Statement',
-    icon: 'newspaper',
-    accent: '#256F3A',
-    hint: 'The Statement of Us',
-  },
-  {
-    id: 'settings',
-    to: '/settings',
-    label: 'Settings',
-    icon: 'action-settings',
-    accent: '#5B738B',
-    hint: 'People, model, data',
-  },
-  {
     id: 'chat',
+    section: 'us',
     to: '/chat',
     label: 'Chat',
     icon: 'discussion',
@@ -167,7 +174,35 @@ export const HOME_TILES: readonly HomeTileSpec[] = [
     hint: 'Say something',
   },
   {
+    id: 'mood',
+    section: 'us',
+    to: '/mood',
+    label: 'Mood',
+    icon: 'da',
+    accent: '#C87200',
+    hint: 'How are you doing today?',
+  },
+  {
+    id: 'intimacy',
+    section: 'us',
+    to: '/intimacy',
+    label: 'Between us',
+    icon: 'private',
+    accent: '#B02A6F',
+    hint: 'Where you like being touched',
+  },
+  {
+    id: 'settings',
+    section: 'app',
+    to: '/settings',
+    label: 'Settings',
+    icon: 'action-settings',
+    accent: '#5B738B',
+    hint: 'People, model, data',
+  },
+  {
     id: 'howItWorks',
+    section: 'app',
     to: '/how-it-works',
     label: 'How it works',
     icon: 'learning-assistant',

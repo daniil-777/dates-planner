@@ -231,21 +231,24 @@ beforeEach(() => {
  * ------------------------------------------------------------------ */
 
 describe('the home grid', () => {
+  // Grouped by `HOME_SECTIONS`: the money, time together, each other, the app. The order
+  // here is the reading order of the launcher, so a tile moved between groups fails this and
+  // has to be moved deliberately rather than by accident.
   it('offers one tile per destination, each a real link', () => {
     renderHome()
 
     expect(HOME_TILES.map(spec => spec.to)).toEqual([
       '/scan',
+      '/ledger',
+      '/statement',
+      '/tonight',
+      '/calendar',
+      '/events',
+      '/memories',
+      '/chat',
       '/mood',
       '/intimacy',
-      '/tonight',
-      '/ledger',
-      '/events',
-      '/calendar',
-      '/memories',
-      '/statement',
       '/settings',
-      '/chat',
       '/how-it-works',
     ])
 

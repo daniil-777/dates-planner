@@ -47,6 +47,12 @@ const COMMA_GROUPED = /\d,\d{3}/
  * calls it, and the test below guards the fix.
  */
 async function open(page: Page, path: string): Promise<void> {
+  await page.addInitScript(() => {
+    // Pinned. `readStoredLang` falls back to `navigator.language`, so on a machine whose
+    // browser is not English every assertion below fails on a translated string — which is
+    // a real failure of the suite rather than of the app, and reads as neither.
+    window.localStorage.setItem('twm.lang', 'en')
+  })
   await page.goto(path)
 }
 
@@ -102,9 +108,13 @@ function watchForErrors(page: Page): string[] {
 }
 
 test.describe('the app comes up', () => {
-  test('/ redirects to the ledger', async ({ page }) => {
-    await page.goto('/')
-    await expect(page).toHaveURL(/\/ledger$/)
+  test('/ is the launcher, not a redirect', async ({ page }) => {
+    // It used to redirect to the ledger, and this test still said so long after the launcher
+    // (FRONTEND-CONTRACT §8) took over `/`. A suite that is red for a reason nobody acts on
+    // teaches people to stop reading it.
+    await open(page, '/')
+    await expect(page).toHaveURL(/\/$/)
+    await expect(page.locator('.home-grid').first()).toBeVisible()
   })
 
   test('the ShellBar names the product', async ({ page }) => {
@@ -178,13 +188,17 @@ test.describe('navigation', () => {
       return
     }
 
-    // Mobile: the bottom bar is five real <a> elements, so it can be driven the way a
-    // person drives it.
+    // Mobile: the bar holds four real <a> elements and a "More" button for the rest. It was
+    // five links once; `BOTTOM_BAR_SLOTS` in AppShell is the number that decides, and the
+    // destinations past it are reachable through More rather than absent.
     const links = nav.getByRole('link')
-    await expect(links).toHaveCount(ROUTES.length)
+    await expect(links).toHaveCount(4)
 
     for (const route of ROUTES) {
       const link = nav.getByRole('link', { name: route.label })
+      // Past the fourth slot a destination lives in the More menu, which this test does not
+      // open — the click-through below is about the bar.
+      if ((await link.count()) === 0) continue
       await expect(link).toBeVisible()
 
       // FRONTEND-CONTRACT §7: touch targets >= 44 px. This is used one-handed, walking.

@@ -49,7 +49,7 @@ import './home/icons'
 import './home/home.css'
 import { HomeTile } from './home/HomeTile'
 import { NextUpStrip } from './home/NextUpStrip'
-import { HOME_TILES, type HomeTileId } from './home/tiles'
+import { HOME_SECTIONS, HOME_TILES, type HomeTileId } from './home/tiles'
 import {
   calendarFigure,
   draftsFigure,
@@ -173,12 +173,24 @@ export function HomePage() {
         </span>
       </header>
 
-      <nav aria-label="Destinations">
-        <ul className="home-grid" data-testid="home-grid">
-          {HOME_TILES.map(spec => (
-            <HomeTile key={spec.id} spec={spec} figure={figures[spec.id]} />
-          ))}
-        </ul>
+      <nav className="home-nav" aria-label={t('home.nav', 'Everything in the app')}>
+        {/*
+          Grouped rather than one grid of twelve. Twelve tiles is past the point where a flat
+          grid is scanned — it starts being hunted through — and the four headings are the
+          app's own account of itself rather than four new words to learn.
+        */}
+        {HOME_SECTIONS.map(section => (
+          <section className="home-section" key={section.id}>
+            <h2 className="home-section__heading">
+              {t(`home.section.${section.id}`, section.heading)}
+            </h2>
+            <ul className="home-grid">
+              {HOME_TILES.filter(spec => spec.section === section.id).map(spec => (
+                <HomeTile key={spec.id} spec={spec} figure={figures[spec.id]} />
+              ))}
+            </ul>
+          </section>
+        ))}
       </nav>
 
       <NextUpStrip items={nextUp} loading={nextUpLoading} />

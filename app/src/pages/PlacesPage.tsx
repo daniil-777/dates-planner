@@ -24,6 +24,7 @@ import { Button, Title } from '@ui5/webcomponents-react'
 import '@ui5/webcomponents-icons/dist/add.js'
 
 import { useNearby, usePlaceDetail } from '@/api/commonsHooks'
+import { useI18n } from '@/i18n'
 import { ErrorState } from '@/components/ErrorState'
 import { LoadingSkeleton } from '@/components/LoadingSkeleton'
 import { CommonsNav } from './places/CommonsNav'
@@ -44,6 +45,7 @@ import {
 import './places/places.css'
 
 export function PlacesPage(): React.ReactElement {
+  const { t } = useI18n()
   const { here, status, locate, setHere } = useHere()
   const [kind, setKind] = useState<PlaceKind | null>(null)
   const [tag, setTag] = useState<PlaceTag | null>(null)
@@ -59,7 +61,7 @@ export function PlacesPage(): React.ReactElement {
       <section className="places">
         <CommonsNav />
         <header className="places__head">
-          <Title level="H2">Places</Title>
+          <Title level="H2">{t('commons.places', 'Places')}</Title>
         </header>
         <HerePrompt status={status} onLocate={locate} onPick={setHere} />
       </section>
@@ -70,9 +72,9 @@ export function PlacesPage(): React.ReactElement {
     <section className="places">
       <CommonsNav />
       <header className="places__head">
-        <Title level="H2">Places</Title>
+        <Title level="H2">{t('commons.places', 'Places')}</Title>
         <Button design="Transparent" icon="add" onClick={() => setRating(true)}>
-          Rate a place
+          {t('commons.rate', 'Rate a place')}
         </Button>
       </header>
 
@@ -86,7 +88,7 @@ export function PlacesPage(): React.ReactElement {
             className={`places__chip${kind === null ? ' places__chip--on' : ''}`}
             onClick={() => setKind(null)}
           >
-            Everything
+            {t('places.everything', 'Everything')}
           </button>
           {FILTER_KINDS.map(one => (
             <button
@@ -122,15 +124,15 @@ export function PlacesPage(): React.ReactElement {
         <div className="places__empty">
           <p className="places__empty-line">
             {kind !== null || tag !== null
-              ? 'Nothing near you matches that.'
-              : 'Nothing near you yet.'}
+              ? t('places.emptyFiltered', 'Nothing near you matches that.')
+              : t('places.empty', 'Nothing near you yet.')}
           </p>
           <p className="places__empty-hint">
             A place appears once three households have rated it — enough that no single household
             can be picked out of it. Rate somewhere you already like and it starts filling up.
           </p>
           <Button design="Emphasized" icon="add" onClick={() => setRating(true)}>
-            Rate a place
+            {t('commons.rate', 'Rate a place')}
           </Button>
         </div>
       )}

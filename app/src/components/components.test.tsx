@@ -258,6 +258,7 @@ describe('AppShell', () => {
       '/events',
       '/memories',
       '/chat',
+      '/tonight',
       '/calendar',
       '/statement',
       '/settings',

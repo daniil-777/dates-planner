@@ -5,7 +5,15 @@ import { VitePWA } from 'vite-plugin-pwa'
 import { fileURLToPath, URL } from 'node:url'
 import { buildStamp } from './vite/buildStamp.ts'
 
-const CAP = 'http://localhost:4004'
+/**
+ * Where the CAP server is.
+ *
+ * Configurable so the end-to-end suite can stand up its own pair of servers on other ports
+ * while a dev server is still running. It used to be a constant, and the cost of that was
+ * that `npm run e2e` refused to start whenever `npm run dev` was up — which is most of the
+ * time somebody would want to run it.
+ */
+const CAP = process.env.TWM_CAP_URL ?? 'http://localhost:4004'
 
 /**
  * The `72` faces UI5 bakes absolute jsdelivr URLs for, rewritten to `public/fonts`.

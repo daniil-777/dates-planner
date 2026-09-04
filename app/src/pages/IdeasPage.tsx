@@ -20,29 +20,44 @@ import { useState } from 'react'
 import { SegmentedButton, SegmentedButtonItem, Title } from '@ui5/webcomponents-react'
 
 import { useDeck } from '@/api/commonsHooks'
+import { useI18n } from '@/i18n'
 import { ErrorState } from '@/components/ErrorState'
 import { LoadingSkeleton } from '@/components/LoadingSkeleton'
 import { CommonsNav } from './places/CommonsNav'
 import { TagChips } from './places/Chips'
-import { costShort } from './places/vocabulary'
+import { COST_BANDS, costLabel, costShort, minutesLabel, type CostBand } from './places/vocabulary'
 import './places/places.css'
 import './tonight/tonight.css'
 
 type Deck = 'activity' | 'gift'
 
 export function IdeasPage(): React.ReactElement {
+  const { t } = useI18n()
   const [deck, setDeck] = useState<Deck>('activity')
+  const [ceiling, setCeiling] = useState<CostBand | null>(null)
   const cards = useDeck(deck)
+
+  /*
+   * Twenty-eight cards is nine screens of scrolling on a phone, and an inspiration deck that
+   * has to be scrolled through is one nobody reaches the end of. Cost is the filter worth
+   * having — it is the question somebody actually arrives with ("what can we do that is
+   * free?"), and unlike a topic filter it needs no vocabulary to use.
+   */
+  const shown = (cards.data ?? []).filter(
+    idea =>
+      ceiling === null ||
+      COST_BANDS.indexOf(idea.costBand ?? 'free') <= COST_BANDS.indexOf(ceiling),
+  )
 
   return (
     <section className="ideas">
       <CommonsNav />
       <header>
-        <Title level="H2">Ideas</Title>
+        <Title level="H2">{t('commons.ideas', 'Ideas')}</Title>
         <p className="tonight__lede">
           {deck === 'activity'
-            ? 'Things to do that need no booking and no corpus.'
-            : 'Things to give that are not a voucher.'}
+            ? t('ideas.ledeDo', 'Things to do that need no booking and no corpus.')
+            : t('ideas.ledeGive', 'Things to give that are not a voucher.')}
         </p>
       </header>
 
@@ -54,19 +69,41 @@ export function IdeasPage(): React.ReactElement {
         }}
       >
         <SegmentedButtonItem id="activity" selected={deck === 'activity'}>
-          To do
+          {t('ideas.toDo', 'To do')}
         </SegmentedButtonItem>
         <SegmentedButtonItem id="gift" selected={deck === 'gift'}>
-          To give
+          {t('ideas.toGive', 'To give')}
         </SegmentedButtonItem>
       </SegmentedButton>
+
+      <div className="tonight__filter" role="group" aria-label={t('ideas.budget', 'At most, each')}>
+        <button
+          type="button"
+          aria-pressed={ceiling === null}
+          className={`tonight__chip${ceiling === null ? ' tonight__chip--on' : ''}`}
+          onClick={() => setCeiling(null)}
+        >
+          {t('tonight.any', 'Any')}
+        </button>
+        {COST_BANDS.map(band => (
+          <button
+            type="button"
+            key={band}
+            aria-pressed={ceiling === band}
+            className={`tonight__chip${ceiling === band ? ' tonight__chip--on' : ''}`}
+            onClick={() => setCeiling(ceiling === band ? null : band)}
+          >
+            {costLabel(band).replace(' each', '')}
+          </button>
+        ))}
+      </div>
 
       {cards.isPending && <LoadingSkeleton />}
       {cards.isError && <ErrorState error={cards.error} onRetry={() => cards.refetch()} />}
 
       {!cards.isPending && !cards.isError && (
         <ol className="ideas__grid">
-          {(cards.data ?? []).map(idea => (
+          {shown.map(idea => (
             <li key={idea.ID}>
               <article className="idea">
                 <h3 className="idea__title">{idea.title}</h3>
@@ -74,7 +111,9 @@ export function IdeasPage(): React.ReactElement {
                 <TagChips tags={idea.tags ?? []} limit={2} />
                 <p className="idea__meta">
                   <span>{costShort(idea.costBand)}</span>
-                  {idea.minutes !== null && <span>{idea.minutes} min</span>}
+                  {minutesLabel(idea.minutes) !== null && (
+                    <span>{minutesLabel(idea.minutes)?.replace('About ', '')}</span>
+                  )}
                 </p>
               </article>
             </li>

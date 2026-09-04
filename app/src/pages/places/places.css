@@ -259,8 +259,20 @@
   fill: #f5a623;
 }
 
+/*
+ * The empty half of a star.
+ *
+ * Light, and lighter still in the input, because an unselected star drawn in the theme's
+ * border colour reads as *selected but grey* rather than as empty — which on a five-star row
+ * makes it look as though somebody has already answered.
+ */
 .stars__outline {
   fill: var(--sapContent_ForegroundBorderColor, #c8ced4);
+  opacity: 0.55;
+}
+
+.star-input .stars__outline {
+  opacity: 0.35;
 }
 
 .stars__count {

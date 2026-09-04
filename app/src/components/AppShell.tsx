@@ -7,6 +7,7 @@ import '@ui5/webcomponents-icons/dist/appointment-2.js'
 import '@ui5/webcomponents-icons/dist/heart.js'
 import '@ui5/webcomponents-icons/dist/newspaper.js'
 import '@ui5/webcomponents-icons/dist/action-settings.js'
+import '@ui5/webcomponents-icons/dist/lightbulb.js'
 import '@ui5/webcomponents-icons/dist/overflow.js'
 import type { ReactNode } from 'react'
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
@@ -33,6 +34,10 @@ export const NAV_ITEMS = [
   { to: '/events', label: 'Events', icon: 'calendar', hint: 'Trips, dinners, parties' },
   { to: '/memories', label: 'Memories', icon: 'heart', hint: 'The timeline' },
   { to: '/chat', label: 'Chat', icon: 'discussion', hint: 'Say something' },
+  // In the overflow rather than the bar: the four visible slots are the things done daily,
+  // and this is reachable from the launcher too. Not in `NAV_ITEMS` at all — which is where
+  // it started — meant it existed only on the home screen.
+  { to: '/tonight', label: 'Tonight', icon: 'lightbulb', hint: 'Three evenings that worked' },
   { to: '/calendar', label: 'Calendar', icon: 'appointment-2', hint: 'The month, day by day' },
   { to: '/statement', label: 'Statement', icon: 'newspaper', hint: 'The Statement of Us' },
   { to: '/settings', label: 'Settings', icon: 'action-settings', hint: 'People, model, data' },

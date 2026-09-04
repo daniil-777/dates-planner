@@ -368,3 +368,33 @@
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
+
+/* ---------------------------------------------------------------- sections */
+
+/*
+ * Four labelled groups instead of one grid of twelve.
+ *
+ * The heading does the work of the Law of Proximity's other half: whitespace says "these
+ * belong together", a word says *why*. Small and quiet — it is a signpost, not a title, and a
+ * heading that competes with the tiles under it has taken the attention they wanted.
+ */
+.home-nav {
+  display: flex;
+  flex-direction: column;
+  gap: var(--twm-space-xl);
+}
+
+.home-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--twm-space-s);
+}
+
+.home-section__heading {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--twm-muted);
+}

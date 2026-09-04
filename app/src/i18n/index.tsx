@@ -39,6 +39,39 @@ export const LANGUAGES: ReadonlyArray<{ code: Lang; label: string }> = [
 type Dictionary = Readonly<Record<string, string>>
 
 const de: Dictionary = {
+  'home.nav': 'Alles in der App',
+  'home.section.money': 'Das Geld',
+  'home.section.together': 'Gemeinsame Zeit',
+  'home.section.us': 'Wir beide',
+  'home.section.app': 'Die App',
+
+  // The commons (ADR-003)
+  'commons.nav': 'Gemeinsames',
+  'commons.tonight': 'Heute Abend',
+  'commons.places': 'Orte',
+  'commons.ideas': 'Ideen',
+  'commons.rate': 'Ort bewerten',
+  'tonight.lede':
+    'Drei Abende, die bei anderen Haushalten funktioniert haben. Nimm einen, oder keinen.',
+  'tonight.budget': 'Höchstens, pro Person',
+  'tonight.any': 'Egal',
+  'tonight.empty': 'Noch nichts zu verteilen.',
+  'tonight.emptyHint':
+    'Ein Ort erscheint hier, sobald drei Haushalte ihn bewertet haben. Bewerte einen Ort, den ihr mögt, und es füllt sich — euer eigener eingeschlossen.',
+  'tonight.footnote': 'Für heute ausgeteilt. Morgen sind es andere.',
+  'places.empty': 'Noch nichts in eurer Nähe.',
+  'places.emptyFiltered': 'Nichts in eurer Nähe passt dazu.',
+  'places.emptyHint':
+    'Ein Ort erscheint, sobald drei Haushalte ihn bewertet haben — genug, dass kein einzelner Haushalt erkennbar ist. Bewertet einen Ort, den ihr mögt, und es füllt sich.',
+  'places.everything': 'Alles',
+  'ideas.ledeDo': 'Dinge, die keine Reservierung und keine Datenbank brauchen.',
+  'ideas.ledeGive': 'Geschenke, die kein Gutschein sind.',
+  'ideas.toDo': 'Zu tun',
+  'ideas.toGive': 'Zu schenken',
+  'tile.tonight.label': 'Heute Abend',
+  'tile.tonight.value': 'Drei',
+  'tile.tonight.caption': 'Abende, die funktioniert haben',
+
   // Shell
   'app.tagline': 'Haushalts-Date-Management',
   'nav.home': 'Start',
@@ -149,6 +182,38 @@ const de: Dictionary = {
 }
 
 const ru: Dictionary = {
+  'home.nav': 'Всё в приложении',
+  'home.section.money': 'Деньги',
+  'home.section.together': 'Время вместе',
+  'home.section.us': 'Друг о друге',
+  'home.section.app': 'Приложение',
+
+  // The commons (ADR-003)
+  'commons.nav': 'Общее',
+  'commons.tonight': 'Сегодня вечером',
+  'commons.places': 'Места',
+  'commons.ideas': 'Идеи',
+  'commons.rate': 'Оценить место',
+  'tonight.lede': 'Три вечера, которые сработали у других. Выберите один или ни одного.',
+  'tonight.budget': 'Не дороже, на человека',
+  'tonight.any': 'Любая',
+  'tonight.empty': 'Пока нечего предложить.',
+  'tonight.emptyHint':
+    'Место появляется здесь, когда его оценили три дома. Оцените место, которое вам нравится, и список начнёт наполняться — включая ваше.',
+  'tonight.footnote': 'Выдано на сегодня. Завтра будут другие.',
+  'places.empty': 'Рядом пока ничего нет.',
+  'places.emptyFiltered': 'Рядом ничего не подходит.',
+  'places.emptyHint':
+    'Место появляется, когда его оценили три дома — достаточно, чтобы нельзя было узнать ни один из них. Оцените место, которое вам нравится.',
+  'places.everything': 'Всё',
+  'ideas.ledeDo': 'Занятия, для которых не нужна ни бронь, ни база.',
+  'ideas.ledeGive': 'Подарки, которые не сертификат.',
+  'ideas.toDo': 'Чем заняться',
+  'ideas.toGive': 'Что подарить',
+  'tile.tonight.label': 'Сегодня вечером',
+  'tile.tonight.value': 'Три',
+  'tile.tonight.caption': 'вечера, которые сработали',
+
   // Shell
   'app.tagline': 'Планирование свиданий для дома',
   'nav.home': 'Главная',

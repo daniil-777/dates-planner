@@ -94,6 +94,15 @@ async function walkBackTo(page: Page, marker: Locator): Promise<number> {
   )
 }
 
+test.beforeEach(async ({ page }) => {
+  // Pinned. `readStoredLang` falls back to `navigator.language`, so on a machine whose
+  // browser is not English every assertion below fails on a translated string — a failure of
+  // the suite rather than of the app, and one that reads as neither.
+  await page.addInitScript(() => {
+    window.localStorage.setItem('twm.lang', 'en')
+  })
+})
+
 test('a receipt becomes a posting, a payment run, a memory and a statement', async ({ page }) => {
   // ------------------------------------------------------------------
   // 1. Scan
@@ -178,7 +187,9 @@ test('a receipt becomes a posting, a payment run, a memory and a statement', asy
   // 2. The ledger shows it
   // ------------------------------------------------------------------
   await test.step('the ledger shows it', async () => {
-    await page.getByRole('button', { name: /open the ledger/i }).click()
+    // 'Open expenses', not 'Open the ledger' — the label was renamed to match the nav and
+    // this spec was never followed through.
+    await page.getByRole('button', { name: /open expenses/i }).click()
     await expect(page).toHaveURL(/\/ledger$/)
 
     // Wait for the ledger itself, not just for the URL. React swaps the route in a later

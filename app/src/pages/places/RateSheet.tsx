@@ -215,7 +215,8 @@ export function RateSheet({
         </section>
 
         <section className="rate-sheet__section">
-          <Label>What was it like?</Label>
+          {/* No <Label> here: `TagPicker` labels each of its three groups, and the first of
+              them is "What was it like?" — which put the same words on screen twice. */}
           <TagPicker value={tags} onChange={setTags} />
         </section>
 

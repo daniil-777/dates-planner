@@ -187,7 +187,10 @@ const TAG_PHRASE: Record<string, string> = {
 export function because(place: DealtPlace): string {
   const phrase = place.tags.map(tag => TAG_PHRASE[tag]).find(found => found !== undefined)
   const households = `${place.households} household${place.households === 1 ? '' : 's'}`
-  return phrase === undefined ? `Worked for ${households}` : `${phrase} — ${households}`
+  if (phrase === undefined) return `Worked for ${households}`
+  // The phrases read as sentence fragments because they are also used mid-sentence; on a card
+  // this is the whole line, and a line that opens lower-case reads as a mistake.
+  return `${phrase[0]!.toUpperCase()}${phrase.slice(1)} — ${households}`
 }
 
 /* -------------------------------------------------------------------- deal */

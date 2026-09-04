@@ -12,15 +12,18 @@
  */
 import { NavLink } from 'react-router-dom'
 
-const VIEWS: ReadonlyArray<{ to: string; label: string }> = [
-  { to: '/tonight', label: 'Tonight' },
-  { to: '/places', label: 'Places' },
-  { to: '/ideas', label: 'Ideas' },
+import { useI18n } from '@/i18n'
+
+const VIEWS: ReadonlyArray<{ to: string; key: string; label: string }> = [
+  { to: '/tonight', key: 'commons.tonight', label: 'Tonight' },
+  { to: '/places', key: 'commons.places', label: 'Places' },
+  { to: '/ideas', key: 'commons.ideas', label: 'Ideas' },
 ]
 
 export function CommonsNav(): React.ReactElement {
+  const { t } = useI18n()
   return (
-    <nav className="commons-nav" aria-label="The commons">
+    <nav className="commons-nav" aria-label={t('commons.nav', 'The commons')}>
       {VIEWS.map(view => (
         <NavLink
           key={view.to}
@@ -30,7 +33,7 @@ export function CommonsNav(): React.ReactElement {
             `commons-nav__link${isActive ? ' commons-nav__link--on' : ''}`
           }
         >
-          {view.label}
+          {t(view.key, view.label)}
         </NavLink>
       ))}
     </nav>

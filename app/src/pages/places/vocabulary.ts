@@ -203,3 +203,18 @@ export function distanceLabel(metres: number | null): string | null {
 export function householdsLabel(count: number): string {
   return count === 1 ? '1 household' : `${count} households`
 }
+
+/**
+ * How long something takes, said the way somebody would say it.
+ *
+ * Minutes up to an hour and a half, hours above — "about 2½ hours" is a plan you can picture,
+ * "about 150 minutes" is arithmetic somebody has to do while deciding.
+ */
+export function minutesLabel(minutes: number | null): string | null {
+  if (minutes === null || !Number.isFinite(minutes) || minutes <= 0) return null
+  if (minutes < 90) return `About ${Math.round(minutes / 5) * 5} minutes`
+  const hours = minutes / 60
+  const rounded = Math.round(hours * 2) / 2
+  const written = Number.isInteger(rounded) ? String(rounded) : `${Math.floor(rounded)}½`
+  return `About ${written} hours`
+}

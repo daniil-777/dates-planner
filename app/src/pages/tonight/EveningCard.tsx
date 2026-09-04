@@ -24,7 +24,13 @@ import type { Evening } from '@/api/commons'
 import { MapLinks } from '@/pages/places/PlaceCard'
 import { StarRating } from '@/pages/places/Stars'
 import { TagChips } from '@/pages/places/Chips'
-import { KIND_LABEL, costLabel, distanceLabel, householdsLabel } from '@/pages/places/vocabulary'
+import {
+  KIND_LABEL,
+  costLabel,
+  distanceLabel,
+  householdsLabel,
+  minutesLabel,
+} from '@/pages/places/vocabulary'
 
 export interface EveningCardProps {
   evening: Evening
@@ -80,8 +86,8 @@ export function EveningCardView({ evening, index, onPlan }: EveningCardProps): R
             {/* An idea from the deck, used when the corpus has nowhere nearby. A card with a
                 meal and no second half is half a card. */}
             <p className="evening__summary">{doIdea.summary}</p>
-            {doIdea.minutes !== null && (
-              <p className="evening__meta">About {doIdea.minutes} minutes</p>
+            {minutesLabel(doIdea.minutes) !== null && (
+              <p className="evening__meta">{minutesLabel(doIdea.minutes)}</p>
             )}
           </>
         ) : (
