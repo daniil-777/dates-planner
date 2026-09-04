@@ -24,8 +24,10 @@
  */
 import { describe, expect, it } from 'vitest'
 
-import { buildFigure, clearFigureCache } from './figure'
-import { FORMS, ZONE_CODES, type ZoneCode } from './zones'
+import { BufferAttribute, Color } from 'three'
+
+import { buildFigure, clearFigureCache, paint } from './figure'
+import { FORMS, LEVEL_SPECS, ZONE_CODES, type ZoneCode } from './zones'
 
 /**
  * How much surface each region owns, in square centimetres.
@@ -54,10 +56,7 @@ function areaByZone(form: (typeof FORMS)[number]): Map<ZoneCode, number> {
     const vy = position.getY(ic) - position.getY(ia)
     const vz = position.getZ(ic) - position.getZ(ia)
     // Half the cross product's length, then m² to cm².
-    const area =
-      0.5 *
-      Math.hypot(uy * vz - uz * vy, uz * vx - ux * vz, ux * vy - uy * vx) *
-      10_000
+    const area = 0.5 * Math.hypot(uy * vz - uz * vy, uz * vx - ux * vz, ux * vy - uy * vx) * 10_000
 
     for (const vertex of [ia, ib, ic]) {
       const code = ZONE_CODES[zones[vertex]!]
@@ -287,5 +286,64 @@ describe('the surface faces outward', () => {
     expect(share, `only ${(share * 100).toFixed(1)}% of triangles face outward`).toBeGreaterThan(
       0.99,
     )
+  })
+})
+
+/* ------------------------------------------------------------- highlight */
+
+describe('the selection highlight', () => {
+  /**
+   * WCAG 2.1 relative luminance.
+   *
+   * No sRGB-to-linear step, because there is nothing to convert: three.js manages colour and
+   * a `Color` holds **linear** components, which is already the space luminance is defined
+   * in. Applying the usual transform here — the obvious thing to write — squares the
+   * gamma and reported the highlight at 1.54:1 when it is 3.50:1.
+   */
+  function luminance(colour: Color): number {
+    return 0.2126 * colour.r + 0.7152 * colour.g + 0.0722 * colour.b
+  }
+
+  function contrast(a: Color, b: Color): number {
+    const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x)
+    return (hi + 0.05) / (lo + 0.05)
+  }
+
+  /** Read the colour the mesh actually ended up with for one zone. */
+  function colourOf(figure: ReturnType<typeof buildFigure>, zone: ZoneCode): Color {
+    const attribute = figure.geometry.getAttribute('color') as BufferAttribute
+    const array = attribute.array as Float32Array
+    const index = figure.zones.findIndex(one => ZONE_CODES[one] === zone)
+    expect(index, `no vertices for ${zone}`).toBeGreaterThanOrEqual(0)
+    return new Color(array[index * 3], array[index * 3 + 1], array[index * 3 + 2])
+  }
+
+  it.each([
+    ['light', '#d8c3b4'],
+    ['dark', '#8d7566'],
+  ])('is visible against the %s figure', (_name, base) => {
+    // It used to lerp 28% towards white, which on the pale base measures 1.17:1 — WCAG
+    // 1.4.11 asks 3:1 of a non-text indicator, and no amount of extra white reaches it,
+    // because the base is already light. Tapping a region was the whole interaction and its
+    // only feedback was a change nobody could see.
+    const figure = buildFigure('neutral')
+    paint(figure, new Map(), 'shoulders', base)
+
+    const highlighted = colourOf(figure, 'shoulders')
+    expect(contrast(highlighted, new Color(base))).toBeGreaterThanOrEqual(3)
+  })
+
+  it('cannot be mistaken for any of the four level colours', () => {
+    // A selected-but-unmarked region must not read as an answer somebody has already given.
+    const figure = buildFigure('neutral')
+    paint(figure, new Map(), 'shoulders', '#d8c3b4')
+    const highlighted = colourOf(figure, 'shoulders')
+
+    for (const spec of LEVEL_SPECS) {
+      expect(
+        contrast(highlighted, new Color(spec.colour)),
+        `highlight is too close to "${spec.label}"`,
+      ).toBeGreaterThanOrEqual(3)
+    }
   })
 })

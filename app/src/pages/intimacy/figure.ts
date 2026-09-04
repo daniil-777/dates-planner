@@ -80,7 +80,9 @@ function asset(): Asset {
   const magic = view.getUint32(0, true)
   const version = view.getUint32(4, true)
   if (magic !== MAGIC || version !== VERSION) {
-    throw new Error(`figureData is not a v${VERSION} figure asset — re-run app/scripts/bake-figure.ts`)
+    throw new Error(
+      `figureData is not a v${VERSION} figure asset — re-run app/scripts/bake-figure.ts`,
+    )
   }
   const vertexCount = view.getUint32(8, true)
   const quadCount = view.getUint32(12, true)
@@ -199,6 +201,33 @@ function build(form: BodyForm): Figure {
  * the array changes and the picture does not, which looks exactly like a broken click
  * handler and is the first thing to check if this ever appears not to work.
  */
+/**
+ * The colour a selected region is painted.
+ *
+ * It used to lerp 28% towards **white**, and that direction cannot work at all: the light
+ * figure's base is `#d8c3b4`, already pale, so lightening it gives **1.17:1** against its
+ * surroundings. WCAG 1.4.11 asks 3:1 of a non-text indicator and the ceiling going lighter is
+ * 1.50:1 even at 75% white. The dark figure managed 1.63:1 — no better in practice.
+ *
+ * It is a replacement rather than a tint, which is the part worth noting. A partial mix has
+ * to clear 3:1 against *both* base figures while staying clearly apart from four level
+ * colours, and there is no mix amount that does: 80% towards near-black reaches 3.71:1 on the
+ * light base but only 2.66:1 on the dark one, and lands 1.02:1 from "Favourite". Painting the
+ * region outright measures 11.55:1 and 4.54:1 against the two bases and 3.18:1 from the
+ * nearest level colour, which is the only arrangement that clears everything.
+ *
+ * What is given up is seeing a region's existing mark while it is selected. The level buttons
+ * show that, and they are on screen precisely then.
+ *
+ * This mattered more than a contrast number usually does: tapping a region was the entire
+ * interaction, and its only feedback was a change nobody could see.
+ *
+ * (Contrast figures are computed in **linear** space, which is what three.js `Color` holds.
+ * Converting from sRGB first — the obvious thing to write — squares the gamma and reports
+ * 1.54:1 where the truth is 3.50:1.)
+ */
+const HIGHLIGHT = new Color('#0d0b10')
+
 export function paint(
   figure: Figure,
   marks: ReadonlyMap<ZoneCode, string>,
@@ -213,7 +242,7 @@ export function paint(
   const perZone = ZONE_CODES.map(code => {
     const mark = marks.get(code)
     const resolved = mark === undefined ? baseColour.clone() : new Color(mark)
-    if (code === hovered) resolved.lerp(new Color('#ffffff'), 0.28)
+    if (code === hovered) resolved.copy(HIGHLIGHT)
     return resolved
   })
 
