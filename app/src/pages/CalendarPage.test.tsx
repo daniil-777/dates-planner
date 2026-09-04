@@ -663,10 +663,13 @@ describe('CalendarPage', () => {
   it('opens a day, lists what is on it, and routes an event to its own page', async () => {
     renderPage()
 
-    expect(screen.queryByTestId('day-sheet')).toBeNull()
+    // The day used to be a modal that opened on a tap. It is a panel under the grid now and
+    // is always present, opened on today — so the assertion is that it is there and is
+    // showing today, not that it is absent until something is clicked.
+    expect(screen.getByTestId('day-panel')).toBeInTheDocument()
     fireEvent.click(dayButton(TODAY))
 
-    const sheet = within(await screen.findByTestId('day-sheet'))
+    const sheet = within(await screen.findByTestId('day-panel'))
     expect(sheet.getByText('Kronenhalle Dinner')).toBeInTheDocument()
     expect(sheet.getByText('Book the sleeper')).toBeInTheDocument()
     // The reminder says when it fires, and says it in days rather than in a stored date.
@@ -680,7 +683,7 @@ describe('CalendarPage', () => {
     renderPage()
 
     fireEvent.click(dayButton(TODAY))
-    const sheet = within(await screen.findByTestId('day-sheet'))
+    const sheet = within(await screen.findByTestId('day-panel'))
 
     const secret = sheet.getByText('Weekend in Vals').closest('[data-testid="calendar-entry"]')
     expect(secret).not.toBeNull()
@@ -750,7 +753,7 @@ describe('CalendarPage', () => {
     renderPage()
 
     fireEvent.click(dayButton(TODAY))
-    const sheet = await screen.findByTestId('day-sheet')
+    const sheet = await screen.findByTestId('day-panel')
     fireEvent.click(within(sheet).getByText('Add a reminder'))
 
     const dialog = within(await screen.findByTestId('reminder-dialog'))
@@ -775,7 +778,7 @@ describe('CalendarPage', () => {
     renderPage()
 
     fireEvent.click(dayButton(TODAY))
-    const sheet = await screen.findByTestId('day-sheet')
+    const sheet = await screen.findByTestId('day-panel')
     const row = within(sheet)
       .getByText('Kronenhalle Dinner')
       .closest('[data-testid="calendar-entry"]') as HTMLElement
@@ -803,7 +806,7 @@ describe('CalendarPage', () => {
     renderPage()
 
     fireEvent.click(dayButton(TODAY))
-    const sheet = await screen.findByTestId('day-sheet')
+    const sheet = await screen.findByTestId('day-panel')
     const row = within(sheet)
       .getByText('Book the sleeper')
       .closest('[data-testid="calendar-entry"]') as HTMLElement
@@ -821,7 +824,7 @@ describe('CalendarPage', () => {
     renderPage()
 
     fireEvent.click(dayButton(TODAY))
-    const sheet = await screen.findByTestId('day-sheet')
+    const sheet = await screen.findByTestId('day-panel')
     const row = within(sheet)
       .getByText('Book the sleeper')
       .closest('[data-testid="calendar-entry"]') as HTMLElement

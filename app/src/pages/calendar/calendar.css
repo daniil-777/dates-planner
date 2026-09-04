@@ -131,25 +131,32 @@
 
 /* ---------- month grid ---------- */
 
+/*
+ * The month, arranged the way every calendar people already know arranges it.
+ *
+ * Three decisions carry the look, and each replaces something that was fighting it:
+ *
+ *  1. **No card.** The grid used to sit in a bordered, rounded, padded white box. A month is
+ *     the page, not a widget on it, and the box made it read as one panel among several.
+ *  2. **The number is the control.** Today and the selected day are a *circle around the
+ *     number*, not a border around the whole cell — the old full-cell outline stretched into
+ *     a tall capsule on a phone, which is why today looked like a lozenge.
+ *  3. **The cell is square and quiet.** Everything else — dots, the overflow count — sits
+ *     under the number in a fixed-height strip, so a day with three events is exactly as
+ *     tall as an empty one and the grid never reflows as a month loads.
+ */
+
 .cal-grid {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  border: 1px solid var(--twm-border);
-  border-radius: var(--twm-radius-m);
-  padding: var(--twm-space-xs);
-  background: var(--twm-surface);
-}
-
-.cal-grid__row {
-  display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 2px;
 }
 
 .cal-grid__head {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   font-size: 0.6875rem;
-  letter-spacing: 0.06em;
+  font-weight: 600;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--twm-muted);
   padding-bottom: var(--twm-space-xs);
@@ -157,65 +164,107 @@
 
 .cal-grid__weekday {
   text-align: center;
-  padding: 0.15rem 0;
+}
+
+.cal-grid__row {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  /* A hairline per week, as a month view has. Not a full border: the grid is a table of
+     days, and ruling every column turns it into a spreadsheet. */
+  border-top: 1px solid var(--twm-border);
+}
+
+.cal-grid__row:last-child {
+  border-bottom: 1px solid var(--twm-border);
 }
 
 .cal-day {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.15rem;
+  gap: 2px;
+  /* Square, so the month is as wide as it is tall and reads as a page rather than a list. */
+  aspect-ratio: 1 / 1;
   min-height: var(--twm-touch);
-  padding: 0.3rem 0.1rem;
-  border: 1px solid transparent;
-  border-radius: var(--twm-radius-s);
+  padding: 6px 0 0;
+  border: none;
   background: transparent;
   cursor: pointer;
   font: inherit;
   color: var(--sapTextColor, #1d2d3e);
-}
-
-.cal-day:hover {
-  background: var(--sapList_Hover_Background, #f2f2f2);
+  -webkit-tap-highlight-color: transparent;
 }
 
 .cal-day:focus-visible {
   outline: 2px solid var(--sapContent_FocusColor, #0032a5);
-  outline-offset: -2px;
+  outline-offset: -3px;
+  border-radius: var(--twm-radius-s);
 }
 
-.cal-day--out {
+.cal-day--out .cal-day__num {
   color: var(--twm-muted);
-  opacity: 0.65;
+  opacity: 0.5;
 }
 
-.cal-day--today {
-  border-color: var(--sapBrandColor, #0070f2);
+/*
+ * The number, in its circle.
+ *
+ * Sized in absolute units rather than `em` so the circle is a circle at every text scale the
+ * cell can be given, and `tabular-nums` so 11 and 30 are the same width and the column does
+ * not shimmy as the month changes.
+ */
+.cal-day__num {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  font-size: 0.9375rem;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+}
+
+.cal-day:hover .cal-day__num {
+  background: var(--sapList_Hover_Background, #f2f2f2);
+}
+
+/* Today, unselected: the accent on the number alone. */
+.cal-day--today .cal-day__num {
+  color: var(--sapBrandColor, #0070f2);
   font-weight: 700;
 }
 
-.cal-day--selected {
-  background: var(--sapList_SelectionBackgroundColor, #e3f0ff);
-  border-color: var(--sapBrandColor, #0070f2);
+/* The chosen day: a filled circle. Ink when it is any other day… */
+.cal-day--selected .cal-day__num,
+.cal-day--selected:hover .cal-day__num {
+  background: var(--sapTextColor, #1d2d3e);
+  color: var(--twm-surface);
+  font-weight: 600;
 }
 
-.cal-day__num {
-  font-size: 0.875rem;
-  line-height: 1.2;
+/* …and the accent when the chosen day is also today, so "today" survives being selected. */
+.cal-day--today.cal-day--selected .cal-day__num,
+.cal-day--today.cal-day--selected:hover .cal-day__num {
+  background: var(--sapBrandColor, #0070f2);
+  color: #fff;
 }
 
+/* A fixed strip under the number: a busy day is exactly as tall as an empty one. */
 .cal-day__marks {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 2px;
-  min-height: 0.5rem;
+  gap: 3px;
+  height: 0.5rem;
 }
 
 /* An event is a round dot. */
 .cal-dot {
-  width: 0.375rem;
-  height: 0.375rem;
+  width: 0.3125rem;
+  height: 0.3125rem;
   border-radius: 50%;
   background: var(--sapBrandColor, #0070f2);
 }
@@ -223,37 +272,103 @@
 /* A surprise only this viewer can see is the same dot, hollow. */
 .cal-dot--only {
   background: transparent;
-  border: 1px solid var(--sapBrandColor, #0070f2);
+  box-shadow: inset 0 0 0 1px var(--sapBrandColor, #0070f2);
 }
 
-/* A reminder is deliberately not a dot: a diamond reads as a different kind of thing
-   at 6 px, where a second colour of circle just reads as another event. */
+/* A reminder is deliberately not a dot: a diamond reads as a different kind of thing at
+   6 px, where a second colour of circle just reads as another event. */
 .cal-mark {
-  width: 0.375rem;
-  height: 0.375rem;
+  width: 0.3125rem;
+  height: 0.3125rem;
   transform: rotate(45deg);
   background: var(--sapCriticalColor, #e76500);
 }
 
 .cal-mark--done {
   background: transparent;
-  border: 1px solid var(--sapCriticalColor, #e76500);
+  box-shadow: inset 0 0 0 1px var(--sapCriticalColor, #e76500);
+}
+
+/* On a selected day the marks sit on the filled circle's ground, so they invert with it. */
+.cal-day--selected .cal-dot,
+.cal-day--selected .cal-mark {
+  background: var(--sapTextColor, #1d2d3e);
+  opacity: 0.55;
 }
 
 .cal-day__more {
-  font-size: 0.625rem;
+  font-size: 0.5625rem;
+  line-height: 1;
   color: var(--twm-muted);
 }
 
 @media (min-width: 700px) {
   .cal-day {
-    min-height: 4rem;
+    /* Wider than tall on a laptop: a square cell there is a very tall month. */
+    aspect-ratio: auto;
+    min-height: 4.5rem;
     justify-content: flex-start;
   }
 
   .cal-day__num {
+    width: 2.25rem;
+    height: 2.25rem;
     font-size: 1rem;
   }
+}
+
+/* ---------- the chosen day, under the grid ---------- */
+
+.cal-day-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--twm-space-s);
+  padding-top: var(--twm-space-m);
+}
+
+.cal-day-panel__head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--twm-space-s);
+}
+
+.cal-day-panel__date {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  gap: var(--twm-space-s);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.cal-day-panel__weekday {
+  color: var(--sapTextColor, #1d2d3e);
+}
+
+.cal-day-panel__long {
+  font-size: 0.8125rem;
+  font-weight: 400;
+  color: var(--twm-muted);
+}
+
+.cal-day-panel__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--twm-space-xs);
+}
+
+.cal-day-panel__add {
+  align-self: flex-start;
+}
+
+.cal-day-panel__empty {
+  margin: 0;
+  padding: var(--twm-space-m) 0;
+  color: var(--twm-muted);
+  font-size: 0.875rem;
 }
 
 /* ---------- list view ---------- */

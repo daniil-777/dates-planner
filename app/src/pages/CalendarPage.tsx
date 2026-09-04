@@ -45,7 +45,7 @@ import { currentPeriod, formatPeriod, shiftPeriod } from '@/theme'
 import './calendar/icons'
 import './calendar/calendar.css'
 import { DayList } from './calendar/DayList'
-import { DaySheet } from './calendar/DaySheet'
+import { DayPanel } from './calendar/DayPanel'
 import { MonthGrid } from './calendar/MonthGrid'
 import { NextUpStrip } from './calendar/NextUpStrip'
 import { MAX_LEAD_DAYS, ReminderDialog, type ReminderDraft } from './calendar/ReminderDialog'
@@ -63,7 +63,15 @@ export function CalendarPage() {
 
   const [period, setPeriod] = useState<string>(() => currentPeriod())
   const [focusedDate, setFocusedDate] = useState<string>(today)
-  const [selectedDate, setSelectedDate] = useState<string | null>(null)
+  /*
+   * There is always a chosen day, and it starts as today.
+   *
+   * It used to start as `null`, because selecting a day opened a modal and opening one on
+   * arrival would have been rude. The day now lives under the grid instead, so `null` would
+   * mean six hundred pixels of nothing under a month — and "what is on today" is the question
+   * somebody opening a calendar is most often asking anyway.
+   */
+  const [selectedDate, setSelectedDate] = useState<string>(today)
   const [view, setView] = useState<CalendarView>(() => readView())
 
   const [draft, setDraft] = useState<ReminderDraft | null>(null)
@@ -114,7 +122,12 @@ export function CalendarPage() {
 
   const goToPeriod = (target: string): void => {
     setPeriod(target)
-    setFocusedDate(sameDayInPeriod(target, focusedDate))
+    // The same day of the month, clamped — so paging from 31 January lands on 28 February
+    // rather than on nothing. The chosen day follows the focus, or the panel below would be
+    // describing a day that is no longer on screen.
+    const landing = sameDayInPeriod(target, focusedDate)
+    setFocusedDate(landing)
+    setSelectedDate(landing)
   }
 
   const chooseView = (chosen: CalendarView): void => {
@@ -123,7 +136,8 @@ export function CalendarPage() {
   }
 
   const openEvent = (eventId: string): void => {
-    setSelectedDate(null)
+    // Nothing to close any more: the day lives under the grid rather than over it, so it
+    // stays chosen and is still chosen on the way back.
     navigate(`/events/${eventId}`)
   }
 
@@ -153,7 +167,6 @@ export function CalendarPage() {
   const remindAbout = (item: DayEntry): void => {
     const eventId = item.entry.eventId
     if (!eventId) return
-    setSelectedDate(null)
     setDraftError(null)
     setDraft({ eventId, leadDays: 1, note: '' })
   }
@@ -200,16 +213,20 @@ export function CalendarPage() {
     }
   }
 
-  const dayItems = selectedDate ? (byDay.get(selectedDate) ?? []) : []
+  const dayItems = byDay.get(selectedDate) ?? []
   const monthCount = buckets.reduce((total, bucket) => total + bucket.items.length, 0)
 
   return (
     <div className="cal" data-testid="calendar-page">
       <div className="cal__bar">
         <div className="cal__heading">
-          <Title level="H4">Calendar</Title>
+          {/* The month leads, not the word "Calendar" — the nav already said which page this
+              is, and the month is the thing that changes and that somebody is looking for. */}
+          <Title level="H4">{formatPeriod(period)}</Title>
           <span className="cal__sub">
-            {`${formatPeriod(period)} · ${monthCount === 0 ? 'nothing scheduled' : `${monthCount} ${monthCount === 1 ? 'entry' : 'entries'}`}`}
+            {monthCount === 0
+              ? 'Nothing scheduled'
+              : `${monthCount} ${monthCount === 1 ? 'entry' : 'entries'}`}
           </span>
         </div>
 
@@ -258,8 +275,11 @@ export function CalendarPage() {
               List
             </SegmentedButtonItem>
           </SegmentedButton>
+          {/* Transparent, not a filled block. A calendar's header is chrome, and a solid
+              accent square in it competes with the one thing on the page that should be
+              loud — which is today. */}
           <Button
-            design="Emphasized"
+            design="Transparent"
             icon="add"
             accessibleName="New reminder"
             tooltip="New reminder"
@@ -268,29 +288,32 @@ export function CalendarPage() {
         </div>
       </div>
 
-      <NextUpStrip
-        next={next}
-        reminders={reminders}
-        busyId={busyId}
-        onOpenEvent={openEvent}
-        onComplete={id => void markDone(id)}
-        onCreate={() => openReminderDialog(null)}
-      />
-
       {upcomingQuery.isError ? (
         <ErrorState error={upcomingQuery.error} onRetry={() => void upcomingQuery.refetch()} />
       ) : upcomingQuery.isPending ? (
         <LoadingSkeleton rows={6} variant="card" />
       ) : view === 'grid' ? (
-        <MonthGrid
-          period={period}
-          cells={cells}
-          byDay={byDay}
-          focusedDate={focusedDate}
-          selectedDate={selectedDate}
-          onFocusDate={setFocusedDate}
-          onOpenDate={setSelectedDate}
-        />
+        <>
+          <MonthGrid
+            period={period}
+            cells={cells}
+            byDay={byDay}
+            focusedDate={focusedDate}
+            selectedDate={selectedDate}
+            onFocusDate={setFocusedDate}
+            onOpenDate={setSelectedDate}
+          />
+          <DayPanel
+            date={selectedDate}
+            items={dayItems}
+            busyId={busyId}
+            onOpenEvent={openEvent}
+            onCompleteReminder={id => void markDone(id)}
+            onDeleteReminder={setPendingDelete}
+            onRemindAbout={remindAbout}
+            onAddReminder={date => openReminderDialog(date)}
+          />
+        </>
       ) : buckets.length === 0 ? (
         <EmptyState
           icon="calendar"
@@ -315,22 +338,22 @@ export function CalendarPage() {
         />
       )}
 
-      {selectedDate === null ? null : (
-        <DaySheet
-          date={selectedDate}
-          items={dayItems}
-          busyId={busyId}
-          onClose={() => setSelectedDate(null)}
-          onOpenEvent={openEvent}
-          onCompleteReminder={id => void markDone(id)}
-          onDeleteReminder={setPendingDelete}
-          onRemindAbout={remindAbout}
-          onAddReminder={date => {
-            setSelectedDate(null)
-            openReminderDialog(date)
-          }}
-        />
-      )}
+      {/*
+        Below the month, not above it.
+
+        It was the first thing on the page, and a 270-pixel card pushed the grid most of the
+        way off a phone screen — on a page whose subject is the month. The home launcher
+        already carries a next-up strip, so this is the second copy rather than the only one,
+        and it reads better as a footnote to the month than as a headline over it.
+      */}
+      <NextUpStrip
+        next={next}
+        reminders={reminders}
+        busyId={busyId}
+        onOpenEvent={openEvent}
+        onComplete={id => void markDone(id)}
+        onCreate={() => openReminderDialog(null)}
+      />
 
       {draft === null ? null : (
         <ReminderDialog
