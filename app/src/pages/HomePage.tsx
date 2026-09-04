@@ -132,6 +132,15 @@ export function HomePage() {
         caption: t('tile.tonight.caption', 'evenings that worked'),
       },
     },
+    games: {
+      status: 'ready',
+      figure: {
+        kind: 'text',
+        value: t('tile.games.value', 'Play'),
+        emphasis: 'number',
+        caption: t('tile.games.caption', 'one minute each question'),
+      },
+    },
     ledger: figureFrom<PeriodTotals>(periodQuery, monthFigure),
     events: figureFrom<Event[]>(eventsQuery, events => eventsFigure(events, today)),
     calendar: figureFrom<CalendarEntry[]>(upcomingQuery, () => calendarFigure(scheduled)),

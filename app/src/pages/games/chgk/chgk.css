@@ -1,0 +1,524 @@
+/*
+ * "What? Where? When?".
+ *
+ * ## Why this one page is dark when the rest of the app is not
+ *
+ * The app is Fiori: light, flat, businesslike, and correct for a ledger. A game played round
+ * a table at ten at night is not that. The table in the show it borrows from is a pool of
+ * light in a dark room, and the whole feeling of the thing is that everything except the
+ * question has gone away.
+ *
+ * So this surface is dark in both themes — not "dark mode", a *deliberate* dark, the way a
+ * cinema is dark whatever time it is outside. It is the only screen in the app that does
+ * this, and it does it because the game is the one part of the app that is a performance.
+ *
+ * Everything is tokenised locally (`--chgk-*`) rather than reaching for the theme's
+ * variables, precisely because it must *not* follow the theme.
+ *
+ * ## Motion
+ *
+ * Three animations, each earning its place: the top decelerating (anticipation, which is the
+ * cheapest fun in any game), the card turning over (the answer arrives from behind the
+ * question rather than replacing it), and the last ten seconds breathing (a signal to
+ * decide, not drama). Every one of them is off under `prefers-reduced-motion`, where the
+ * same states are shown without movement — the game does not depend on any of it.
+ */
+
+.chgk {
+  --chgk-ink: #f4efe4;
+  --chgk-dim: #9c957f;
+  --chgk-ground: #10141c;
+  --chgk-panel: #1a2130;
+  --chgk-gold: #d4af37;
+  --chgk-green: #2f7d55;
+  --chgk-red: #c0392b;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--twm-space-l);
+  padding: var(--twm-space-l);
+  border-radius: var(--twm-radius-l);
+  background:
+    radial-gradient(120% 80% at 50% 0%, #1d2636 0%, var(--chgk-ground) 62%),
+    var(--chgk-ground);
+  color: var(--chgk-ink);
+  min-height: 60vh;
+  text-align: center;
+  overflow: hidden;
+}
+
+/* ------------------------------------------------------------------ score */
+
+.chgk-score {
+  display: flex;
+  align-items: baseline;
+  gap: var(--twm-space-m);
+  font-variant-numeric: tabular-nums;
+}
+
+.chgk-score__side {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.chgk-score__value {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--chgk-gold);
+}
+
+.chgk-score__side--them .chgk-score__value {
+  color: var(--chgk-ink);
+}
+
+.chgk-score__label {
+  font-size: 0.625rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--chgk-dim);
+  margin-top: 2px;
+}
+
+.chgk-score__colon {
+  font-size: 1.5rem;
+  color: var(--chgk-dim);
+}
+
+/* -------------------------------------------------------------------- top */
+
+.chgk-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--twm-space-m);
+  width: 100%;
+  min-height: 17rem;
+  justify-content: center;
+}
+
+.chgk-top {
+  position: relative;
+  width: 11rem;
+  height: 11rem;
+}
+
+.chgk-top__face,
+.chgk-top__arrow {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.chgk-top__rim {
+  fill: none;
+  stroke: var(--chgk-gold);
+  stroke-width: 2;
+  opacity: 0.55;
+}
+
+.chgk-top__sector {
+  fill: #223049;
+}
+
+.chgk-top__sector--alt {
+  fill: #182234;
+}
+
+.chgk-top__hub {
+  fill: var(--chgk-ground);
+  stroke: var(--chgk-gold);
+  stroke-width: 1.5;
+  opacity: 0.9;
+}
+
+.chgk-top__needle {
+  fill: var(--chgk-gold);
+}
+
+.chgk-top__pivot {
+  fill: var(--chgk-ink);
+}
+
+/*
+ * A hard shove and a long settle. A linear spin that stops dead reads as a loading spinner
+ * that finished, which is the opposite of anticipation.
+ */
+.chgk-top__arrow {
+  transform: rotate(0deg);
+  transition: transform 1600ms cubic-bezier(0.15, 0.9, 0.25, 1);
+  transform-origin: 50% 50%;
+}
+
+.chgk-top--spinning .chgk-top__face {
+  animation: chgk-glow 1600ms ease-in-out;
+}
+
+@keyframes chgk-glow {
+  0%,
+  100% {
+    filter: none;
+  }
+  55% {
+    filter: drop-shadow(0 0 14px rgb(212 175 55 / 45%));
+  }
+}
+
+.chgk-stage__hint {
+  margin: 0;
+  color: var(--chgk-dim);
+  font-size: 0.875rem;
+}
+
+.chgk-stage__hint--live {
+  color: var(--chgk-gold);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+}
+
+/* ------------------------------------------------------------------- card */
+
+/*
+ * The answer is behind the question, not after it.
+ *
+ * A card that turns over says "this was here all along", which is the truth and is also the
+ * feeling the game wants — the answer was always reachable. Replacing the text would say
+ * "here is a different screen now".
+ */
+.chgk-card {
+  position: relative;
+  width: 100%;
+  max-width: 30rem;
+  min-height: 15rem;
+  transform-style: preserve-3d;
+  transition: transform 620ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.chgk-card--revealed {
+  transform: rotateY(180deg);
+}
+
+.chgk-card__face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--twm-space-m);
+  padding: var(--twm-space-l);
+  box-sizing: border-box;
+  border-radius: var(--twm-radius-l);
+  background: var(--chgk-panel);
+  border: 1px solid rgb(212 175 55 / 22%);
+  backface-visibility: hidden;
+}
+
+.chgk-card__face--back {
+  transform: rotateY(180deg);
+  background: linear-gradient(160deg, #1c2a22 0%, var(--chgk-panel) 70%);
+}
+
+.chgk-card__kicker {
+  margin: 0;
+  font-size: 0.625rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--chgk-gold);
+}
+
+.chgk-card__q {
+  margin: 0;
+  font-size: 1.0625rem;
+  line-height: 1.5;
+  /* A question is read aloud, so it is set for reading aloud: generous line height and a
+     measure short enough that the reader's eye never loses the line. */
+  max-width: 26rem;
+}
+
+.chgk-card__a {
+  margin: 0;
+  font-size: 1.375rem;
+  font-weight: 700;
+  color: var(--chgk-gold);
+}
+
+.chgk-card__note {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--chgk-dim);
+  max-width: 24rem;
+}
+
+.chgk-card__timer {
+  margin-top: var(--twm-space-xs);
+}
+
+/* ------------------------------------------------------------------ timer */
+
+.chgk-timer {
+  position: relative;
+  width: 5.5rem;
+  height: 5.5rem;
+  display: grid;
+  place-items: center;
+}
+
+.chgk-timer__ring {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.chgk-timer__track {
+  stroke: rgb(255 255 255 / 10%);
+}
+
+.chgk-timer__arc {
+  stroke: var(--chgk-gold);
+}
+
+.chgk-timer__value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  grid-area: 1 / 1;
+  transform: translateY(-6px);
+}
+
+.chgk-timer__unit {
+  grid-area: 1 / 1;
+  transform: translateY(16px);
+  font-size: 0.5625rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--chgk-dim);
+}
+
+.chgk-timer--idle {
+  opacity: 0.4;
+}
+
+.chgk-timer--urgent .chgk-timer__arc,
+.chgk-timer--urgent .chgk-timer__value {
+  stroke: var(--chgk-red);
+  color: var(--chgk-red);
+}
+
+/* Breathing, not flashing: a signal to decide rather than an alarm. */
+.chgk-timer--urgent {
+  animation: chgk-breathe 1s ease-in-out infinite;
+}
+
+@keyframes chgk-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.06);
+  }
+}
+
+.chgk-timer--done .chgk-timer__arc {
+  stroke: var(--chgk-red);
+}
+
+.chgk-timer--done .chgk-timer__value {
+  color: var(--chgk-red);
+}
+
+/* ---------------------------------------------------------------- actions */
+
+.chgk-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--twm-space-s);
+  min-height: 4.5rem;
+  justify-content: center;
+}
+
+.chgk-actions__aside {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--chgk-dim);
+}
+
+.chgk-verdict-buttons {
+  display: flex;
+  gap: var(--twm-space-s);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* ----------------------------------------------------------------- themes */
+
+.chgk-themes {
+  width: 100%;
+  max-width: 30rem;
+  text-align: left;
+  border-top: 1px solid rgb(255 255 255 / 8%);
+  padding-top: var(--twm-space-m);
+}
+
+.chgk-themes summary {
+  cursor: pointer;
+  font-size: 0.8125rem;
+  color: var(--chgk-dim);
+  min-height: var(--twm-touch);
+  display: flex;
+  align-items: center;
+}
+
+.chgk-themes__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--twm-space-xs);
+  padding: var(--twm-space-s) 0;
+}
+
+.chgk-chip {
+  min-height: 36px;
+  padding: 0 var(--twm-space-m);
+  border-radius: var(--twm-radius-pill);
+  border: 1px solid rgb(212 175 55 / 30%);
+  background: transparent;
+  color: var(--chgk-ink);
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+
+.chgk-chip--on {
+  background: var(--chgk-gold);
+  border-color: var(--chgk-gold);
+  color: #1a1408;
+  font-weight: 600;
+}
+
+.chgk-themes__note {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--chgk-dim);
+  line-height: 1.5;
+}
+
+/* ------------------------------------------------------------------- over */
+
+.chgk--over {
+  justify-content: center;
+}
+
+.chgk-verdict__kicker {
+  margin: 0;
+  font-size: 0.6875rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--chgk-dim);
+}
+
+.chgk-verdict {
+  margin: 0;
+  font-size: 3rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--chgk-ink);
+}
+
+.chgk--won .chgk-verdict {
+  color: var(--chgk-gold);
+  animation: chgk-arrive 700ms cubic-bezier(0.2, 0.9, 0.2, 1);
+}
+
+@keyframes chgk-arrive {
+  from {
+    opacity: 0;
+    transform: scale(0.86);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.chgk-verdict__line {
+  margin: 0;
+  max-width: 24rem;
+  color: var(--chgk-dim);
+  font-size: 0.9375rem;
+}
+
+.chgk-recap {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  max-width: 26rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
+}
+
+.chgk-recap li {
+  display: flex;
+  gap: var(--twm-space-s);
+  align-items: baseline;
+  padding: var(--twm-space-xs) 0;
+  font-size: 0.8125rem;
+  color: var(--chgk-dim);
+  border-bottom: 1px solid rgb(255 255 255 / 6%);
+}
+
+.chgk-recap--won {
+  color: var(--chgk-ink);
+}
+
+.chgk-recap__num {
+  font-variant-numeric: tabular-nums;
+  color: var(--chgk-dim);
+  min-width: 1rem;
+}
+
+.chgk-recap--won .chgk-recap__answer {
+  color: var(--chgk-gold);
+}
+
+/* ------------------------------------------------------- reduced motion */
+
+/*
+ * Every state above is reachable without movement. The spin still takes its second and a
+ * half — the anticipation is the *pause*, not the rotation — the card swaps rather than
+ * turns, and the last ten seconds stay red without breathing.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .chgk-top__arrow,
+  .chgk-card {
+    transition: none;
+  }
+
+  .chgk-top--spinning .chgk-top__face,
+  .chgk-timer--urgent,
+  .chgk--won .chgk-verdict {
+    animation: none;
+  }
+
+  .chgk-card--revealed {
+    transform: none;
+  }
+
+  .chgk-card--revealed .chgk-card__face--front {
+    display: none;
+  }
+
+  .chgk-card--revealed .chgk-card__face--back {
+    transform: none;
+  }
+}

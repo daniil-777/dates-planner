@@ -20,6 +20,7 @@ import '@ui5/webcomponents-icons/dist/discussion.js'
 
 // The commons (ADR-003). One tile; Places and Ideas live inside it.
 import '@ui5/webcomponents-icons/dist/lightbulb.js'
+import '@ui5/webcomponents-icons/dist/sys-help.js'
 
 // The next-up strip: a nudge, a date in the diary, a year come round again.
 import '@ui5/webcomponents-icons/dist/bell.js'

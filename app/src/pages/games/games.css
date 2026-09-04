@@ -1,0 +1,97 @@
+/*
+ * The Games chapter.
+ *
+ * A list of one, for now, and built so that being a list of one does not look like a mistake:
+ * the card is large, illustrated and obviously the point of the page, rather than a lonely row
+ * in a table that is waiting for siblings.
+ */
+
+.games {
+  display: flex;
+  flex-direction: column;
+  gap: var(--twm-space-l);
+  padding-bottom: calc(var(--twm-bottomnav-height) + var(--twm-safe-bottom) + var(--twm-space-xl));
+}
+
+.games__lede {
+  margin: var(--twm-space-xs) 0 0;
+  color: var(--twm-muted);
+  font-size: 0.875rem;
+}
+
+.games__back {
+  all: unset;
+  cursor: pointer;
+  align-self: flex-start;
+  min-height: var(--twm-touch);
+  display: inline-flex;
+  align-items: center;
+  color: var(--sapLinkColor, #0070f2);
+  font-size: 0.9375rem;
+}
+
+.game-card {
+  all: unset;
+  cursor: pointer;
+  display: flex;
+  gap: var(--twm-space-m);
+  align-items: center;
+  padding: var(--twm-space-l);
+  border-radius: var(--twm-radius-l);
+  /* The game's own dark, so the card is a window into it rather than a label on it. */
+  background:
+    radial-gradient(120% 90% at 20% 0%, #1d2636 0%, #10141c 65%),
+    #10141c;
+  color: #f4efe4;
+  box-sizing: border-box;
+}
+
+.game-card:focus-visible {
+  outline: 2px solid var(--sapContent_FocusColor, #0032a5);
+  outline-offset: 2px;
+}
+
+/* A miniature of the spinning top, still. */
+.game-card__art {
+  flex: 0 0 auto;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: conic-gradient(#223049 0 30deg, #182234 0 60deg);
+  box-shadow: inset 0 0 0 1.5px rgb(212 175 55 / 55%);
+}
+
+.game-card__top {
+  display: block;
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-bottom: 20px solid #d4af37;
+  transform: translateY(-3px);
+}
+
+.game-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.game-card__name {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: #d4af37;
+}
+
+.game-card__blurb {
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+.game-card__meta {
+  font-size: 0.75rem;
+  color: #9c957f;
+}

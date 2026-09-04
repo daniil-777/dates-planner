@@ -39,6 +39,7 @@ export type HomeTileId =
   | 'mood'
   | 'intimacy'
   | 'tonight'
+  | 'games'
   | 'ledger'
   | 'events'
   | 'calendar'
@@ -163,6 +164,21 @@ export const HOME_TILES: readonly HomeTileSpec[] = [
     icon: 'heart',
     accent: '#F31DED',
     hint: 'The timeline',
+  },
+  {
+    /*
+     * The third documented exception to the ten category colours, after "Between us" and
+     * "Tonight". Gold, because the game it holds is a performance and gold is the colour it
+     * is performed in — the only place in this app that reaches outside the Fiori palette on
+     * purpose rather than for want of a free hue.
+     */
+    id: 'games',
+    section: 'us',
+    to: '/games',
+    label: 'Games',
+    icon: 'sys-help',
+    accent: '#C9A227',
+    hint: 'Play something at the table',
   },
   {
     id: 'chat',
