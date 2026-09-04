@@ -43,7 +43,10 @@
   background: transparent;
   font: inherit;
   cursor: pointer;
-  transition: transform 120ms ease, border-color 120ms ease, background 120ms ease;
+  transition:
+    transform 120ms ease,
+    border-color 120ms ease,
+    background 120ms ease;
 }
 
 .mood-scale__face:hover {
@@ -155,4 +158,434 @@
   font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.04em;
+}
+
+/* ==========================================================================
+   The aurora
+   ==========================================================================
+
+   A slow field of colour behind the picker, whose hue, brightness and drift speed are the
+   answer to the question on the screen.
+
+   The technique is borrowed from Google's Stitch landing page — near-black ground, fine
+   dotted grid, two or three enormous soft blooms drifting behind a frosted panel. There it is
+   decoration: the same bloom plays whatever you type. Here the same device carries the data,
+   which is the only interesting thing to do with it.
+
+   Three rules held throughout:
+
+   1. **Only `transform` and `opacity` animate.** Both are compositor-only — no layout, no
+      paint, no main-thread work. A phone can run this at 60fps while the radio is on.
+   2. **No `filter: blur()`.** It is the obvious way to make a soft bloom and it forces the
+      compositor to rasterise a full-bleed surface every frame. A radial gradient with a long
+      transparent falloff is already soft and costs nothing.
+   3. **Nothing depends on the motion.** Under `prefers-reduced-motion` the field is still,
+      still coloured, and still says exactly the same thing.
+*/
+
+/*
+ * Registered so they interpolate.
+ *
+ * An unregistered custom property is a string, so a gradient built from one *snaps* between
+ * palettes. Registering it as `<color>` is what turns changing your mood into a two-second
+ * morph rather than a cut. Unsupported browsers ignore the block and get the cut, which is a
+ * degradation rather than a break.
+ */
+@property --aurora-core {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #3d4a63;
+}
+
+@property --aurora-echo {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #2b3348;
+}
+
+@property --aurora-ground {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #141821;
+}
+
+.aurora {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-radius: var(--twm-radius-l);
+  background: var(--aurora-ground);
+  /* The morph. Long, because a mood is not a toggle and a fast colour change reads as an
+     error state. Two seconds is about as slow as a UI response can be before it feels
+     broken, and this is the one place worth spending all of it. */
+  transition:
+    --aurora-core 1800ms ease,
+    --aurora-echo 1800ms ease,
+    --aurora-ground 1800ms ease;
+}
+
+.aurora__field {
+  position: absolute;
+  inset: -30%;
+  z-index: 0;
+}
+
+.aurora__bloom {
+  position: absolute;
+  display: block;
+  border-radius: 50%;
+  /* `closest-side` plus a long transparent tail is the whole softness. The stop at 62% is
+     where a hard-edged circle becomes a glow. */
+  will-change: transform;
+}
+
+.aurora__bloom--one {
+  width: 90%;
+  height: 80%;
+  left: -10%;
+  top: 5%;
+  background: radial-gradient(closest-side, var(--aurora-core) 0%, transparent 62%);
+  opacity: 0.85;
+  animation: aurora-drift-a var(--aurora-drift, 40s) ease-in-out infinite;
+}
+
+.aurora__bloom--two {
+  width: 80%;
+  height: 90%;
+  right: -15%;
+  top: -10%;
+  background: radial-gradient(closest-side, var(--aurora-echo) 0%, transparent 60%);
+  opacity: 0.75;
+  /* A different period from the first, so the two never come back into the same relative
+     position — the field does not visibly loop. */
+  animation: aurora-drift-b calc(var(--aurora-drift, 40s) * 1.37) ease-in-out infinite;
+}
+
+.aurora__bloom--three {
+  width: 70%;
+  height: 70%;
+  left: 20%;
+  bottom: -20%;
+  background: radial-gradient(closest-side, var(--aurora-core) 0%, transparent 58%);
+  opacity: 0.55;
+  animation: aurora-drift-c calc(var(--aurora-drift, 40s) * 0.83) ease-in-out infinite;
+}
+
+@keyframes aurora-drift-a {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(12%, 8%, 0) scale(1.18);
+  }
+}
+
+@keyframes aurora-drift-b {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1.1);
+  }
+  50% {
+    transform: translate3d(-14%, 12%, 0) scale(0.92);
+  }
+}
+
+@keyframes aurora-drift-c {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(0.95);
+  }
+  50% {
+    transform: translate3d(8%, -14%, 0) scale(1.25);
+  }
+}
+
+/*
+ * The grid, above the colour and below the content.
+ *
+ * It is what makes the blooms read as light behind a surface rather than as paint on top of
+ * one — the regular dots give the eye a plane to place the glow behind. Two pixels of dot on
+ * a 22 px pitch; any denser and it becomes a texture you notice.
+ */
+.aurora__grid {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background-image: radial-gradient(circle at 1px 1px, rgb(255 255 255 / 9%) 1px, transparent 0);
+  background-size: 22px 22px;
+  /* Fades out at the edges so the panel does not look like graph paper with a border. */
+  mask-image: radial-gradient(120% 100% at 50% 40%, #000 40%, transparent 100%);
+}
+
+.aurora__content {
+  position: relative;
+  z-index: 2;
+}
+
+/* Off-screen, for the announcement only. */
+.aurora__announce {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+/* ---------------------------------------------------------------- the faces */
+
+.aurora .mood-scale {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--twm-space-xs);
+  padding: var(--twm-space-l) var(--twm-space-m) var(--twm-space-m);
+}
+
+.aurora .mood-scale__face {
+  all: unset;
+  flex: 1 1 0;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: var(--twm-space-s) 0;
+  min-height: var(--twm-touch);
+  border-radius: var(--twm-radius-m);
+  color: rgb(255 255 255 / 62%);
+  font-size: 0.6875rem;
+  text-align: center;
+  transition:
+    transform 260ms cubic-bezier(0.2, 0.9, 0.2, 1),
+    color 260ms ease,
+    background-color 260ms ease;
+}
+
+.aurora .mood-scale__emoji {
+  font-size: 1.75rem;
+  line-height: 1;
+  display: block;
+  /* Greyed until chosen, so the row reads as five options rather than five moods you are
+     already having. */
+  filter: saturate(0.25) opacity(0.65);
+  transition:
+    filter 300ms ease,
+    transform 300ms cubic-bezier(0.2, 0.9, 0.2, 1);
+}
+
+.aurora .mood-scale__face:hover .mood-scale__emoji,
+.aurora .mood-scale__face:focus-visible .mood-scale__emoji {
+  filter: none;
+  transform: translateY(-2px) scale(1.06);
+}
+
+.aurora .mood-scale__face:focus-visible {
+  outline: 2px solid rgb(255 255 255 / 70%);
+  outline-offset: 2px;
+}
+
+/* The chosen one lifts and lights up; the rest stay quiet. */
+.aurora .mood-scale__face--active {
+  background: rgb(255 255 255 / 10%);
+  color: #fff;
+}
+
+.aurora .mood-scale__face--active .mood-scale__emoji {
+  filter: none;
+  transform: translateY(-3px) scale(1.22);
+}
+
+/* --------------------------------------------------------------- the glass */
+
+/*
+ * The panel over the field.
+ *
+ * `backdrop-filter` is the one blur worth paying for: it is applied to a small element, once,
+ * and it is what makes the aurora read as light coming through rather than a picture behind.
+ * The border is deliberately near-white at low alpha so it picks up whatever colour is
+ * passing underneath it — which is the detail that makes the whole effect look intentional.
+ */
+.aurora__glass {
+  margin: 0 var(--twm-space-m) var(--twm-space-m);
+  padding: var(--twm-space-m);
+  border-radius: var(--twm-radius-m);
+  background: rgb(255 255 255 / 7%);
+  border: 1px solid rgb(255 255 255 / 14%);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  display: flex;
+  flex-direction: column;
+  gap: var(--twm-space-s);
+}
+
+.aurora .mood-note {
+  background: transparent;
+  border: none;
+  color: #fff;
+  font: inherit;
+  resize: none;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0;
+}
+
+.aurora .mood-note::placeholder {
+  color: rgb(255 255 255 / 45%);
+}
+
+.aurora .mood-note:focus-visible {
+  outline: none;
+}
+
+.aurora__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--twm-space-s);
+  flex-wrap: wrap;
+}
+
+.aurora__prompt {
+  margin: 0;
+  padding: var(--twm-space-l) var(--twm-space-m) 0;
+  color: rgb(255 255 255 / 80%);
+  font-size: 0.9375rem;
+  text-align: center;
+}
+
+/* ------------------------------------------------------------- the ribbon */
+
+.mood-ribbon {
+  margin: 0 0 var(--twm-space-m);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mood-ribbon__band {
+  height: 14px;
+  border-radius: var(--twm-radius-pill);
+  /* A soft inner edge so the band reads as a light source rather than a painted bar. */
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 8%);
+}
+
+.mood-ribbon__caption {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--twm-muted);
+}
+
+.mood-ribbon__verdict {
+  font-weight: 600;
+}
+
+/* ------------------------------------------------------- reduced motion */
+
+/*
+ * Everything above still says the same thing standing still.
+ *
+ * The field keeps its colour and its brightness — which is where all the meaning is — and
+ * simply stops drifting. The colour morph is shortened rather than removed, because an
+ * instant change of a full-screen colour is itself a jolt, and the setting exists to avoid
+ * exactly that.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .aurora__bloom {
+    animation: none;
+  }
+
+  .aurora {
+    transition-duration: 300ms;
+  }
+
+  .aurora .mood-scale__face,
+  .aurora .mood-scale__emoji {
+    transition-duration: 1ms;
+  }
+}
+
+/* ------------------------------------------------ corrections on the aurora
+
+   Three things from the light-theme card carried into the dark panel and had to be
+   overridden rather than left to inherit. Each was visible immediately on screen and
+   invisible in a unit test, which is a fair summary of what a screenshot is for.
+*/
+
+/* The word under each face was still the Fiori neutral ink — dark grey on a dark field. */
+.aurora .mood-scale__word {
+  color: inherit;
+  font-weight: 600;
+}
+
+.aurora .mood-scale__face--active .mood-scale__word {
+  color: #fff;
+}
+
+/*
+ * The buttons.
+ *
+ * A solid Fiori blue on a warm gold field is two design systems shouting at each other. On
+ * this one panel they become glass, like everything else on it: the primary action is a light
+ * fill, the secondary is a hairline. The rest of the app keeps its blue.
+ */
+.aurora__actions .ui5-button-root,
+.aurora__actions ui5-button::part(button) {
+  border-radius: var(--twm-radius-pill);
+}
+
+.aurora__actions ui5-button[design='Emphasized']::part(button) {
+  background: rgb(255 255 255 / 92%);
+  border-color: transparent;
+  color: #17191f;
+}
+
+.aurora__actions ui5-button[design='Transparent']::part(button) {
+  background: rgb(255 255 255 / 8%);
+  border: 1px solid rgb(255 255 255 / 22%);
+  color: rgb(255 255 255 / 88%);
+}
+
+/* Room for the field to be seen. A colour wash in a 120 px strip is a stripe, not a sky. */
+.aurora {
+  min-height: 21rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.aurora__content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+/* The glass sits at the bottom, so the open sky is above it and the controls are under the
+   thumb rather than in the middle of the panel. */
+.aurora__glass {
+  margin-top: auto;
+}
+
+.mood-panel {
+  margin-bottom: var(--twm-space-m);
+}
+
+/* The strips the picker can raise belong on the panel's ground, not on the card's. */
+.aurora .mood-suggestion {
+  --_ui5_message_strip_border_radius: var(--twm-radius-s);
+}
+
+/*
+ * The focus ring, in the panel's own colours.
+ *
+ * Fiori's is a blue outline, which on this panel reads as a stray border rather than as
+ * focus. It is not removed — a control you can reach with a keyboard and cannot see is worse
+ * than an ugly one — it is recoloured to something the field can carry.
+ */
+.aurora__actions ui5-button::part(button) {
+  border: 1px solid transparent;
+  box-shadow: none;
+}
+
+.aurora__actions ui5-button:focus-within::part(button) {
+  outline: 2px solid rgb(255 255 255 / 85%);
+  outline-offset: 2px;
 }

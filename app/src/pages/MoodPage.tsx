@@ -27,6 +27,8 @@ import { useActivePerson } from '@/components/AppShell'
 import { useI18n } from '@/i18n'
 import { ErrorState } from '@/components/ErrorState'
 import { LoadingSkeleton } from '@/components/LoadingSkeleton'
+import { MoodAurora } from './mood/MoodAurora'
+import { MoodRibbon } from './mood/MoodRibbon'
 import { ApiError } from '@/api/client'
 import './mood/mood.css'
 
@@ -70,6 +72,14 @@ export function MoodPage(): ReactElement {
   const [scanProblem, setScanProblem] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
   const cameraRef = useRef<HTMLInputElement>(null)
+  /*
+   * A level being considered but not chosen.
+   *
+   * The aurora previews it, so you can see what "Good" looks like before committing to
+   * having had one. It is the one thing this does that a decorative field cannot, and it
+   * turns a five-way radio group into something worth touching.
+   */
+  const [hovered, setHovered] = useState<number | null>(null)
 
   /** 501 means "no key configured" — a fact about the deployment, not about this photo. */
   const detectionUnavailable =
@@ -141,79 +151,103 @@ export function MoodPage(): ReactElement {
       <Text className="mood-hint">
         {person === null
           ? t('mood.hint.today', 'How is today going? Tap a face — or let the camera have a guess.')
-          : t('mood.hint.named', 'How is {name} doing? Tap a face — or let the camera have a guess.', {
-              name: person.name,
-            })}
+          : t(
+              'mood.hint.named',
+              'How is {name} doing? Tap a face — or let the camera have a guess.',
+              {
+                name: person.name,
+              },
+            )}
       </Text>
 
       {/* ------------------------------------------------ the picker */}
-      <section className="mood-card" aria-label="How are you feeling?">
-        <div className="mood-scale" role="radiogroup" aria-label="Mood level">
-          {LEVELS.map(entry => (
-            <button
-              key={entry.level}
-              type="button"
-              role="radio"
-              aria-checked={level === entry.level}
-              className={
-                level === entry.level ? 'mood-scale__face mood-scale__face--active' : 'mood-scale__face'
-              }
-              onClick={() => setLevel(entry.level)}
-            >
-              <span className="mood-scale__emoji" aria-hidden="true">
-                {entry.face}
-              </span>
-              <span className="mood-scale__word">{t(`mood.level.${entry.level}`, entry.word)}</span>
-            </button>
-          ))}
-        </div>
+      <section className="mood-panel" aria-label="How are you feeling?">
+        <MoodAurora level={level} preview={hovered}>
+          <p className="aurora__prompt">{t('mood.prompt', 'How is it, right now?')}</p>
+          <div className="mood-scale" role="radiogroup" aria-label="Mood level">
+            {LEVELS.map(entry => (
+              <button
+                key={entry.level}
+                type="button"
+                role="radio"
+                aria-checked={level === entry.level}
+                className={
+                  level === entry.level
+                    ? 'mood-scale__face mood-scale__face--active'
+                    : 'mood-scale__face'
+                }
+                onPointerEnter={() => setHovered(entry.level)}
+                onPointerLeave={() => setHovered(null)}
+                onFocus={() => setHovered(entry.level)}
+                onBlur={() => setHovered(null)}
+                onClick={() => setLevel(entry.level)}
+              >
+                <span className="mood-scale__emoji" aria-hidden="true">
+                  {entry.face}
+                </span>
+                <span className="mood-scale__word">
+                  {t(`mood.level.${entry.level}`, entry.word)}
+                </span>
+              </button>
+            ))}
+          </div>
 
-        {suggestion === null ? null : (
-          <MessageStrip design="Information" hideCloseButton className="mood-suggestion">
-            {suggestion.observation} — reads as <b>{suggestion.label}</b>
-            {` (${Math.round(suggestion.confidence * 100)}% sure). `}
-            Adjust the face above if it got you wrong; you are the authority here.
-          </MessageStrip>
-        )}
+          <div className="aurora__glass">
+            {suggestion === null ? null : (
+              <MessageStrip design="Information" hideCloseButton className="mood-suggestion">
+                {suggestion.observation} — reads as <b>{suggestion.label}</b>
+                {` (${Math.round(suggestion.confidence * 100)}% sure). `}
+                Adjust the face above if it got you wrong; you are the authority here.
+              </MessageStrip>
+            )}
 
-        <textarea
-          className="mood-note"
-          placeholder={t('mood.note.placeholder', 'A sentence about it, if you want (optional)')}
-          maxLength={NOTE_LIMIT}
-          value={note}
-          onChange={event => setNote(event.target.value)}
-          rows={2}
-        />
+            <textarea
+              className="mood-note"
+              placeholder={t(
+                'mood.note.placeholder',
+                'A sentence about it, if you want (optional)',
+              )}
+              maxLength={NOTE_LIMIT}
+              value={note}
+              onChange={event => setNote(event.target.value)}
+              rows={2}
+            />
 
-        <div className="mood-actions">
-          <Button
-            design="Emphasized"
-            disabled={level === null || createMood.isPending}
-            onClick={() => level !== null && save(level, suggestion === null ? 'manual' : 'face')}
-          >
-            {createMood.isPending ? t('mood.saving', 'Saving…') : t('mood.save', 'Save mood')}
-          </Button>
+            <div className="aurora__actions">
+              <Button
+                design="Emphasized"
+                disabled={level === null || createMood.isPending}
+                onClick={() =>
+                  level !== null && save(level, suggestion === null ? 'manual' : 'face')
+                }
+              >
+                {createMood.isPending ? t('mood.saving', 'Saving…') : t('mood.save', 'Save mood')}
+              </Button>
 
-          {detectionUnavailable ? null : (
-            <Button
-              design="Transparent"
-              icon="camera"
-              disabled={detect.isPending}
-              onClick={() => cameraRef.current?.click()}
-            >
-              {detect.isPending ? t('mood.scanning', 'Looking…') : t('mood.scan', 'Scan my face')}
-            </Button>
-          )}
-          <input
-            ref={cameraRef}
-            data-testid="mood-camera-input"
-            type="file"
-            accept="image/*"
-            capture="user"
-            hidden
-            onChange={event => onPhoto(event.target.files)}
-          />
-        </div>
+              {detectionUnavailable ? null : (
+                <Button
+                  design="Transparent"
+                  icon="camera"
+                  disabled={detect.isPending}
+                  onClick={() => cameraRef.current?.click()}
+                >
+                  {detect.isPending
+                    ? t('mood.scanning', 'Looking…')
+                    : t('mood.scan', 'Scan my face')}
+                </Button>
+              )}
+              <input
+                ref={cameraRef}
+                data-testid="mood-camera-input"
+                type="file"
+                accept="image/*"
+                capture="user"
+                hidden
+                onChange={event => onPhoto(event.target.files)}
+              />
+            </div>
+          </div>
+        </MoodAurora>
 
         {detectionUnavailable ? (
           <MessageStrip design="Information" hideCloseButton>
@@ -246,6 +280,10 @@ export function MoodPage(): ReactElement {
       {/* ------------------------------------------------ the record */}
       <section className="mood-card" aria-label="Recent moods">
         <Title level="H4">{t('mood.lately', 'Lately')}</Title>
+        {/* The shape first, the entries under it. Nobody wants "what did I put on Tuesday";
+            they want to know whether this has been a bad fortnight, and a list is the worst
+            possible way to see that. */}
+        <MoodRibbon entries={rows.map(entry => ({ at: entry.at, level: entry.level }))} />
         {moods.isPending ? (
           <LoadingSkeleton rows={3} />
         ) : moods.isError ? (
