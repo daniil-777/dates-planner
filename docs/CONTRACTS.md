@@ -871,3 +871,94 @@ refuses to run when `DATABASE_URL` is set (`backupIsExternal()`), because agains
 would produce a reassuring empty tarball every night until the night somebody needed it.
 Managed Postgres backs itself up; the nightly workflow must be turned off at the same time as
 the cutover, not after.
+
+---
+
+## 16. Cards — `srv/lib/payments`, `srv/payments-service.ts`
+
+TWM-ADR-004 is the reasoning; this is the contract.
+
+### 16.1 The rule
+
+**No card number reaches this process, and nothing here can store one.** `PaymentProvider`
+has no method that takes one. `PaymentMethods` has no column one would fit in. Every inbound
+payload on `/api/payments` is swept by `assertNoPan()` and refused if anything in it passes a
+Luhn check — keys as well as values, to any depth.
+
+The exception thrown never quotes what it found. It carries the *path* only, because it is
+going to be logged.
+
+### 16.2 What a card is, here
+
+| field | why it is allowed |
+|---|---|
+| `token` | the provider's handle; worthless without our secret key |
+| `brand`, `last4`, `expMonth`, `expYear` | what a bank app prints on its own cards screen |
+| `fingerprint` | the *provider's* hash; lets a duplicate be noticed, cannot be inverted |
+| `issuer`, `country` | cosmetic, from the BIN table |
+| `authenticated` | whether SCA happened at setup — evidence, not decoration |
+
+Adding `pan`, `cvv`, `cardholderName` or a full expiry is a defect.
+
+### 16.3 The flow, and the gap in it
+
+`startCardSetup` → *the browser leaves for the issuer* → `finishCardSetup`.
+
+The gap is the design problem. A card stored for later use must be authenticated by its owner
+**now**, or the charge next month has no exemption to rely on. During the gap the person may
+refresh, background the tab, lose signal, or open a second one — all four land on one card,
+because the `CardSetups` row is the lock and every asker gets the same answer.
+
+`finishCardSetup` is safe to call repeatedly. `pending` is not an error.
+
+### 16.4 Providers
+
+`STRIPE_SECRET_KEY` + `STRIPE_PUBLISHABLE_KEY` selects Stripe; neither selects the mock.
+Exactly one of the pair is an error in every environment. **The mock is refused when
+`NODE_ENV=production`.**
+
+The mock has **no card entry**. It offers scenarios — works, needs the bank, declined,
+already on file — rendered as buttons. `mockScenarios()` returning an empty array *is* the
+"a real provider is configured" signal; there is no second flag to fall out of step with it.
+
+---
+
+## 17. The ledger and points — `srv/lib/money`, `srv/wallet-service.ts`
+
+### 17.1 The ledger
+
+- **Integers, in minor units.** Not `Decimal(10,2)`: a decimal rounds when divided and a
+  ledger divides constantly. `Expenses.amount` keeps its decimal — it records what a receipt
+  said, and a receipt is a decimal.
+- **A balance is a sum, never a column.** There is no `balance` field in this subsystem and
+  adding one would be the most damaging change available to it.
+- **Every movement balances, per currency.** `postings()` refuses anything else. `proves()`
+  is the whole-system check: sum everything, get zero.
+- **`idempotencyKey` is unique in the database.** The application check in `post()` is a
+  check-then-act and therefore a race; `twm_ledger_transfers_idempotency` closes it. Adding a
+  ledger write without a key is a defect.
+
+`allocate()` splits without losing a minor unit: 10.00 three ways is 3.34 / 3.33 / 3.33, and
+the spare units go to the largest remainders.
+
+### 17.2 Points
+
+**Earned, never bought.** This is a legal invariant, not a preference — see ADR-004 §4.
+`EARN_RULES` is the complete list of ways points come into existence; `assertEarnable()` takes
+a reason, never an amount.
+
+Two rules that must survive every future change:
+
+1. **No rule may scale with money.** No rate, no percentage, no multiplier. Points are for
+   acts, never for amounts.
+2. **No client can mint.** Awards happen in `after` handlers attached to the services where
+   acts occur (`srv/server.ts`), so the server observes the act rather than being told about
+   it. An `awardPoints(reason)` endpoint would be an infinite-points endpoint.
+
+Daily caps live in `PointsAwards`, keyed by `eventKey`, which is unique — one act mints once
+however many times the handler runs.
+
+### 17.3 What the wallet screen may claim
+
+Nothing it cannot do. Cash conversion is unavailable, and the screen says so in a sentence
+rather than offering a button that fails.
