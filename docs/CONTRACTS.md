@@ -1098,7 +1098,49 @@ are worth fixing in.
 
 A limb the routine never asks to move is **not graded** and is left out of the body score.
 
-### 19.5 Routines
+### 19.5 The teaching flow
+
+`watch → count in → dance → estimate → be told one thing`. Each step is there for a
+documented reason and removing one is a regression:
+
+- **Watch first, and on demand.** The chapter shipped without any demonstration at all,
+  holding the intended pose at every beat and showing none of them. Observational modelling
+  has a much larger effect on movement *dynamics* than on outcome, and a dance is all
+  dynamics. It loops until the learner says they are ready rather than for a fixed count —
+  self-chosen exposure beats a schedule.
+- **From behind by default.** Mirroring is the folk answer; a preregistered study of dancers
+  learning choreography found back view beat both front-mirrored and front-opposite. Front is
+  one tap away and the scorer accepts either.
+- **The beat is audible**, scheduled ahead on the audio clock. A visual metronome is the worst
+  modality for synchronisation — you cannot watch a dot while dancing — and timing is one of
+  the three faults graded. `setInterval` is not accurate enough: a metronome that drifts while
+  drift is being marked is worse than none.
+- **Words, not just counts.** "Forward, side, together" is what a teacher says and what people
+  still have a week later.
+- **Nothing is drawn over the learner while they move.** Concurrent visual feedback improves
+  performance during practice and degrades retention, and dancers asked about exactly this
+  rejected it — an overlay covers what you are looking at.
+- **They estimate before they are told.** Self-estimation before knowledge of results is what
+  builds error detection, which a score otherwise quietly replaces. One tap, and skippable.
+
+### 19.5a The figure
+
+`kinematics.ts` is the maths, `Dancer.tsx` the drawing, and they must stay each other's
+inverse — if one changes convention the demonstration silently stops matching what is scored.
+
+Two things the angles cannot say are **chosen openly rather than faked**: which plane a joint
+bends in (the one containing the limb and the body's vertical), and where the feet are
+(nowhere — nothing locates the ground, so the figure hangs from the hips).
+
+**The three-quarter view is not styling.** Head on, an orthographic projection puts an arm held
+forward and one held behind on the same pixel — measured at 0.02 apart, against 0.5 when
+turned. Half the box step is forward and back.
+
+The card thumbnail uses the frame **furthest from standing**, not furthest from the routine's
+own average: a routine that spends most of its time away from rest makes the resting frame the
+outlier, and the underarm turn's card would have shown somebody standing perfectly still.
+
+### 19.6 Routines
 
 Keyframes, not recorded video: bodiless by construction, and adding a step is a dozen numbers
 rather than a film shoot. Two invariants, both enforced by test:

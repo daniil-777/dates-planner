@@ -683,3 +683,57 @@
     opacity: 0.4;
   }
 }
+
+/* ------------------------------------------------------------- the guess */
+
+/**
+ * The question asked between finishing and finding out.
+ *
+ * Given its own quiet panel rather than shown over the stage: it is a moment of reflection,
+ * and putting it on top of a picture of yourself would be the opposite of one.
+ */
+.floor__guess {
+  margin-top: 1.25rem;
+  display: grid;
+  gap: 0.875rem;
+  justify-items: start;
+}
+
+.floor__guessAsk {
+  margin: 0;
+  font-size: 1.0625rem;
+  color: var(--dance-ink);
+}
+
+.floor__guessRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.floor__guessOne {
+  padding: 0.625rem 1rem;
+  border-radius: var(--twm-radius-pill, 999px);
+  border: 1px solid var(--dance-line);
+  background: var(--dance-surface);
+  color: var(--dance-ink);
+  font-size: var(--t-body);
+  font-family: inherit;
+  cursor: pointer;
+  transition:
+    border-color 120ms ease,
+    background 120ms ease;
+}
+
+.floor__guessOne:hover {
+  border-color: rgb(214 154 208 / 55%);
+  background: rgb(243 236 227 / 9%);
+}
+
+/* Whether they read their own attempt correctly — the skill a score otherwise quietly
+   replaces. Set in the accent, above the coaching note. */
+.verdict__guess {
+  margin: 0.75rem 0 0;
+  font-size: var(--t-body);
+  color: var(--dance-accent);
+}

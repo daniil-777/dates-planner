@@ -42,7 +42,30 @@ import { toSkeleton } from './pose'
 import { beatsIn, callAt, poseAt, secondsFor, toSequence, type Routine } from './routines'
 import { scoreRoutine, type Verdict } from './score'
 
-type Stage = 'watch' | 'counting' | 'dancing' | 'judging' | 'done' | 'failed'
+type Stage = 'watch' | 'counting' | 'dancing' | 'judging' | 'guessing' | 'done' | 'failed'
+
+/**
+ * What the learner is asked before the score is shown.
+ *
+ * ## Why there is a step between finishing and finding out
+ *
+ * Two manipulations of feedback have better support than simply giving less of it, and both
+ * are cheap in a UI. **Self-controlled feedback** — letting the learner decide when to see
+ * it — beats a fixed schedule at retention and transfer. And **asking for an estimate first**
+ * is the one that matters most here: being made to judge your own attempt before the answer
+ * arrives is what builds error detection, which is the capacity a score otherwise quietly
+ * replaces. A learner who is handed a number every time stops forming an opinion, and then
+ * has nothing when the number goes away.
+ *
+ * It is one tap and it is skippable. The bands are deliberately words rather than numbers —
+ * guessing "68" is a different and much worse task than knowing whether that felt right.
+ */
+const GUESSES = [
+  { id: 'rough', say: 'Bit of a mess', low: 0, high: 45 },
+  { id: 'getting', say: 'Getting there', low: 40, high: 70 },
+  { id: 'good', say: 'That felt good', low: 65, high: 90 },
+  { id: 'nailed', say: 'Nailed it', low: 85, high: 100 },
+] as const
 
 /** Beats of count-in. Four is one bar, which is what a person expects. */
 const COUNT_IN = 4
@@ -62,6 +85,8 @@ export function DanceFloor({ routine, onLeave }: DanceFloorProps): React.ReactEl
   /** Seen from behind by default — see the header. */
   const [facing, setFacing] = useState(false)
   const [beat, setBeat] = useState(0)
+  /** What they said before they were told. Null when they skipped the question. */
+  const [guess, setGuess] = useState<(typeof GUESSES)[number] | null>(null)
 
   const video = useRef<HTMLVideoElement>(null)
   const stream = useRef<MediaStream | null>(null)
@@ -179,7 +204,7 @@ export function DanceFloor({ routine, onLeave }: DanceFloorProps): React.ReactEl
     }
 
     setVerdict(scoreRoutine(toSequence(routine, FPS), learner))
-    setStage('done')
+    setStage('guessing')
     // The landmarks go out of scope here and are never stored. See the note in camera.ts: a
     // time series of joint positions is a gait signature.
   }, [routine, seconds, span])
@@ -290,10 +315,45 @@ export function DanceFloor({ routine, onLeave }: DanceFloorProps): React.ReactEl
         </div>
       )}
 
+      {stage === 'guessing' && (
+        <div className="floor__guess">
+          <p className="floor__guessAsk">Before you look — how did that feel?</p>
+          <div className="floor__guessRow">
+            {GUESSES.map(one => (
+              <button
+                key={one.id}
+                type="button"
+                className="floor__guessOne"
+                onClick={() => {
+                  setGuess(one)
+                  setStage('done')
+                }}
+              >
+                {one.say}
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            className="floor__leave"
+            onClick={() => {
+              setGuess(null)
+              setStage('done')
+            }}
+          >
+            Just show me
+          </button>
+        </div>
+      )}
+
       {stage === 'done' && verdict !== null && (
         <Result
           verdict={verdict}
-          onAgain={() => void run()}
+          guess={guess}
+          onAgain={() => {
+            setGuess(null)
+            void run()
+          }}
           onWatch={() => setStage('watch')}
           onLeave={onLeave}
         />
@@ -313,11 +373,13 @@ const LABEL: Record<string, string> = {
 
 function Result({
   verdict,
+  guess,
   onAgain,
   onWatch,
   onLeave,
 }: {
   verdict: Verdict
+  guess: { say: string; low: number; high: number } | null
   onAgain: () => void
   onWatch: () => void
   onLeave: () => void
@@ -339,6 +401,19 @@ function Result({
         <span className="verdict__number">{verdict.score}</span>
         <span className="verdict__outOf">out of 100</span>
       </div>
+
+      {/* Whether they read their own attempt correctly, which is the skill actually worth
+          building. Said before the coaching note, because "you knew" is the more useful
+          thing to learn about yourself than any individual score. */}
+      {guess !== null && (
+        <p className="verdict__guess">
+          {verdict.score >= guess.low && verdict.score <= guess.high
+            ? `You called it — “${guess.say.toLowerCase()}” was about right.`
+            : verdict.score > guess.high
+              ? `Better than you thought. You said “${guess.say.toLowerCase()}”.`
+              : `You were kinder to yourself than that one deserved — you said “${guess.say.toLowerCase()}”.`}
+        </p>
+      )}
 
       {/* The sentence is the point, and it is bigger than the number on purpose. */}
       <p className="verdict__note">{verdict.note}</p>
