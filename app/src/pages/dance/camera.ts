@@ -50,8 +50,22 @@
  */
 import type { Landmarks } from './pose'
 
-/** Pinned. An unpinned model is a routine that silently rescores itself one morning. */
-const WASM_ROOT = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/wasm'
+/**
+ * The runtime's version, and it **must equal the installed `@mediapipe/tasks-vision`**.
+ *
+ * Pinned, because an unpinned model is a routine that silently rescores itself one morning.
+ * The first pin was `0.10.22` — a version that was never published. jsdelivr answered 404 for
+ * every file under it, `FilesetResolver.forVisionTasks` threw, and the whole camera path of
+ * the Dance chapter could not start on any device. Nothing caught it: the tests reach the
+ * demonstration, which is drawn from keyframes and never loads MediaPipe at all.
+ *
+ * It also has to *match the installed package*, not merely exist. The loader JS comes from
+ * `node_modules` and the WASM from here; a mismatched pair is the subtler version of the same
+ * bug, and it fails at runtime on a real device rather than in CI. `camera.test.ts` compares
+ * this string against `package.json` so neither half can drift again.
+ */
+export const WASM_VERSION = '1.0.1'
+const WASM_ROOT = `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${WASM_VERSION}/wasm`
 const MODEL =
   'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task'
 
