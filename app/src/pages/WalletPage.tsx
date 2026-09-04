@@ -120,10 +120,26 @@ export function WalletPage(): React.ReactElement {
             <dt>Earned all time</dt>
             <dd>{it.earned.toLocaleString('en-CH')}</dd>
           </div>
-          <div>
-            <dt>Worth</dt>
-            <dd>{money(it.worth, it.currency)}</dd>
-          </div>
+          {/* "Worth CHF 0.00" is only worth saying if it can become something.
+              With conversion unavailable the screen was making two loud, contradictory
+              claims in its top third — here is what your points are worth, and here is why
+              they can never be worth it — which is dispiriting and says nothing. The rung
+              somebody is climbing towards is a real number that moves. */}
+          {it.canConvert ? (
+            <div>
+              <dt>Worth</dt>
+              <dd>{money(it.worth, it.currency)}</dd>
+            </div>
+          ) : (
+            <div>
+              <dt>{it.nextStanding === null ? 'Standing' : 'Next rung'}</dt>
+              <dd>
+                {it.nextStanding === null
+                  ? 'Top'
+                  : (it.nextStanding - it.balance).toLocaleString('en-CH')}
+              </dd>
+            </div>
+          )}
         </dl>
       </div>
 
@@ -139,7 +155,24 @@ export function WalletPage(): React.ReactElement {
         <h3 className="wallet__h3">Worth doing</h3>
         <ul className="ways">
           {(ways.data ?? []).map(way => (
-            <li key={way.reason} className={`way${way.left === 0 ? ' way--spent' : ''}`}>
+            <li
+              key={way.reason}
+              className={`way${way.left === 0 ? ' way--spent' : ''}`}
+              // The rail's width, as a fraction of the biggest award on the list.
+              //
+              // Its stylesheet has always claimed the rail was "proportional to what the act
+              // is worth — so the list is scannable by shape as well as by number", and the
+              // rule underneath said `width: 3px`. So a two-point act and a hundred-point one
+              // were rendered identically, nine times, and the section was a wall. Now the
+              // claim is true and the eye can find the thing worth doing without reading.
+              style={
+                {
+                  '--way-weight': String(
+                    way.points / Math.max(...(ways.data ?? [way]).map(one => one.points)),
+                  ),
+                } as React.CSSProperties
+              }
+            >
               <span className="way__label">{way.label}</span>
               <span className="way__points">+{way.points}</span>
               <span className="way__left">

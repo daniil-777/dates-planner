@@ -11,10 +11,27 @@
  */
 
 .reflect {
+  /* A scale with gaps in it, and a title that outweighs its own lede — which it did not:
+     1.625rem at weight 300 was being beaten by three lines of 0.9375rem underneath. */
+  --t-hero: 2.25rem;
+  --t-read: 1.0625rem;
+  --t-body: 0.9375rem;
+  --t-meta: 0.8125rem;
+  --t-kicker: 0.75rem;
+
   padding: 1.5rem 1.25rem 3rem;
   max-width: 40rem;
   margin: 0 auto;
   color: rgba(255, 255, 255, 0.92);
+  /* The composer sits in the middle of the field rather than at the top of it.
+     
+     `min-height: 86vh` guaranteed the aurora reached the navigation bar and nothing filled
+     it: everything was top-anchored, so the screen was a beautifully lit panel with 900px of
+     empty dark green under the last line of text. That is not spaciousness, it is an
+     unfinished layout. */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   /* Both of these are load-bearing rather than tidy. The aurora clips its children, so
      anything that makes this wider than the viewport is not merely scrolled — it is cut
      off, invisibly, at whatever width the field happens to be. `box-sizing` keeps the
@@ -40,15 +57,16 @@
 
 .reflect__title {
   margin: 0;
-  font-size: 1.625rem;
-  font-weight: 300;
-  letter-spacing: -0.01em;
+  font-size: var(--t-hero);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
   color: #fff;
 }
 
 .reflect__lede {
-  margin: 0.5rem 0 0;
-  font-size: 0.9375rem;
+  margin: 0.625rem 0 0;
+  font-size: var(--t-body);
   line-height: 1.55;
   color: rgba(255, 255, 255, 0.62);
   max-width: 34rem;
@@ -63,7 +81,7 @@
 
 .reflect__box {
   width: 100%;
-  min-height: 9rem;
+  min-height: 11rem;
   resize: none;
   padding: 1.125rem 1.25rem;
   border-radius: 0.875rem;
@@ -133,7 +151,7 @@
 .reflect__note,
 .reflect__problem {
   margin: 0;
-  font-size: 0.8125rem;
+  font-size: var(--t-meta);
   line-height: 1.5;
   color: rgba(255, 255, 255, 0.5);
 }
@@ -149,26 +167,26 @@
   gap: 1.5rem;
 }
 
-/* What the person wrote, set as writing. The left rule and the serif are what stop it
-   reading as a form field played back at them. */
+/* What the person wrote, set as writing — and set as the *most important thing on the
+   screen*, which is what the page's own docstring claims and what its stylesheet used to
+   contradict. The entry was 72% white with a hairline; the machine's reply got a bordered,
+   filled, blurred glass panel at 90%. The eye landed on the reply first, every time. */
 .reflect__yours {
   margin: 0;
   padding: 0 0 0 1.25rem;
-  border-inline-start: 2px solid rgba(255, 255, 255, 0.22);
+  border-inline-start: 2px solid rgba(255, 255, 255, 0.45);
   font-family: Georgia, 'Iowan Old Style', 'Times New Roman', serif;
-  font-size: 1.0625rem;
-  line-height: 1.75;
-  color: rgba(255, 255, 255, 0.72);
+  font-size: 1.25rem;
+  line-height: 1.7;
+  color: #fff;
   white-space: pre-wrap;
 }
 
+/* The reply is a response *to* the entry, so it is set quieter than it: no panel, no border,
+   a rule to mark it as an answer, and a plainer face than the serif above. */
 .reflect__reply {
-  padding: 1.25rem 1.375rem;
-  border-radius: 0.875rem;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  padding: 0 0 0 1.25rem;
+  border-inline-start: 2px solid rgba(255, 255, 255, 0.14);
   /* Arrives rather than appears. 400 ms is enough to feel considered and not enough to
      make anybody wait for it. */
   animation: reflect-arrive 400ms cubic-bezier(0.22, 1, 0.36, 1);
@@ -176,21 +194,32 @@
 
 .reflect__reply p {
   margin: 0 0 0.75rem;
-  font-size: 1rem;
-  line-height: 1.65;
-  color: rgba(255, 255, 255, 0.9);
+  font-size: var(--t-body);
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.66);
 }
 
 .reflect__reply p:last-child {
   margin-bottom: 0;
 }
 
-/* The help card. Warmer and brighter than an ordinary reply, but deliberately NOT red:
-   somebody who has just written the hardest thing they have written all year must not have
-   an alarm colour flashed at them. The same argument as the mood palette's low end. */
+/* The help card is the one reply that must NOT be quiet, so it keeps the panel the ordinary
+   reply gave up. Warmer and brighter, but deliberately not red: somebody who has just written
+   the hardest thing they have written all year must not have an alarm colour flashed at them.
+   The same argument as the mood palette's low end. */
 .reflect__reply--help {
+  padding: 1.25rem 1.375rem;
+  border-radius: 0.875rem;
+  border: 1px solid rgba(255, 214, 170, 0.32);
+  border-inline-start-width: 1px;
   background: rgba(255, 214, 170, 0.12);
-  border-color: rgba(255, 214, 170, 0.32);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.reflect__reply--help p {
+  color: rgba(255, 255, 255, 0.92);
+  font-size: var(--t-read);
 }
 
 @keyframes reflect-arrive {
@@ -264,7 +293,7 @@
 
 .reflect__h3 {
   margin: 0 0 0.75rem;
-  font-size: 0.75rem;
+  font-size: var(--t-kicker);
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -284,6 +313,13 @@
   align-items: center;
   gap: 0.5rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  /* `min-width: 0` again, and this is the one that was missing.
+     
+     `.entries` is a grid, and a grid item's default `min-width: auto` refuses to shrink below
+     its content — so the truncation set up on `.entry__peek` never got the chance to fire and
+     the row pushed past the panel edge, taking the delete button off-screen with it. Flex and
+     grid children both need this; fixing one and not the other fixes nothing. */
+  min-width: 0;
 }
 
 .entry__open {
