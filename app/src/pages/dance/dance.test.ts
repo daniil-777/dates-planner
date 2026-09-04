@@ -18,11 +18,14 @@ import { describe, expect, it } from 'vitest'
 import { align, frameDistance, salience } from './dtw'
 import {
   ANGLES,
+  JOINT,
   angleAt,
+  circularDistance,
   mirror,
   toSkeleton,
   toVector,
   type Landmarks,
+  type Point,
   type Skeleton,
 } from './pose'
 import { noteFor, scoreRoutine } from './score'
@@ -71,6 +74,43 @@ function wave(frames: number, { phase = 0, size = 1, mirrored = false } = {}): S
   })
 }
 
+/**
+ * A synthetic body in MediaPipe's world frame, so the extraction can be tested against poses
+ * whose answer is known rather than against whatever a camera happened to see.
+ *
+ * −y is up, and the subject faces +z. Every joint is fully visible.
+ */
+function landmarksFor(overrides: Record<number, [number, number, number]> = {}): Landmarks {
+  const standing: Record<number, [number, number, number]> = {
+    [JOINT.leftShoulder]: [0.2, -0.5, 0],
+    [JOINT.rightShoulder]: [-0.2, -0.5, 0],
+    [JOINT.leftHip]: [0.1, 0, 0],
+    [JOINT.rightHip]: [-0.1, 0, 0],
+    [JOINT.leftElbow]: [0.25, -0.2, 0],
+    [JOINT.rightElbow]: [-0.25, -0.2, 0],
+    [JOINT.leftWrist]: [0.28, 0.1, 0],
+    [JOINT.rightWrist]: [-0.28, 0.1, 0],
+    [JOINT.leftKnee]: [0.1, 0.45, 0],
+    [JOINT.rightKnee]: [-0.1, 0.45, 0],
+    [JOINT.leftAnkle]: [0.1, 0.9, 0],
+    [JOINT.rightAnkle]: [-0.1, 0.9, 0],
+  }
+  const all = { ...standing, ...overrides }
+  const points: Point[] = Array.from({ length: 33 }, () => ({ x: 0, y: 0, z: 0, visibility: 1 }))
+  for (const [index, [x, y, z]] of Object.entries(all)) {
+    points[Number(index)] = { x, y, z, visibility: 1 }
+  }
+  return points
+}
+
+/** Tip the torso by moving both shoulders, leaving the hips where they are. */
+function tilted(dx: number, dz: number): Landmarks {
+  return landmarksFor({
+    [JOINT.leftShoulder]: [0.2 + dx, -0.5, dz],
+    [JOINT.rightShoulder]: [-0.2 + dx, -0.5, dz],
+  })
+}
+
 /* ------------------------------------------------------------------ pose */
 
 describe('reading a body', () => {
@@ -96,6 +136,85 @@ describe('reading a body', () => {
     })
     expect(angleAt(at(0), at(-1), at(1))).toBeCloseTo(Math.PI, 6)
     expect(Number.isNaN(angleAt(at(0), at(1), at(2)))).toBe(false)
+  })
+
+  it('tells a lean left from a lean right, and a lean forward from a lean back', () => {
+    // Four separate regressions guarded here, and every one of them shipped.
+    //
+    // The first version measured a single UNSIGNED tilt, so leaning left and leaning right
+    // both read 0.3805 — which made the sway, a dance that is nothing but alternating those
+    // two, impossible to score.
+    //
+    // The version that replaced it took pitch as `dot(up, forward)` where `forward` is built
+    // as `cross(across, up)` — perpendicular to the spine by construction, so the dot product
+    // is identically zero and pitch could never be anything but level. Both directions read
+    // 0.00000. Roll had the same flaw and was only accidentally right, because `across` is
+    // not orthogonalised against the spine either.
+    const upright = toSkeleton(landmarksFor())
+    const left = toSkeleton(tilted(0.25, 0))
+    const right = toSkeleton(tilted(-0.25, 0))
+    const forward = toSkeleton(tilted(0, 0.25))
+    const back = toSkeleton(tilted(0, -0.25))
+
+    for (const one of [upright, left, right, forward, back]) expect(one).not.toBeNull()
+    if (!upright || !left || !right || !forward || !back) return
+
+    expect(upright.roll).toBeCloseTo(0, 3)
+    expect(upright.pitch).toBeCloseTo(0, 3)
+
+    // Signed and opposite, so the two directions are genuinely different numbers.
+    expect(left.roll).toBeGreaterThan(0.3)
+    expect(right.roll).toBeLessThan(-0.3)
+    expect(forward.pitch).toBeGreaterThan(0.3)
+    expect(back.pitch).toBeLessThan(-0.3)
+
+    // And independent: a sideways lean is not a forward one.
+    expect(left.pitch).toBeCloseTo(0, 3)
+    expect(right.pitch).toBeCloseTo(0, 3)
+    expect(forward.roll).toBeCloseTo(0, 3)
+    expect(back.roll).toBeCloseTo(0, 3)
+  })
+
+  it('tells a step forward from a step to the side from a step behind', () => {
+    // The box step is called "forward, side, together". With elevation alone all three were
+    // 0.537 — the same number — so the routine named after the difference between them could
+    // not express any of it. Azimuth is what separates them.
+    const forward = toSkeleton(
+      landmarksFor({ [JOINT.leftKnee]: [0.1, 0.42, 0.25], [JOINT.leftAnkle]: [0.1, 0.85, 0.4] }),
+    )
+    const side = toSkeleton(
+      landmarksFor({ [JOINT.leftKnee]: [0.35, 0.42, 0], [JOINT.leftAnkle]: [0.5, 0.85, 0] }),
+    )
+    const behind = toSkeleton(
+      landmarksFor({ [JOINT.leftKnee]: [0.1, 0.42, -0.25], [JOINT.leftAnkle]: [0.1, 0.85, -0.4] }),
+    )
+    if (!forward || !side || !behind) {
+      expect.unreachable('all three should read')
+      return
+    }
+
+    // Elevation still cannot tell them apart — that is expected, it is not what it measures.
+    expect(forward.leftHip).toBeCloseTo(side.leftHip, 2)
+
+    // Azimuth can, and by a wide margin in every pairing.
+    for (const [a, b, names] of [
+      [forward.leftLegAround, side.leftLegAround, 'forward vs side'],
+      [forward.leftLegAround, behind.leftLegAround, 'forward vs behind'],
+      [side.leftLegAround, behind.leftLegAround, 'side vs behind'],
+    ] as const) {
+      expect(circularDistance(a, b), names).toBeGreaterThan(0.9)
+    }
+  })
+
+  it('has no opinion about which way a hanging limb points', () => {
+    // An arm by your side points nowhere in particular. Reporting a number there would be
+    // reporting the direction of the noise, and comparing two people's noise is worse than
+    // comparing nothing.
+    const resting = toSkeleton(landmarksFor())
+    expect(resting).not.toBeNull()
+    if (!resting) return
+    expect(Number.isNaN(resting.leftLegAround)).toBe(true)
+    expect(Number.isNaN(resting.rightLegAround)).toBe(true)
   })
 
   it('refuses a frame where the torso was not clearly seen', () => {

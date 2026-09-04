@@ -251,6 +251,11 @@ function length(a: Vec): number {
   return Math.sqrt(dot(a, a))
 }
 
+/** The other way. */
+function negate(a: Vec): Vec {
+  return [-a[0], -a[1], -a[2]]
+}
+
 /** Normalised, or a zero vector when there is nothing to normalise. */
 function unit(a: Vec): Vec {
   const size = length(a)
@@ -396,6 +401,15 @@ export function toSkeleton(landmarks: Landmarks): Skeleton | null {
   // frame is used. MediaPipe's world frame has −y up.
   const worldUp: Vec = [0, -1, 0]
 
+  /** Drop a vector's vertical part, leaving the direction it points along the ground. */
+  const level = (v: Vec): Vec => {
+    const along = dot(v, worldUp)
+    return unit([v[0] - worldUp[0] * along, v[1] - worldUp[1] * along, v[2] - worldUp[2] * along])
+  }
+
+  const acrossLevel = level(across)
+  const forwardLevel = level(forward)
+
   return {
     leftElbow:
       le !== undefined && lw !== undefined && seen(le, lw) ? angleAt(le, ls, lw) : Number.NaN,
@@ -417,11 +431,21 @@ export function toSkeleton(landmarks: Landmarks): Skeleton | null {
     leftLegAround: leftLeg.azimuth,
     rightLegAround: rightLeg.azimuth,
 
-    // Signed, both of them. The unsigned tilt this replaces gave leaning left and leaning
-    // right the same number, which made the sway — a dance that is nothing but alternating
-    // those two — literally unscoreable.
-    roll: Math.atan2(dot(up, [-across[0], -across[1], -across[2]]), dot(up, worldUp)),
-    pitch: Math.atan2(dot(up, forward), dot(up, worldUp)),
+    // Signed, both of them, and measured against the world's horizontal rather than the
+    // body's own axes.
+    //
+    // That distinction is the whole of it. `forward` is built as `cross(across, up)` and is
+    // therefore perpendicular to `up` **by construction**, so `dot(up, forward)` is
+    // identically zero and a pitch defined that way can never report anything but level —
+    // leaning forwards and leaning backwards both came out as 0.00000. `across` is not
+    // orthogonalised against the spine either, so a roll taken from it is only accidentally
+    // right when the shoulders happen to sit square.
+    //
+    // Flattening the two axes into the world's horizontal plane fixes both: they stop being
+    // defined relative to the spine, so the spine's departure from vertical has somewhere to
+    // register.
+    roll: Math.atan2(dot(up, negate(acrossLevel)), dot(up, worldUp)),
+    pitch: Math.atan2(dot(up, forwardLevel), dot(up, worldUp)),
     // Shoulders against hips. The one angle that needs both, and the one that catches a
     // whole class of "your feet are right but your body is not" errors.
     twist: signedAngle(across, unit(sub(rh, lh)), up),
