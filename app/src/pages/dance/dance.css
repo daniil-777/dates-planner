@@ -1,0 +1,443 @@
+/**
+ * Dance.
+ *
+ * A dark chapter, like the quiz, because both are performances in a room rather than
+ * documents on a screen — and because a camera preview on a light background looks like a
+ * video call, which is precisely the wrong feeling.
+ */
+
+.dance {
+  padding: 1rem 1rem 3rem;
+  max-width: 42rem;
+  margin: 0 auto;
+}
+
+.dance__lede {
+  margin: 0.375rem 0 0;
+  color: var(--sapContent_LabelColor);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
+.dance__privacy {
+  margin: 2rem 0 0;
+  padding: 0.875rem 1rem;
+  border-radius: 0.625rem;
+  background: var(--sapList_Background);
+  border: 1px solid var(--sapList_BorderColor);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--sapContent_LabelColor);
+}
+
+/* ----------------------------------------------------------------- steps */
+
+.steps {
+  list-style: none;
+  margin: 1.5rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  padding: 0.875rem;
+  border-radius: 0.875rem;
+  border: 1px solid var(--sapList_BorderColor);
+  background: var(--sapList_Background);
+  cursor: pointer;
+  text-align: start;
+  font-family: inherit;
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.step:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+}
+
+.step__art {
+  position: relative;
+  width: 3.25rem;
+  height: 3.25rem;
+  flex: 0 0 auto;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  background: linear-gradient(140deg, #2b1a45, #6c2f6b);
+}
+
+/* A moving dot, so the tile has a pulse without an illustration of a body — this app is
+   careful about figures, and a dance card is not the place to start drawing one. */
+.step__figure {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0.6rem;
+  height: 0.6rem;
+  margin: -0.3rem 0 0 -0.3rem;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  animation: step-drift 2.8s ease-in-out infinite;
+}
+
+@keyframes step-drift {
+  0%,
+  100% {
+    transform: translate(-0.5rem, 0.3rem) scale(1);
+  }
+  25% {
+    transform: translate(0.5rem, -0.4rem) scale(1.25);
+  }
+  50% {
+    transform: translate(0.6rem, 0.4rem) scale(1);
+  }
+  75% {
+    transform: translate(-0.4rem, -0.3rem) scale(1.15);
+  }
+}
+
+.step__body {
+  display: grid;
+  gap: 0.1875rem;
+  min-width: 0;
+}
+
+.step__name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--sapTextColor);
+}
+
+.step__blurb {
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--sapContent_LabelColor);
+}
+
+.step__meta {
+  font-size: 0.6875rem;
+  color: var(--sapContent_LabelColor);
+  opacity: 0.8;
+}
+
+/* ----------------------------------------------------------------- floor */
+
+.floor {
+  color: #fff;
+}
+
+.floor__back,
+.floor__leave {
+  border: none;
+  background: none;
+  color: var(--sapContent_LabelColor);
+  font-size: 0.875rem;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 0.25rem 0;
+}
+
+.floor__head {
+  margin: 0.5rem 0 1rem;
+}
+
+.floor__name {
+  margin: 0;
+  font-size: 1.375rem;
+  font-weight: 300;
+  color: var(--sapTextColor);
+}
+
+.floor__hint {
+  margin: 0.375rem 0 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--sapContent_LabelColor);
+}
+
+.floor__stage {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  border-radius: 1rem;
+  overflow: hidden;
+  background: #12101a;
+  display: grid;
+  place-items: center;
+}
+
+.floor__video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* Mirrored. Everybody has spent their life in mirrors, and an unmirrored preview makes
+     people move the wrong way — it is not a preference, it is a usability failure. */
+  transform: scaleX(-1);
+}
+
+.floor__video--off {
+  opacity: 0;
+}
+
+.floor__count {
+  position: relative;
+  font-size: 5rem;
+  font-weight: 200;
+  color: #fff;
+  text-shadow: 0 2px 24px rgba(0, 0, 0, 0.6);
+  animation: count-pop 480ms ease-out;
+}
+
+@keyframes count-pop {
+  from {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+.floor__ring {
+  position: absolute;
+  inset: 4%;
+  width: 92%;
+  height: 92%;
+  transform: rotate(-90deg);
+  pointer-events: none;
+}
+
+.floor__ringTrack {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.16);
+  stroke-width: 1.5;
+}
+
+.floor__ringFill {
+  fill: none;
+  stroke: #f0b33c;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+}
+
+/* The beat. One pulsing dot is all the metronome a body needs, and it does not cover the
+   preview the way a flashing overlay would. */
+.floor__beat {
+  position: absolute;
+  bottom: 1.25rem;
+  left: 50%;
+  width: 0.75rem;
+  height: 0.75rem;
+  margin-inline-start: -0.375rem;
+  border-radius: 50%;
+  background: #f0b33c;
+  animation-name: beat-pulse;
+  animation-timing-function: ease-out;
+  animation-iteration-count: infinite;
+}
+
+@keyframes beat-pulse {
+  0% {
+    transform: scale(1.9);
+    opacity: 1;
+  }
+  60%,
+  100% {
+    transform: scale(1);
+    opacity: 0.35;
+  }
+}
+
+.floor__lost,
+.floor__judging {
+  position: absolute;
+  bottom: 3rem;
+  margin: 0;
+  padding: 0.375rem 0.875rem;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.6);
+  font-size: 0.8125rem;
+  color: #fff;
+}
+
+.floor__judging {
+  bottom: auto;
+}
+
+.floor__go {
+  margin-top: 1rem;
+  width: 100%;
+  padding: 0.875rem;
+  border-radius: 0.75rem;
+  border: none;
+  background: var(--sapButton_Emphasized_Background, #0070f2);
+  color: var(--sapButton_Emphasized_TextColor, #fff);
+  font-size: 1rem;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.floor__failed {
+  margin-top: 1rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--sapNegativeElementColor, #d20a0a);
+}
+
+/* --------------------------------------------------------------- verdict */
+
+.floor__verdict {
+  margin-top: 1.25rem;
+}
+
+.verdict__score {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.verdict__number {
+  font-size: 3rem;
+  font-weight: 200;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--sapTextColor);
+}
+
+.verdict__outOf {
+  font-size: 0.8125rem;
+  color: var(--sapContent_LabelColor);
+}
+
+/* Bigger than the number, because it is the part worth reading. A score tells somebody
+   where they are; this tells them what to do next. */
+.verdict__note {
+  margin: 0.75rem 0 1.25rem;
+  font-size: 1.0625rem;
+  line-height: 1.5;
+  color: var(--sapTextColor);
+}
+
+.verdict__limbs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.verdict__limb {
+  display: grid;
+  grid-template-columns: 6rem 1fr 2rem;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.8125rem;
+  color: var(--sapContent_LabelColor);
+}
+
+.verdict__bar {
+  height: 0.375rem;
+  border-radius: 999px;
+  background: var(--sapField_BorderColor);
+  overflow: hidden;
+}
+
+.verdict__bar > span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #6c2f6b, #f0b33c);
+  transition: width 600ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.verdict__limbScore {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+  color: var(--sapTextColor);
+}
+
+.floor__after {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.floor__after .floor__go {
+  margin-top: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .step,
+  .verdict__bar > span {
+    transition: none;
+  }
+  .step__figure,
+  .floor__count {
+    animation: none;
+  }
+  /* The beat stays: it is information, not decoration, and somebody who cannot see it
+     cannot keep time. It is slowed rather than stopped. */
+  .floor__beat {
+    animation-name: beat-fade;
+  }
+}
+
+@keyframes beat-fade {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  60% {
+    opacity: 0.4;
+  }
+}
+
+/* The stage before anything starts. */
+.floor__empty {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 0.375rem;
+  padding: 2rem 1.5rem;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.floor__empty p {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.45;
+}
+
+.floor__emptySub {
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 0.8125rem;
+}
+
+/* A phone leaning against something, drawn in two boxes. Cheaper than an illustration and
+   says the one thing that matters: stand it up, do not hold it. */
+.floor__emptyIcon {
+  width: 2.75rem;
+  height: 4rem;
+  margin-bottom: 0.75rem;
+  border-radius: 0.375rem;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  transform: rotate(-8deg);
+  position: relative;
+}
+
+.floor__emptyIcon::after {
+  content: '';
+  position: absolute;
+  left: -1.25rem;
+  right: -1.25rem;
+  bottom: -0.5rem;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.22);
+  transform: rotate(8deg);
+}

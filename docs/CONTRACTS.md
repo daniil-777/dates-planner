@@ -1013,3 +1013,62 @@ that ever changes, the UI copy changes first.
 No model configured is not a reason to fake a reply. The template provider is treated as *no
 model*: the entry is saved and the screen says nothing will write back. A canned "that sounds
 hard" would be worse than silence, because it would look like it had been read.
+
+---
+
+## 19. Dance — `app/src/pages/dance`
+
+### 19.1 What is possible, and what is not
+
+**Apple's own pose APIs are out of reach.** Vision's `VNDetectHumanBodyPoseRequest` and
+ARKit body tracking are native-only; a PWA cannot call them, and installing to the home
+screen does not change that. This is browser pose detection — MediaPipe's Pose Landmarker,
+33 landmarks, WASM — which also works on Android and a laptop.
+
+`detectForVideo()` blocks the calling thread. It runs on the main thread anyway, for the
+reason set out in `camera.ts`: a worker cannot take a `<video>` element, and the copy-per-
+frame it would need adds a second timing domain to a feature whose whole job is timing. If a
+heavier model is ever wanted, `capture()` is the only function that changes.
+
+### 19.2 The privacy rule
+
+**No frame leaves the device**, and **no landmarks are stored** — not in a database, not in
+`localStorage`, not in a log. A time series of joint positions is a gait signature and
+identifies people about as well as a face does. Landmarks live in memory for one attempt.
+
+What may be kept is a score and a sentence.
+
+### 19.3 The algorithm, and why each step is there
+
+1. **Angles, not positions.** Twelve joint angles (`pose.ts`). Invariant to build, distance
+   and facing, which positions are not.
+2. **Dynamic time warping** (`dtw.ts`). Being slightly slow is *not a mistake*; getting there
+   in the wrong order is. A frame-by-frame comparison measures tempo, not dancing.
+3. **A Sakoe–Chiba band.** Not an optimisation — without it, forty frames of standing still
+   align to one frame of the reference and score well.
+4. **Salience weighting.** Error only means something where there was supposed to be
+   movement. Weight is the **larger** of the reference's and the learner's range, so both
+   "you did not move" and "you moved when you should not have" are caught. Without this, a
+   motionless dancer scored 94 out of 100.
+5. **Per-limb rigid shift** (`limbOffset`). A limb that fits better shifted is *out of time*,
+   which is a different fault from being in the wrong shape. This is what makes "your left
+   arm is late" possible.
+6. **Both mirrorings scored, better kept.** Somebody facing the camera copies mirrored and is
+   not wrong.
+
+### 19.4 What it says
+
+One sentence, naming one limb, with a direction. Never a list — somebody told four things
+fixes none of them. Faults are ranked timing → amplitude → shape, which is the order they
+are worth fixing in.
+
+A limb the routine never asks to move is **not graded** and is left out of the body score.
+
+### 19.5 Routines
+
+Keyframes, not recorded video: bodiless by construction, and adding a step is a dozen numbers
+rather than a film shoot. Two invariants, both enforced by test:
+
+- **A routine ends where it begins**, or every repetition teaches a jump.
+- **Keyframes accumulate**, so a joint bent in one keyframe stays bent until another names
+  it. Name both sides.

@@ -42,6 +42,7 @@ const IdeasPage = lazyPage(() => import('./pages/IdeasPage'), 'IdeasPage')
 const GamesPage = lazyPage(() => import('./pages/GamesPage'), 'GamesPage')
 const WalletPage = lazyPage(() => import('./pages/WalletPage'), 'WalletPage')
 const ReflectPage = lazyPage(() => import('./pages/ReflectPage'), 'ReflectPage')
+const DancePage = lazyPage(() => import('./pages/DancePage'), 'DancePage')
 const LedgerPage = lazyPage(() => import('./pages/LedgerPage'), 'LedgerPage')
 const EventsPage = lazyPage(() => import('./pages/EventsPage'), 'EventsPage')
 const CalendarPage = lazyPage(() => import('./pages/CalendarPage'), 'CalendarPage')
@@ -115,6 +116,7 @@ export function App() {
               <Route path="/games" element={<GamesPage />} />
               <Route path="/wallet" element={<WalletPage />} />
               <Route path="/reflect" element={<ReflectPage />} />
+              <Route path="/dance" element={<DancePage />} />
               <Route path="/chat" element={<ChatPage />} />
               <Route path="/how-it-works" element={<HowItWorksPage />} />
               <Route path="*" element={<Navigate to="/" replace />} />

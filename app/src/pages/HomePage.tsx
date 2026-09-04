@@ -144,6 +144,15 @@ export function HomePage() {
         caption: t('tile.wallet.caption', 'and cards on file'),
       },
     },
+    dance: {
+      status: 'ready',
+      figure: {
+        kind: 'text',
+        value: t('tile.dance.value', 'Four'),
+        emphasis: 'number',
+        caption: t('tile.dance.caption', 'steps to try'),
+      },
+    },
     // Static, and deliberately says nothing about what is in there. A count of entries on
     // the household's most public screen would be a number about somebody's private
     // journal, which is the one figure this tile must never carry.

@@ -247,6 +247,7 @@ describe('the home grid', () => {
       '/events',
       '/memories',
       '/games',
+      '/dance',
       '/chat',
       '/mood',
       '/reflect',
@@ -297,6 +298,9 @@ describe('the home grid', () => {
       // The fifth. A deep teal, so the journal reads as the mood picker's neighbour — the
       // two screens share an aurora and should look like the same room.
       ['reflect', '#1F6F6A'],
+      // The sixth, and the last that should ever be needed: a plum, sharing the quiz's
+      // theatre without repeating its gold.
+      ['dance', '#6C2F6B'],
     ])
 
     for (const spec of HOME_TILES) {
@@ -404,6 +408,7 @@ describe('the home grid', () => {
       'games',
       'wallet',
       'reflect',
+      'dance',
     ])
     const awaited = HOME_TILES.filter(spec => !STATIC_FIGURES.has(spec.id))
     expect(screen.getAllByTestId('home-tile-shimmer')).toHaveLength(awaited.length)

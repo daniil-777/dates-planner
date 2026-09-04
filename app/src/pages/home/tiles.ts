@@ -25,6 +25,7 @@
  * | Between us | `#B02A6F` | **not from that palette** — see below |
  * | Wallet | `#3D4C8A` | **not from that palette** — see below |
  * | On your mind | `#1F6F6A` | **not from that palette** — see below |
+ * | Dance | `#6C2F6B` | **not from that palette** — see below |
  *
  * `Between us` and `Wallet` are the exceptions, and both are deliberate: the ten category colours
  * were all spoken for by the time it arrived, and this tile is not a spending category
@@ -42,6 +43,7 @@ export type HomeTileId =
   | 'intimacy'
   | 'tonight'
   | 'games'
+  | 'dance'
   | 'wallet'
   | 'reflect'
   | 'ledger'
@@ -198,6 +200,17 @@ export const HOME_TILES: readonly HomeTileSpec[] = [
     icon: 'sys-help',
     accent: '#C9A227',
     hint: 'Play something at the table',
+  },
+  {
+    id: 'dance',
+    section: 'us',
+    to: '/dance',
+    label: 'Dance',
+    icon: 'media-play',
+    // The sixth invented hue, and the last: a plum, because this chapter shares the quiz's
+    // theatre and should sit beside its gold without repeating it.
+    accent: '#6C2F6B',
+    hint: 'Learn a step, badly, together',
   },
   {
     id: 'chat',
