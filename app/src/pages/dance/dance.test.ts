@@ -15,7 +15,7 @@
  */
 import { describe, expect, it } from 'vitest'
 
-import { align, frameDistance, salience } from './dtw'
+import { align, driftOf, frameDistance, salience, wrapDrift } from './dtw'
 import {
   ANGLES,
   JOINT,
@@ -205,6 +205,39 @@ describe('reading a body', () => {
     ] as const) {
       expect(circularDistance(a, b), names).toBeGreaterThan(0.9)
     }
+  })
+
+  it('does not let a twist of the shoulders move the legs', () => {
+    // The legs are measured in the PELVIS frame, not the shoulder one. When they shared a
+    // frame, rotating only the two shoulder landmarks — with every hip, knee and ankle
+    // bit-identical — moved `leftLegAround` one-for-one with `twist`, from 0.000 to −0.500.
+    //
+    // It was not cosmetic: the underarm turn reaches a twist of 1.05, so it injected sixty
+    // degrees of phantom azimuth into legs the routine never mentions, and `salience()`
+    // weights by observed travel — so the artefact earned weight and was then graded.
+    const stepped = {
+      [JOINT.leftKnee]: [0.35, 0.42, 0] as [number, number, number],
+      [JOINT.leftAnkle]: [0.5, 0.85, 0] as [number, number, number],
+    }
+    const spin = (angle: number): Landmarks =>
+      landmarksFor({
+        ...stepped,
+        [JOINT.leftShoulder]: [0.2 * Math.cos(angle), -0.5, 0.2 * Math.sin(angle)],
+        [JOINT.rightShoulder]: [-0.2 * Math.cos(angle), -0.5, -0.2 * Math.sin(angle)],
+      })
+
+    const square = toSkeleton(spin(0))
+    const twisted = toSkeleton(spin(0.5))
+    if (square === null || twisted === null) {
+      expect.unreachable('both should read')
+      return
+    }
+
+    // The twist is seen...
+    expect(Math.abs(twisted.twist)).toBeGreaterThan(0.4)
+    // ...and the legs, which did not move, do not move.
+    expect(twisted.leftLegAround).toBeCloseTo(square.leftLegAround, 6)
+    expect(twisted.leftHip).toBeCloseTo(square.leftHip, 6)
   })
 
   it('has no opinion about which way a hanging limb points', () => {
@@ -590,5 +623,72 @@ describe('the pose that represents a routine on its card', () => {
         ).toBeGreaterThan(0.4)
       }
     }
+  })
+})
+
+/* -------------------------------------------------------------- lateness */
+
+describe('being late as a whole', () => {
+  /** Shift a sequence in time by rotating it, which is what a late performance looks like. */
+  function shifted(sequence: readonly Skeleton[], frames: number): Skeleton[] {
+    const n = ((frames % sequence.length) + sequence.length) % sequence.length
+    return [...sequence.slice(sequence.length - n), ...sequence.slice(0, sequence.length - n)]
+  }
+
+  it('is measured, where every limb score is blind to it', () => {
+    // The gap this closes. `limbOffset` finds a limb out of time WITH THE REST OF THE BODY;
+    // when everybody is late together no limb fits better than the others and the score comes
+    // back 100. Measured on all four routines at ±1 and ±2 beats: 100 every time. The
+    // commonest fault in dancing was the one thing the coach could not see.
+    for (const routine of ROUTINES) {
+      const reference = toSequence(routine, 20)
+      const framesPerBeat = (60 / routine.bpm) * 20
+      const tempo = { framesPerBeat, beatsPerCycle: beatsIn(routine) }
+
+      const late = scoreRoutine(reference, shifted(reference, Math.round(framesPerBeat / 2)), tempo)
+      expect(late.drift, `${routine.id} late`).toBeGreaterThan(0.3)
+      expect(late.note, routine.id).toMatch(/behind the click/i)
+
+      const early = scoreRoutine(
+        reference,
+        shifted(reference, -Math.round(framesPerBeat / 2)),
+        tempo,
+      )
+      expect(early.drift, `${routine.id} early`).toBeLessThan(-0.3)
+      expect(early.note, routine.id).toMatch(/ahead of the click/i)
+    }
+  })
+
+  it('says nothing about timing when the timing is fine', () => {
+    for (const routine of ROUTINES) {
+      const reference = toSequence(routine, 20)
+      const verdict = scoreRoutine(reference, reference, {
+        framesPerBeat: (60 / routine.bpm) * 20,
+        beatsPerCycle: beatsIn(routine),
+      })
+      expect(verdict.drift, routine.id).toBeCloseTo(0, 1)
+      expect(verdict.note, routine.id).not.toMatch(/click/i)
+    }
+  })
+
+  it('does not call a whole cycle of lateness lateness', () => {
+    // A cyclic routine offset by a full repetition IS the same dance. The shoulder bounce is
+    // a two-beat loop, so a two-beat shift has to fold to zero rather than being reported as
+    // two beats behind.
+    expect(wrapDrift(2, 2)).toBeCloseTo(0, 6)
+    expect(wrapDrift(2.5, 2)).toBeCloseTo(0.5, 6)
+    expect(wrapDrift(-1.5, 2)).toBeCloseTo(0.5, 6)
+    expect(wrapDrift(0.4, 8)).toBeCloseTo(0.4, 6)
+  })
+
+  it('reports no drift for an empty alignment rather than a NaN', () => {
+    expect(driftOf([])).toBe(0)
+  })
+
+  it('is zero when nobody said what the tempo was', () => {
+    // Frames cannot become beats without one, and inventing a number would be worse than
+    // saying nothing.
+    const reference = toSequence(ROUTINES[0]!, 20)
+    expect(scoreRoutine(reference, shifted(reference, 8)).drift).toBe(0)
   })
 })

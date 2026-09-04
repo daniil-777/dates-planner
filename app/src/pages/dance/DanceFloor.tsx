@@ -91,6 +91,7 @@ export function DanceFloor({ routine, onLeave }: DanceFloorProps): React.ReactEl
   const video = useRef<HTMLVideoElement>(null)
   const stream = useRef<MediaStream | null>(null)
   const clock = useRef<Metronome | null>(null)
+  const stopping = useRef<AbortController | null>(null)
 
   const seconds = secondsFor(routine)
   const span = beatsIn(routine)
@@ -102,6 +103,7 @@ export function DanceFloor({ routine, onLeave }: DanceFloorProps): React.ReactEl
     return () => {
       closeCamera(stream.current)
       clock.current?.stop()
+      stopping.current?.abort()
     }
   }, [])
 
@@ -174,12 +176,20 @@ export function DanceFloor({ routine, onLeave }: DanceFloorProps): React.ReactEl
     }
 
     setStage('dancing')
-    const taken = await capture(video.current!, seconds, (landmarks, done) => {
-      setThrough(done)
-      // Told once, quietly, while there is still time to step back into frame — rather than
-      // afterwards, when the only thing left to say is "that did not work".
-      setSeen(landmarks !== null)
-    })
+    const halt = new AbortController()
+    stopping.current = halt
+    const taken = await capture(
+      video.current!,
+      seconds,
+      (landmarks, done) => {
+        setThrough(done)
+        // Told once, quietly, while there is still time to step back into frame — rather than
+        // afterwards, when the only thing left to say is "that did not work".
+        setSeen(landmarks !== null)
+      },
+      halt.signal,
+    )
+    stopping.current = null
 
     closeCamera(stream.current)
     stream.current = null
@@ -203,7 +213,15 @@ export function DanceFloor({ routine, onLeave }: DanceFloorProps): React.ReactEl
       return
     }
 
-    setVerdict(scoreRoutine(toSequence(routine, FPS), learner))
+    // The tempo is what lets a drift in frames be said in beats — and `beatsPerCycle` is
+    // what stops a routine offset by a whole repetition being called late, because a cyclic
+    // dance a cycle behind is the same dance.
+    setVerdict(
+      scoreRoutine(toSequence(routine, FPS), learner, {
+        framesPerBeat: (60 / routine.bpm) * FPS,
+        beatsPerCycle: span,
+      }),
+    )
     setStage('guessing')
     // The landmarks go out of scope here and are never stored. See the note in camera.ts: a
     // time series of joint positions is a gait signature.
@@ -307,6 +325,17 @@ export function DanceFloor({ routine, onLeave }: DanceFloorProps): React.ReactEl
         </div>
       )}
 
+      {stage === 'dancing' && (
+        <div className="floor__actions">
+          {/* A real way out. Without it the only exit mid-attempt was to leave the screen,
+              which left the detector running against a torn-down stream for the remaining
+              seconds. */}
+          <button type="button" className="floor__second" onClick={() => stopping.current?.abort()}>
+            Stop
+          </button>
+        </div>
+      )}
+
       {stage === 'failed' && (
         <div className="floor__actions">
           <button type="button" className="floor__go" onClick={() => setStage('watch')}>
@@ -397,14 +426,17 @@ function Result({
 
   return (
     <div className="floor__verdict">
-      <div className="verdict__score">
-        <span className="verdict__number">{verdict.score}</span>
-        <span className="verdict__outOf">out of 100</span>
-      </div>
+      {/* The sentence, first and largest.
+          
+          The stylesheet has carried a comment reading "bigger than the number, because it is
+          the part worth reading" since the day it was written, above a rule setting it to a
+          third of the number's size, under a heading that was the first thing on the screen.
+          A score tells somebody where they are; this tells them what to do next, and it is
+          the only line most people will read. */}
+      <p className="verdict__note">{verdict.note}</p>
 
       {/* Whether they read their own attempt correctly, which is the skill actually worth
-          building. Said before the coaching note, because "you knew" is the more useful
-          thing to learn about yourself than any individual score. */}
+          building — "you knew" is more useful to learn about yourself than any one score. */}
       {guess !== null && (
         <p className="verdict__guess">
           {verdict.score >= guess.low && verdict.score <= guess.high
@@ -415,22 +447,33 @@ function Result({
         </p>
       )}
 
-      {/* The sentence is the point, and it is bigger than the number on purpose. */}
-      <p className="verdict__note">{verdict.note}</p>
+      <div className="verdict__score">
+        <span className="verdict__number">{verdict.score}</span>
+        <span className="verdict__outOf">out of 100</span>
+        {/* Computed on every verdict since the day mirroring was added, and rendered nowhere.
+            Somebody who danced it mirrored deserves to know the app noticed and did not mind,
+            or they will spend the next attempt worrying about which arm. */}
+        {verdict.mirrored && <span className="verdict__mirrored">read as a mirror image</span>}
+      </div>
 
-      <ul className="verdict__limbs">
-        {/* Limbs the routine never asks to move say nothing, and a row reading "your legs:
-            100" for a dance with no legs in it is noise dressed as information. */}
-        {graded.map(limb => (
-          <li key={limb.limb} className="verdict__limb">
-            <span className="verdict__limbName">{LABEL[limb.limb]}</span>
-            <span className="verdict__bar" aria-hidden="true">
-              <span style={{ width: grown ? `${limb.score}%` : '0%' }} />
-            </span>
-            <span className="verdict__limbScore">{limb.score}</span>
-          </li>
-        ))}
-      </ul>
+      {/* Folded away. `score.ts` argues twice that feedback must name one thing, because
+          somebody told four things fixes none of them — and then this list said five. */}
+      <details className="verdict__detail">
+        <summary>Show the detail</summary>
+        <ul className="verdict__limbs">
+          {/* Limbs the routine never asks to move say nothing, and a row reading "your legs:
+              100" for a dance with no legs in it is noise dressed as information. */}
+          {graded.map(limb => (
+            <li key={limb.limb} className="verdict__limb">
+              <span className="verdict__limbName">{LABEL[limb.limb]}</span>
+              <span className="verdict__bar" aria-hidden="true">
+                <span style={{ width: grown ? `${limb.score}%` : '0%' }} />
+              </span>
+              <span className="verdict__limbScore">{limb.score}</span>
+            </li>
+          ))}
+        </ul>
+      </details>
 
       <div className="floor__after">
         <button type="button" className="floor__go" onClick={onAgain}>

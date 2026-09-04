@@ -496,22 +496,40 @@
   margin-top: 1.25rem;
 }
 
-/* Device two: the big tabular figure with a tiny unit under it. */
+/* The sentence, and it really is bigger than the number now.
+   
+   This comment used to sit above a rule setting the note to 1.0625rem under a 3rem score —
+   claiming the opposite of what the file did. A score tells somebody where they are; the
+   sentence tells them what to do next, and it is the only line most people read. */
+.verdict__note {
+  margin: 0 0 1rem;
+  max-width: 22rem;
+  font-size: var(--t-display);
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  color: var(--dance-ink);
+}
+
+/* The number, demoted to a supporting figure beside its own caption. */
 .verdict__score {
   display: flex;
   align-items: baseline;
+  flex-wrap: wrap;
   gap: 0.5rem;
+  margin-top: 1.25rem;
 }
 
 .verdict__number {
-  font-size: 3rem;
+  font-size: var(--t-title);
   font-weight: 700;
   line-height: 1;
   font-variant-numeric: tabular-nums;
   color: var(--dance-ink);
 }
 
-.verdict__outOf {
+.verdict__outOf,
+.verdict__mirrored {
   font-size: var(--t-kicker);
   font-weight: 700;
   letter-spacing: 0.1em;
@@ -519,14 +537,41 @@
   color: var(--dance-faint);
 }
 
-/* Bigger than the number, because it is the part worth reading. A score tells somebody where
-   they are; this tells them what to do next. */
-.verdict__note {
-  margin: 0.875rem 0 1.5rem;
-  max-width: 24rem;
-  font-size: 1.0625rem;
-  line-height: 1.5;
+.verdict__mirrored {
+  color: var(--dance-accent);
+  letter-spacing: 0.06em;
+}
+
+.verdict__detail {
+  margin-top: 1.25rem;
+}
+
+.verdict__detail summary {
+  cursor: pointer;
+  font-size: var(--t-meta);
+  color: var(--dance-dim);
+  list-style: none;
+}
+
+.verdict__detail summary::-webkit-details-marker {
+  display: none;
+}
+
+.verdict__detail summary::before {
+  content: '▸ ';
+  color: var(--dance-faint);
+}
+
+.verdict__detail[open] summary::before {
+  content: '▾ ';
+}
+
+.verdict__detail summary:hover {
   color: var(--dance-ink);
+}
+
+.verdict__detail .verdict__limbs {
+  margin-top: 0.75rem;
 }
 
 .verdict__limbs {

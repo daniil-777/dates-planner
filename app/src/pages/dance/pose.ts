@@ -256,6 +256,12 @@ function negate(a: Vec): Vec {
   return [-a[0], -a[1], -a[2]]
 }
 
+/** `a` with any component along `axis` removed, normalised. `axis` must already be unit. */
+function perpendicular(a: Vec, axis: Vec): Vec {
+  const along = dot(a, axis)
+  return unit([a[0] - axis[0] * along, a[1] - axis[1] * along, a[2] - axis[2] * along])
+}
+
 /** Normalised, or a zero vector when there is nothing to normalise. */
 function unit(a: Vec): Vec {
   const size = length(a)
@@ -342,10 +348,31 @@ export function toSkeleton(landmarks: Landmarks): Skeleton | null {
 
   /** Up the spine. The body's own vertical, which is not the world's when somebody leans. */
   const up = unit(sub(shoulders, hips))
-  /** Across the shoulders, towards the person's own right. */
-  const across = unit(sub(rs, ls))
-  /** Out of the chest. Completes a right-handed frame with `across` and `up`. */
-  const forward = unit(cross(across, up))
+
+  /**
+   * Two frames, not one — the shoulder girdle and the pelvis.
+   *
+   * Arms hang off the shoulders and legs off the hips, and the two rotate against each other
+   * every time somebody twists. Measuring both in the shoulder frame makes a twist leak
+   * straight into the legs: rotating **only** the two shoulder landmarks by 0.5 rad, with
+   * every hip, knee and ankle bit-identical, moved `leftLegAround` from 0.000 to −0.500. One
+   * for one, out of a leg that had not moved.
+   *
+   * That is not cosmetic. The underarm turn reaches a twist of 1.05, so it was injecting
+   * sixty degrees of phantom azimuth into legs the routine never mentions — and `salience()`
+   * weights each angle by how far it is *observed* to travel, so the artefact earned weight
+   * and the learner was then graded against it. It is the same fault as the roll/pitch
+   * tautology: a reference frame defined in terms of the thing it is meant to measure
+   * independently of.
+   *
+   * Both are orthogonalised against the spine, because the raw shoulder line is not exactly
+   * perpendicular to it on a real body, and an azimuth taken from a reference that is itself
+   * tilted has the tilt folded into it.
+   */
+  const shoulderAcross = perpendicular(sub(rs, ls), up)
+  const hipAcross = perpendicular(sub(rh, lh), up)
+  const shoulderForward = unit(cross(shoulderAcross, up))
+  const hipForward = unit(cross(hipAcross, up))
 
   /**
    * Where a limb points, in the body's own frame.
@@ -359,6 +386,8 @@ export function toSkeleton(landmarks: Landmarks): Skeleton | null {
     to: Point | undefined,
     axis: Vec,
     side: 'left' | 'right',
+    girdleAcross: Vec,
+    girdleForward: Vec,
   ): { elevation: number; azimuth: number } => {
     if (to === undefined || !seen(to)) return { elevation: Number.NaN, azimuth: Number.NaN }
 
@@ -368,7 +397,8 @@ export function toSkeleton(landmarks: Landmarks): Skeleton | null {
 
     // Outward is the person's own left for a left limb, their own right for a right one, so
     // "arms out to the sides" is the same azimuth on both.
-    const outward: Vec = side === 'right' ? across : [-across[0], -across[1], -across[2]]
+    const outward: Vec =
+      side === 'right' ? girdleAcross : [-girdleAcross[0], -girdleAcross[1], -girdleAcross[2]]
     const along = dot(limb, axis)
     // The part of the limb perpendicular to the axis — the only part that has a direction.
     const flat: Vec = [
@@ -378,7 +408,7 @@ export function toSkeleton(landmarks: Landmarks): Skeleton | null {
     ]
     if (length(flat) < AZIMUTH_FLOOR) return { elevation, azimuth: Number.NaN }
 
-    return { elevation, azimuth: Math.atan2(dot(flat, forward), dot(flat, outward)) }
+    return { elevation, azimuth: Math.atan2(dot(flat, girdleForward), dot(flat, outward)) }
   }
 
   const le = at(JOINT.leftElbow)
@@ -391,10 +421,10 @@ export function toSkeleton(landmarks: Landmarks): Skeleton | null {
   const ra = at(JOINT.rightAnkle)
 
   const down: Vec = [-up[0], -up[1], -up[2]]
-  const leftArm = direction(ls, le, up, 'left')
-  const rightArm = direction(rs, re, up, 'right')
-  const leftLeg = direction(lh, lk, down, 'left')
-  const rightLeg = direction(rh, rk, down, 'right')
+  const leftArm = direction(ls, le, up, 'left', shoulderAcross, shoulderForward)
+  const rightArm = direction(rs, re, up, 'right', shoulderAcross, shoulderForward)
+  const leftLeg = direction(lh, lk, down, 'left', hipAcross, hipForward)
+  const rightLeg = direction(rh, rk, down, 'right', hipAcross, hipForward)
 
   // The world's vertical. Roll and pitch are the two things that are genuinely about the
   // body's relation to gravity rather than to itself, so they are the one place the world
@@ -407,8 +437,11 @@ export function toSkeleton(landmarks: Landmarks): Skeleton | null {
     return unit([v[0] - worldUp[0] * along, v[1] - worldUp[1] * along, v[2] - worldUp[2] * along])
   }
 
-  const acrossLevel = level(across)
-  const forwardLevel = level(forward)
+  // Taken from the pelvis, for the same reason the legs are: the shoulders swing when
+  // somebody twists, and decomposing a lean against a reference that turns would report part
+  // of a sideways lean as a forward one.
+  const acrossLevel = level(hipAcross)
+  const forwardLevel = level(hipForward)
 
   return {
     leftElbow:
@@ -448,7 +481,7 @@ export function toSkeleton(landmarks: Landmarks): Skeleton | null {
     pitch: Math.atan2(dot(up, forwardLevel), dot(up, worldUp)),
     // Shoulders against hips. The one angle that needs both, and the one that catches a
     // whole class of "your feet are right but your body is not" errors.
-    twist: signedAngle(across, unit(sub(rh, lh)), up),
+    twist: signedAngle(shoulderAcross, hipAcross, up),
   }
 }
 

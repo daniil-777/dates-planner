@@ -197,6 +197,14 @@ export async function capture(
   video: HTMLVideoElement,
   seconds: number,
   onFrame?: (landmarks: Landmarks | null, through: number) => void,
+  /**
+   * Stops the loop early — for a Stop button, or for somebody leaving the screen.
+   *
+   * Without it there is no way out of a capture: `detectForVideo` keeps being called against
+   * a video element whose stream has already been torn down, for however many seconds were
+   * left, burning a phone's battery on frames nobody will ever be scored on.
+   */
+  signal?: AbortSignal,
 ): Promise<Capture> {
   const landmarker = await loadLandmarker()
   const frames: Landmarks[] = []
@@ -210,7 +218,9 @@ export async function capture(
       const now = performance.now()
       const through = (now - started) / (seconds * 1000)
 
-      if (through >= 1) {
+      // Whatever was seen up to the moment of stopping is returned rather than thrown away.
+      // The caller decides whether it is enough to score.
+      if (signal?.aborted === true || through >= 1) {
         resolve({ frames, attempted })
         return
       }

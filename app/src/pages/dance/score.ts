@@ -33,7 +33,17 @@
  * and the better one is kept. Doing anything else produces a coach that tells half its users
  * their arms are on the wrong side, which is the fastest way to be uninstalled.
  */
-import { STILL, align, limbOffset, rangeOf, salience, stillnessError, type Alignment } from './dtw'
+import {
+  STILL,
+  align,
+  driftOf,
+  limbOffset,
+  rangeOf,
+  salience,
+  stillnessError,
+  wrapDrift,
+  type Alignment,
+} from './dtw'
 import {
   ANGLES,
   LIMBS,
@@ -100,9 +110,23 @@ export interface LimbReport {
   asked: number
 }
 
+/** What the reference is in time, so a drift in frames can be said in beats. */
+export interface Tempo {
+  framesPerBeat: number
+  /** Beats in one repetition. Drift beyond half of this is not lateness — it is a repeat. */
+  beatsPerCycle: number
+}
+
 export interface Verdict {
   /** 0–100, over the whole body. */
   score: number
+  /**
+   * How far the whole performance sat off the beat, in beats. Positive is late.
+   *
+   * Zero when no {@link Tempo} was supplied, because frames cannot be turned into beats
+   * without one.
+   */
+  drift: number
   /** True when the learner was read as a mirror image, which is the normal case. */
   mirrored: boolean
   limbs: LimbReport[]
@@ -226,6 +250,7 @@ function judge(
 export function scoreRoutine(
   reference: readonly Skeleton[],
   learner: readonly Skeleton[],
+  tempo?: Tempo,
 ): Verdict {
   const wanted = reference.map(toVector)
   const asIs = learner.map(toVector)
@@ -235,14 +260,28 @@ export function scoreRoutine(
   const mirrored = judge(wanted, asMirror)
   const better = mirrored.score > straight.score ? mirrored : straight
 
+  const drift =
+    tempo === undefined || tempo.framesPerBeat <= 0
+      ? 0
+      : wrapDrift(driftOf(better.alignment.path) / tempo.framesPerBeat, tempo.beatsPerCycle)
+
   return {
     score: better.score,
+    drift,
     mirrored: better === mirrored,
     limbs: better.limbs,
-    note: noteFor(better.limbs, better.score),
+    note: noteFor(better.limbs, better.score, drift),
     frames: better.alignment.path.length,
   }
 }
+
+/**
+ * Drift worth mentioning, in beats.
+ *
+ * A fifth of a beat is inside human variation and inside the detector's noise; a third is
+ * something a person can hear and fix. Below this the timing is not the story.
+ */
+const LATE_ENOUGH = 0.3
 
 /**
  * The one sentence.
@@ -255,9 +294,20 @@ export function scoreRoutine(
  * is no point praising somebody's legs for a dance that has none, and less point still in
  * blaming them.
  */
-export function noteFor(limbs: readonly LimbReport[], score: number): string {
+export function noteFor(limbs: readonly LimbReport[], score: number, drift = 0): string {
   const graded = limbs.filter(one => one.asked >= STILL)
   if (graded.length === 0) return 'Not enough of you was in shot to say anything useful.'
+
+  // Being off the beat as a whole outranks everything else, including a good score: doing
+  // the right shapes half a beat behind the music is the commonest fault there is, it is the
+  // easiest to fix, and until now this coach could not see it at all — every limb was
+  // equally displaced, so no limb looked wrong relative to the others.
+  if (Math.abs(drift) >= LATE_ENOUGH) {
+    const much = Math.abs(drift) >= 0.75 ? 'a beat' : 'about half a beat'
+    return drift > 0
+      ? `The shapes are there — you are running ${much} behind the click.`
+      : `The shapes are there — you are running ${much} ahead of the click.`
+  }
 
   // Praise is specific too, or it is noise. Naming the best limb is what makes it land.
   if (score >= 90) {

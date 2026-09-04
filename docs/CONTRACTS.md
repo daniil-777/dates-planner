@@ -1123,6 +1123,39 @@ documented reason and removing one is a regression:
 - **They estimate before they are told.** Self-estimation before knowledge of results is what
   builds error detection, which a score otherwise quietly replaces. One tap, and skippable.
 
+### 19.5b Two frames, and what leaks when there is one
+
+Arms are measured in the **shoulder** frame and legs in the **pelvis** frame, both
+orthogonalised against the spine. Sharing one frame makes a twist leak into the legs:
+rotating only the two shoulder landmarks, with every hip, knee and ankle bit-identical, moved
+`leftLegAround` one-for-one with `twist`. The underarm turn reaches a twist of 1.05, so it
+injected sixty degrees of phantom azimuth into legs the routine never mentions — and salience
+weights by *observed* travel, so the artefact earned weight and was then graded.
+
+Roll and pitch take the pelvis frame for the same reason. **Any frame defined in terms of the
+thing it measures is this bug**: it is the third instance (after `pitch = dot(up, forward)`
+where forward ⟂ up, and the absolute score scale) and the pattern is worth recognising.
+
+### 19.5c Lateness
+
+`limbOffset` finds a limb out of time *with the rest of the body*. It is blind to everybody
+being late together — every limb is equally displaced, so none fits better than the others,
+and a perfect performance shifted by two whole beats scored 100 on all four routines.
+
+`driftOf(path)` is the mean displacement along the warp path, and it recovers the lag
+cleanly. It is reported in beats via `Tempo`, and folded into ±half a cycle by `wrapDrift`,
+because **a cyclic routine offset by a whole repetition is the same dance** — the shoulder
+bounce is a two-beat loop, so a two-beat shift is correctly zero.
+
+When drift clears 0.3 beats it becomes the coaching sentence, ahead of everything else: it is
+the commonest fault in dancing and the easiest to fix.
+
+**Tempo is not a parameter of the reference.** Slow practice changes the metronome's bpm and
+nothing else; the figure follows because the beat is read off the audio clock. A slow attempt
+is never scored. If a scored slow mode is ever wanted the reference must be *regenerated* at
+that tempo — `BAND` is 10% of the longer sequence and a 0.7× attempt is 43% longer, four
+times outside it, so it would score as noise rather than as slow.
+
 ### 19.5a The figure
 
 `kinematics.ts` is the maths, `Dancer.tsx` the drawing, and they must stay each other's

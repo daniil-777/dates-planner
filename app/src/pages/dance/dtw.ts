@@ -295,6 +295,45 @@ function trace(cost: number[][], n: number, m: number, w: number): Step[] {
 }
 
 /**
+ * How far the whole performance sits off the beat, in frames. Positive is late.
+ *
+ * ## The gap this closes
+ *
+ * `limbOffset` finds a limb that is out of time **with the rest of the body**, which is a
+ * real fault and a useful one. What it cannot see is everybody being late together: shift a
+ * perfect performance by two whole beats and every limb is equally displaced, no limb fits
+ * better shifted *relative to the others*, and the score comes back 100. Measured on all four
+ * routines at −2, −1, 0, +1 and +2 beats: 100 every time.
+ *
+ * So the app could not say the sentence a teacher says most often. The alignment already
+ * knows — a late performance bends the warp path off the diagonal — and the average
+ * displacement along that path is the answer.
+ *
+ * ## The caveat that matters
+ *
+ * A cyclic routine offset by a whole cycle **is the same dance**, so drift is only meaningful
+ * up to half a cycle. The shoulder bounce is a two-beat loop; a two-beat shift correctly
+ * reports zero. Callers pass the cycle length and {@link wrapDrift} folds the answer into it.
+ */
+export function driftOf(path: readonly Step[]): number {
+  if (path.length === 0) return 0
+  let sum = 0
+  for (const step of path) sum += step.j - step.i
+  return sum / path.length
+}
+
+/**
+ * Fold a drift into (−cycle/2, +cycle/2], because a whole cycle of lateness is not lateness.
+ */
+export function wrapDrift(drift: number, cycle: number): number {
+  if (!Number.isFinite(cycle) || cycle <= 0) return drift
+  let wrapped = drift % cycle
+  if (wrapped > cycle / 2) wrapped -= cycle
+  if (wrapped <= -cycle / 2) wrapped += cycle
+  return wrapped
+}
+
+/**
  * The error a completely motionless learner would make.
  *
  * ## Why the score needs this
