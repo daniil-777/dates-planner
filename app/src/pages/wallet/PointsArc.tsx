@@ -51,13 +51,18 @@ const RADIUS = (SIZE - STROKE) / 2
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS
 
 /**
- * A ring at zero shows this much, so "just started" does not look like "broken".
+ * Below this much progress the fill is not drawn at all.
  *
- * About 13°. Shorter than that and the round cap makes it a floating dot at twelve o'clock,
- * which reads as a stray element rather than as the beginning of something — the opposite of
- * the reassurance it is there for.
+ * The first attempt at "a ring at zero must not look broken" was a minimum arc, and it was
+ * worse than the problem: thirteen degrees of a 13px round-capped stroke is mostly cap, so it
+ * rendered as a blue capsule floating at twelve o'clock on a grey donut — an iOS toggle knob,
+ * or a spinner that had stalled.
+ *
+ * A ring with no fill and a slightly warmer track does not read as broken; it reads as empty,
+ * which is what it is. The reassurance belongs in the words underneath, where "Just started"
+ * already says it, rather than in a sliver of arc pretending to be progress nobody has made.
  */
-const MINIMUM_ARC = 0.036
+const NOTHING_YET = 0.012
 
 const COUNT_MS = 900
 
@@ -101,9 +106,24 @@ function useCountUp(target: number): number {
 export function PointsArc({ points, standing, next, into }: PointsArcProps): React.ReactElement {
   // A full ring at the top rung: there is nothing left to fill, and showing it 3% full
   // because the arithmetic ran out would read as a demotion.
-  const proportion = next === null ? 1 : Math.min(1, Math.max(0, into))
-  const filled = Math.max(MINIMUM_ARC, proportion)
+  const filled = next === null ? 1 : Math.min(1, Math.max(0, into))
   const shown = useCountUp(points)
+
+  // The ring is mounted empty and filled on the next frame.
+  //
+  // Without this the 900ms transition in the stylesheet never plays: the circle is created
+  // with its final `stroke-dashoffset` already set, and a property has to *change* to
+  // transition. Four animations across these screens were written this way and none of them
+  // ever ran — they were all mounted at their destination.
+  const [drawn, setDrawn] = useState(0)
+  useEffect(() => {
+    if (prefersReducedMotion()) {
+      setDrawn(filled)
+      return
+    }
+    const frame = requestAnimationFrame(() => setDrawn(filled))
+    return () => cancelAnimationFrame(frame)
+  }, [filled])
 
   return (
     <figure className="arc">
@@ -124,25 +144,27 @@ export function PointsArc({ points, standing, next, into }: PointsArcProps): Rea
         </defs>
 
         <circle
-          className="arc__track"
+          className={`arc__track${filled > NOTHING_YET ? '' : ' arc__track--empty'}`}
           cx={SIZE / 2}
           cy={SIZE / 2}
           r={RADIUS}
           strokeWidth={STROKE}
           fill="none"
         />
-        <circle
-          className="arc__fill"
-          cx={SIZE / 2}
-          cy={SIZE / 2}
-          r={RADIUS}
-          strokeWidth={STROKE}
-          fill="none"
-          strokeLinecap="round"
-          stroke="url(#arc-stroke)"
-          strokeDasharray={CIRCUMFERENCE}
-          strokeDashoffset={CIRCUMFERENCE * (1 - filled)}
-        />
+        {filled > NOTHING_YET && (
+          <circle
+            className="arc__fill"
+            cx={SIZE / 2}
+            cy={SIZE / 2}
+            r={RADIUS}
+            strokeWidth={STROKE}
+            fill="none"
+            strokeLinecap="round"
+            stroke="url(#arc-stroke)"
+            strokeDasharray={CIRCUMFERENCE}
+            strokeDashoffset={CIRCUMFERENCE * (1 - drawn)}
+          />
+        )}
       </svg>
 
       <figcaption className="arc__inside">

@@ -74,6 +74,35 @@ export interface Routine {
   /** What to think about while doing it. Shown before the count-in, not during. */
   hint: string
   keys: Keyframe[]
+  /**
+   * What a teacher says on each beat.
+   *
+   * "Forward, side, together" rather than "one, two, three". Naming the movement is what
+   * beginners actually retain — the count tells you *when*, the word tells you *what*, and
+   * the word is the half people can still recall a week later. It is also the only part of
+   * the demonstration that survives somebody looking away from the screen.
+   *
+   * Optional: a routine with no words to say (a sway is a sway) shows the beat number
+   * instead, which is better than inventing a vocabulary for it.
+   */
+  calls?: Array<{ beat: number; say: string }>
+}
+
+/**
+ * The word for the beat the demonstration is on, or `''` when the routine has none.
+ *
+ * Takes the latest call at or before the beat, so a word said on beat 1 stays up until the
+ * next one — a caption that blinked out between beats would be unreadable at 118bpm.
+ */
+export function callAt(routine: Routine, beat: number): string {
+  const calls = routine.calls
+  if (calls === undefined || calls.length === 0) return ''
+
+  let said = ''
+  for (const call of calls) {
+    if (call.beat <= beat + 1e-6) said = call.say
+  }
+  return said
 }
 
 /**
@@ -141,6 +170,12 @@ export const ROUTINES: readonly Routine[] = [
     bpm: 72,
     reps: 3,
     hint: 'It is in the hips. Let your shoulders follow rather than lead.',
+    calls: [
+      { beat: 0, say: 'Centre' },
+      { beat: 2, say: 'Left' },
+      { beat: 4, say: 'Centre' },
+      { beat: 6, say: 'Right' },
+    ],
     // Four beats each way. The signed roll is what makes this a dance rather than a wobble —
     // with the unsigned tilt this file used to be written against, leaning left and leaning
     // right were the same number and the whole routine was unscoreable.
@@ -210,6 +245,15 @@ export const ROUTINES: readonly Routine[] = [
     bpm: 96,
     reps: 4,
     hint: 'Small steps, but commit to the direction. Forward means forward, not vaguely.',
+    // The routine is named after these six words. Saying them is most of the teaching.
+    calls: [
+      { beat: 0, say: 'Together' },
+      { beat: 1, say: 'Forward' },
+      { beat: 2, say: 'Side' },
+      { beat: 3, say: 'Together' },
+      { beat: 4, say: 'Back' },
+      { beat: 5, say: 'Side' },
+    ],
     // `leftLegAround` is what makes this a box. Without a direction for the leg — which is
     // what this file used to have — a step forward, a step to the side and a step backwards
     // were an identical number, and the routine named after the difference between them could
@@ -291,6 +335,14 @@ export const ROUTINES: readonly Routine[] = [
     bpm: 110,
     reps: 5,
     hint: 'The lifted arm stays still. It is a doorway, not a lever — the turn is in the feet.',
+    calls: [
+      { beat: 0, say: 'Ready' },
+      { beat: 1, say: 'Lift' },
+      { beat: 2, say: 'Under' },
+      { beat: 3, say: 'Round' },
+      { beat: 4, say: 'Open' },
+      { beat: 5, say: 'Down' },
+    ],
     // The one routine that worked before, now written in the right convention: the arm starts
     // hanging (≈π) and comes up overhead (≈0.5), rather than starting overhead as the old
     // REST implied and going nowhere a body could follow.
@@ -313,6 +365,10 @@ export const ROUTINES: readonly Routine[] = [
     bpm: 118,
     reps: 16,
     hint: 'Let your arms be heavy. They should swing because your body moved, not on purpose.',
+    calls: [
+      { beat: 0, say: 'Left' },
+      { beat: 1, say: 'Right' },
+    ],
     // A two-beat loop, and the last keyframe is the first: anything else leaves a jump where
     // the repetition joins, which the reference then teaches as part of the step.
     //

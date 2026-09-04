@@ -72,8 +72,10 @@ const L = {
   torso: 1,
   shoulderHalf: 0.26,
   hipHalf: 0.17,
-  neck: 0.16,
-  headRadius: 0.17,
+  // A little longer than it looks right on paper: at 0.16 the head sat straight on the
+  // shoulder line with no neck visible at all.
+  neck: 0.21,
+  headRadius: 0.145,
   upperArm: 0.52,
   foreArm: 0.48,
   thigh: 0.72,

@@ -10,7 +10,7 @@
  */
 import { describe, expect, it } from 'vitest'
 
-import { BONES, VIEW_TURN, boundsOf, toFigure } from './dancer'
+import { BONES, VIEW_TURN, boundsOf, toFigure } from './kinematics'
 import { REST } from './routines'
 import type { Skeleton } from './pose'
 

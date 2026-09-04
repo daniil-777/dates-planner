@@ -6,7 +6,7 @@
  * to hold, and the add-card sheet must never grow a field a card number could be typed into.
  * Both would pass review — they are the kind of change that looks like an improvement.
  */
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
 import { CardFace } from './CardFace'
@@ -93,14 +93,30 @@ describe('the points ring', () => {
     expect(screen.getByText(`${group(3_000)} to the next`)).toBeInTheDocument()
   })
 
-  it('fills completely at the top rung instead of reading as a demotion', () => {
+  it('fills completely at the top rung instead of reading as a demotion', async () => {
     // With no next rung there is no fraction to compute, and showing the ring nearly empty
     // because the arithmetic ran out would look like going backwards.
+    //
+    // Awaited, because the ring is deliberately mounted empty and filled on the next frame —
+    // a `stroke-dashoffset` transition has nothing to play unless the value changes, and
+    // this animation used to be written and never run.
     const { container } = render(
       <PointsArc points={99_000} standing="Written the guide" next={null} into={0} />,
     )
-    const fill = container.querySelector('.arc__fill')
-    expect(fill?.getAttribute('stroke-dashoffset')).toBe('0')
+    await waitFor(() =>
+      expect(container.querySelector('.arc__fill')?.getAttribute('stroke-dashoffset')).toBe('0'),
+    )
     expect(screen.queryByText(/to the next/)).toBeNull()
+  })
+
+  it('draws no arc at all when there is nothing to show, rather than a floating capsule', () => {
+    // The first attempt at "zero must not look broken" was a minimum arc, and thirteen
+    // degrees of a round-capped 13px stroke is mostly cap: it rendered as a toggle knob
+    // adrift at twelve o'clock. An empty ring reads as empty, which is the truth.
+    const { container } = render(
+      <PointsArc points={0} standing="Just started" next={250} into={0} />,
+    )
+    expect(container.querySelector('.arc__fill')).toBeNull()
+    expect(container.querySelector('.arc__track--empty')).not.toBeNull()
   })
 })

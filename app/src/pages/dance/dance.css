@@ -1,33 +1,116 @@
 /**
  * Dance.
  *
- * A dark chapter, like the quiz, because both are performances in a room rather than
- * documents on a screen — and because a camera preview on a light background looks like a
- * video call, which is precisely the wrong feeling.
+ * ## A dark chapter that is actually dark
+ *
+ * The first version of this file opened by declaring "a dark chapter, like the quiz, because
+ * both are performances in a room rather than documents on a screen" — and then styled every
+ * card with `--sapList_Background` and `--sapList_BorderColor`. The result was a light Fiori
+ * list with one 52px dark square on it, repeated four times. The comment was right and the
+ * rules were the default.
+ *
+ * It goes dark properly now, by the third of the app's three ways: **a chapter that paints
+ * its own ground and owns every colour on it**, the way `chgk.css` does. Nothing here reads a
+ * theme token, because a token that resolves to a dark grey in `sap_horizon_dark` would fight
+ * a surface that is already dark. On this screen the app is a stage, not a document.
+ *
+ * ## The type scale
+ *
+ * Declared once, on the root, with real gaps. The three chapters that shipped together had no
+ * scale at all — seven sizes inside a 0.2rem band, with section headings *smaller* than body
+ * text, so the least important line in a row was often the largest thing in it.
  */
 
 .dance {
-  padding: 1rem 1rem 3rem;
+  /* --- ground ------------------------------------------------------------- */
+  --dance-ground: #17101c;
+  --dance-ink: #f3ece3;
+  --dance-dim: rgb(243 236 227 / 58%);
+  --dance-faint: rgb(243 236 227 / 34%);
+  --dance-line: rgb(243 236 227 / 14%);
+  --dance-surface: rgb(243 236 227 / 5%);
+  /* The chapter's own plum, lifted until it is legible on the ground. The tile accent
+     (#6C2F6B) is too dark to sit on a dark stage, so it is used for fills and this for
+     anything that has to be read. */
+  --dance-accent: #d69ad0;
+  --dance-deep: #6c2f6b;
+  /* Time is amber everywhere in this app — the quiz timer, the commons stars. The beat and
+     the progress ring borrow it so that "how long is left" reads the same way here. */
+  --dance-time: #f0b33c;
+  --dance-figure: #f3ece3;
+  --dance-ghost: rgb(243 236 227 / 22%);
+
+  /* --- type --------------------------------------------------------------- */
+  --t-hero: 2.5rem;
+  --t-display: 1.75rem;
+  --t-title: 1.25rem;
+  --t-lede: 0.9375rem;
+  --t-body: 0.875rem;
+  --t-meta: 0.75rem;
+  --t-kicker: 0.6875rem;
+
+  position: relative;
+  padding: 1.25rem 1rem 3rem;
   max-width: 42rem;
   margin: 0 auto;
+  color: var(--dance-ink);
+  background: var(--dance-ground);
+  border-radius: var(--twm-radius-l, 1rem);
+  min-height: 80vh;
+}
+
+/* No full-bleed.
+ *
+ * The obvious way to make the ground reach the edges is an absolutely positioned pseudo
+ * element at `inset: 0 -100vw`. It works visually and it widens the scrollable area by two
+ * viewports — the page then scrolls sideways into empty dark, and a full-page screenshot of a
+ * 412px phone came back 2129px wide. Clipping it would need `overflow-x: hidden` on an
+ * ancestor this file does not own.
+ *
+ * A dark rounded panel on the page's own ground is what the journal does, it looks
+ * deliberate, and it costs nothing. */
+
+.dance__head {
+  margin-bottom: 1.75rem;
+}
+
+/* Device one: the uppercase micro-label. Fourteen instances across the app and the dance
+   chapter had none — which is most of why it did not look like it belonged here. */
+.dance__kicker {
+  margin: 0 0 0.375rem;
+  font-size: var(--t-kicker);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--dance-accent);
+}
+
+.dance__title {
+  margin: 0;
+  font-size: var(--t-hero);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--dance-ink);
 }
 
 .dance__lede {
-  margin: 0.375rem 0 0;
-  color: var(--sapContent_LabelColor);
-  font-size: 0.9375rem;
+  margin: 0.625rem 0 0;
+  max-width: 30rem;
+  font-size: var(--t-lede);
   line-height: 1.5;
+  color: var(--dance-dim);
 }
 
 .dance__privacy {
   margin: 2rem 0 0;
   padding: 0.875rem 1rem;
-  border-radius: 0.625rem;
-  background: var(--sapList_Background);
-  border: 1px solid var(--sapList_BorderColor);
-  font-size: 0.8125rem;
+  border-radius: var(--twm-radius-m, 0.75rem);
+  background: var(--dance-surface);
+  border: 1px solid var(--dance-line);
+  font-size: var(--t-meta);
   line-height: 1.5;
-  color: var(--sapContent_LabelColor);
+  color: var(--dance-faint);
 }
 
 /* ----------------------------------------------------------------- steps */
@@ -37,110 +120,119 @@
   margin: 1.5rem 0 0;
   padding: 0;
   display: grid;
-  gap: 0.75rem;
+  gap: 0.625rem;
 }
 
+/* Device three: the bordered surface. Structure is a hairline; elevation is held back for
+   hover. Its dark form is a translucent white fill over a 14% white line. */
 .step {
   display: flex;
   align-items: center;
   gap: 1rem;
   width: 100%;
   padding: 0.875rem;
-  border-radius: 0.875rem;
-  border: 1px solid var(--sapList_BorderColor);
-  background: var(--sapList_Background);
+  border-radius: var(--twm-radius-m, 0.75rem);
+  border: 1px solid var(--dance-line);
+  background: var(--dance-surface);
+  color: var(--dance-ink);
   cursor: pointer;
   text-align: start;
   font-family: inherit;
   transition:
-    transform 160ms ease,
-    box-shadow 160ms ease;
+    border-color 120ms ease,
+    background 120ms ease,
+    transform 160ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .step:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  border-color: rgb(214 154 208 / 45%);
+  background: rgb(243 236 227 / 8%);
 }
 
+.step:focus-visible {
+  outline: 2px solid var(--dance-accent);
+  outline-offset: 2px;
+}
+
+/**
+ * The card art: this routine's own most characteristic pose.
+ *
+ * It used to be the same gradient and the same drifting dot on all four, which tells the eye
+ * that four things are interchangeable — the opposite of what a menu is for. Now each card
+ * draws its own routine, from the same keyframes that will be scored, so the picture cannot
+ * drift away from the dance it advertises.
+ */
 .step__art {
   position: relative;
-  width: 3.25rem;
-  height: 3.25rem;
+  width: 4.25rem;
+  height: 4.75rem;
   flex: 0 0 auto;
-  border-radius: 0.75rem;
+  border-radius: var(--twm-radius-s, 0.5rem);
   overflow: hidden;
-  background: linear-gradient(140deg, #2b1a45, #6c2f6b);
-}
-
-/* A moving dot, so the tile has a pulse without an illustration of a body — this app is
-   careful about figures, and a dance card is not the place to start drawing one. */
-.step__figure {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 0.6rem;
-  height: 0.6rem;
-  margin: -0.3rem 0 0 -0.3rem;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.9);
-  animation: step-drift 2.8s ease-in-out infinite;
-}
-
-@keyframes step-drift {
-  0%,
-  100% {
-    transform: translate(-0.5rem, 0.3rem) scale(1);
-  }
-  25% {
-    transform: translate(0.5rem, -0.4rem) scale(1.25);
-  }
-  50% {
-    transform: translate(0.6rem, 0.4rem) scale(1);
-  }
-  75% {
-    transform: translate(-0.4rem, -0.3rem) scale(1.15);
-  }
+  padding: 0.25rem;
+  background: linear-gradient(150deg, rgb(108 47 107 / 55%), rgb(23 16 28 / 10%));
+  border: 1px solid var(--dance-line);
 }
 
 .step__body {
   display: grid;
-  gap: 0.1875rem;
+  gap: 0.25rem;
   min-width: 0;
 }
 
 .step__name {
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--sapTextColor);
+  font-size: var(--t-title);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--dance-ink);
 }
 
 .step__blurb {
-  font-size: 0.8125rem;
+  font-size: var(--t-body);
   line-height: 1.45;
-  color: var(--sapContent_LabelColor);
+  color: var(--dance-dim);
 }
 
+/* Device two, small: figures with a quiet unit beside them. */
 .step__meta {
-  font-size: 0.6875rem;
-  color: var(--sapContent_LabelColor);
-  opacity: 0.8;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.125rem;
+  font-size: var(--t-meta);
+  color: var(--dance-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.step__dot {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.6;
 }
 
 /* ----------------------------------------------------------------- floor */
 
-.floor {
-  color: #fff;
+.dance--floor {
+  padding-top: 0.75rem;
 }
 
 .floor__back,
 .floor__leave {
   border: none;
   background: none;
-  color: var(--sapContent_LabelColor);
-  font-size: 0.875rem;
+  color: var(--dance-dim);
+  font-size: var(--t-body);
   font-family: inherit;
   cursor: pointer;
-  padding: 0.25rem 0;
+  padding: 0.375rem 0;
+}
+
+.floor__back:hover,
+.floor__leave:hover {
+  color: var(--dance-ink);
 }
 
 .floor__head {
@@ -149,24 +241,27 @@
 
 .floor__name {
   margin: 0;
-  font-size: 1.375rem;
-  font-weight: 300;
-  color: var(--sapTextColor);
+  font-size: var(--t-display);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--dance-ink);
 }
 
 .floor__hint {
   margin: 0.375rem 0 0;
-  font-size: 0.875rem;
+  max-width: 28rem;
+  font-size: var(--t-body);
   line-height: 1.5;
-  color: var(--sapContent_LabelColor);
+  color: var(--dance-dim);
 }
 
 .floor__stage {
   position: relative;
   aspect-ratio: 3 / 4;
-  border-radius: 1rem;
+  border-radius: var(--twm-radius-l, 1rem);
   overflow: hidden;
-  background: #12101a;
+  background: #0f0a13;
+  border: 1px solid var(--dance-line);
   display: grid;
   place-items: center;
 }
@@ -186,12 +281,75 @@
   opacity: 0;
 }
 
+/* ------------------------------------------------------------ demonstrate */
+
+/**
+ * The demonstration.
+ *
+ * The chapter shipped without one: it held the exact intended pose at every beat and showed
+ * the learner none of it, then scored them on a step they had only read a sentence about.
+ * Watching a movement before attempting it is the oldest finding in motor learning.
+ */
+.floor__demo {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-rows: 1fr auto;
+  padding: 1rem;
+}
+
+.floor__demoFigure {
+  min-height: 0;
+}
+
+.floor__demoFoot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+/* The count, spoken as words rather than numbers where the routine has them: "forward",
+   "side", "together" is what a teacher says, and it is what people remember. */
+.floor__call {
+  font-size: var(--t-title);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--dance-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.floor__callDim {
+  color: var(--dance-faint);
+  font-weight: 600;
+}
+
+.floor__viewToggle {
+  border: 1px solid var(--dance-line);
+  background: rgb(243 236 227 / 7%);
+  color: var(--dance-dim);
+  border-radius: var(--twm-radius-pill, 999px);
+  padding: 0.375rem 0.75rem;
+  font-size: var(--t-meta);
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.floor__viewToggle:hover {
+  color: var(--dance-ink);
+  border-color: rgb(214 154 208 / 45%);
+}
+
+/* --------------------------------------------------------------- counting */
+
 .floor__count {
   position: relative;
   font-size: 5rem;
-  font-weight: 200;
-  color: #fff;
-  text-shadow: 0 2px 24px rgba(0, 0, 0, 0.6);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--dance-ink);
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 2px 24px rgb(0 0 0 / 60%);
   animation: count-pop 480ms ease-out;
 }
 
@@ -202,6 +360,7 @@
   }
 }
 
+/* Device four: the ring. Rotated to start at twelve o'clock, over a faint track. */
 .floor__ring {
   position: absolute;
   inset: 4%;
@@ -213,19 +372,26 @@
 
 .floor__ringTrack {
   fill: none;
-  stroke: rgba(255, 255, 255, 0.16);
+  stroke: rgb(243 236 227 / 10%);
   stroke-width: 1.5;
 }
 
 .floor__ringFill {
   fill: none;
-  stroke: #f0b33c;
+  stroke: var(--dance-time);
   stroke-width: 2.5;
   stroke-linecap: round;
 }
 
-/* The beat. One pulsing dot is all the metronome a body needs, and it does not cover the
-   preview the way a flashing overlay would. */
+/**
+ * The beat.
+ *
+ * Now a companion to the sound rather than the only signal. It used to be the whole
+ * metronome, which is close to the worst arrangement available: you cannot watch a dot while
+ * you are dancing, and under `prefers-reduced-motion` it degraded to a fade — so the people
+ * most likely to need a steady reference got the weakest one. The click carries the beat;
+ * this shows it for anybody who has the sound off.
+ */
 .floor__beat {
   position: absolute;
   bottom: 1.25rem;
@@ -234,7 +400,7 @@
   height: 0.75rem;
   margin-inline-start: -0.375rem;
   border-radius: 50%;
-  background: #f0b33c;
+  background: var(--dance-time);
   animation-name: beat-pulse;
   animation-timing-function: ease-out;
   animation-iteration-count: infinite;
@@ -258,34 +424,70 @@
   bottom: 3rem;
   margin: 0;
   padding: 0.375rem 0.875rem;
-  border-radius: 999px;
-  background: rgba(0, 0, 0, 0.6);
-  font-size: 0.8125rem;
-  color: #fff;
+  border-radius: var(--twm-radius-pill, 999px);
+  background: rgb(0 0 0 / 60%);
+  font-size: var(--t-body);
+  color: var(--dance-ink);
 }
 
 .floor__judging {
   bottom: auto;
 }
 
-.floor__go {
+/* ------------------------------------------------------------------- calls */
+
+.floor__actions {
+  display: flex;
+  gap: 0.625rem;
   margin-top: 1rem;
-  width: 100%;
-  padding: 0.875rem;
-  border-radius: 0.75rem;
+}
+
+/**
+ * The primary call.
+ *
+ * Not Fiori blue. The stage is plum and amber and the ring, the beat and the limb bars are
+ * all warm; a full-width slab of `--sapButton_Emphasized_Background` was the single loudest
+ * element in the chapter and it was the colour that belongs to Expenses.
+ */
+.floor__go {
+  flex: 1;
+  padding: 0.875rem 1.25rem;
+  border-radius: var(--twm-radius-m, 0.75rem);
   border: none;
-  background: var(--sapButton_Emphasized_Background, #0070f2);
-  color: var(--sapButton_Emphasized_TextColor, #fff);
+  background: linear-gradient(135deg, var(--dance-deep), #9c4a97);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: filter 120ms ease;
+}
+
+.floor__go:hover {
+  filter: brightness(1.12);
+}
+
+.floor__second {
+  padding: 0.875rem 1.25rem;
+  border-radius: var(--twm-radius-m, 0.75rem);
+  border: 1px solid var(--dance-line);
+  background: none;
+  color: var(--dance-dim);
   font-size: 1rem;
   font-family: inherit;
   cursor: pointer;
 }
 
+.floor__second:hover {
+  color: var(--dance-ink);
+  border-color: rgb(214 154 208 / 45%);
+}
+
 .floor__failed {
   margin-top: 1rem;
-  font-size: 0.875rem;
+  font-size: var(--t-body);
   line-height: 1.5;
-  color: var(--sapNegativeElementColor, #d20a0a);
+  color: #ffb4a6;
 }
 
 /* --------------------------------------------------------------- verdict */
@@ -294,6 +496,7 @@
   margin-top: 1.25rem;
 }
 
+/* Device two: the big tabular figure with a tiny unit under it. */
 .verdict__score {
   display: flex;
   align-items: baseline;
@@ -302,24 +505,28 @@
 
 .verdict__number {
   font-size: 3rem;
-  font-weight: 200;
+  font-weight: 700;
   line-height: 1;
   font-variant-numeric: tabular-nums;
-  color: var(--sapTextColor);
+  color: var(--dance-ink);
 }
 
 .verdict__outOf {
-  font-size: 0.8125rem;
-  color: var(--sapContent_LabelColor);
+  font-size: var(--t-kicker);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--dance-faint);
 }
 
-/* Bigger than the number, because it is the part worth reading. A score tells somebody
-   where they are; this tells them what to do next. */
+/* Bigger than the number, because it is the part worth reading. A score tells somebody where
+   they are; this tells them what to do next. */
 .verdict__note {
-  margin: 0.75rem 0 1.25rem;
+  margin: 0.875rem 0 1.5rem;
+  max-width: 24rem;
   font-size: 1.0625rem;
   line-height: 1.5;
-  color: var(--sapTextColor);
+  color: var(--dance-ink);
 }
 
 .verdict__limbs {
@@ -335,53 +542,133 @@
   grid-template-columns: 6rem 1fr 2rem;
   align-items: center;
   gap: 0.75rem;
-  font-size: 0.8125rem;
-  color: var(--sapContent_LabelColor);
+  font-size: var(--t-meta);
+  color: var(--dance-dim);
 }
 
 .verdict__bar {
   height: 0.375rem;
-  border-radius: 999px;
-  background: var(--sapField_BorderColor);
+  border-radius: var(--twm-radius-pill, 999px);
+  background: rgb(243 236 227 / 10%);
   overflow: hidden;
 }
 
 .verdict__bar > span {
   display: block;
   height: 100%;
-  border-radius: 999px;
-  background: linear-gradient(90deg, #6c2f6b, #f0b33c);
+  border-radius: var(--twm-radius-pill, 999px);
+  background: linear-gradient(90deg, var(--dance-deep), var(--dance-time));
   transition: width 600ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .verdict__limbScore {
   text-align: end;
   font-variant-numeric: tabular-nums;
-  color: var(--sapTextColor);
+  color: var(--dance-ink);
 }
 
 .floor__after {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.625rem;
   margin-top: 1.5rem;
 }
 
-.floor__after .floor__go {
-  margin-top: 0;
+/* ------------------------------------------------------------ empty stage */
+
+/**
+ * The stage before anything starts.
+ *
+ * It used to be a flat black slab taking 60% of the screen with a small outlined phone adrift
+ * in the middle — it read as a video player that had failed to load, which is the worst first
+ * impression this chapter could give. It now holds the demonstration instead, so the first
+ * thing on the screen is the dance.
+ */
+.floor__empty {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 0.375rem;
+  padding: 1.5rem;
+  text-align: center;
+  color: var(--dance-dim);
 }
+
+.floor__empty p {
+  margin: 0;
+  font-size: var(--t-body);
+  line-height: 1.45;
+}
+
+.floor__emptySub {
+  color: var(--dance-faint);
+  font-size: var(--t-meta);
+}
+
+/* ============================================================== the figure */
+
+/**
+ * The demonstration figure.
+ *
+ * Bones are strokes with round caps — a capsule for the price of a line — and each joint
+ * carries a dot so the body reads as jointed rather than as wire. Nothing here sets a size:
+ * the SVG fills whatever box it is given, so one component is a 68px thumbnail on a card and
+ * a full-height demonstration above the camera.
+ *
+ * Stroke widths are in user units on purpose. `vector-effect: non-scaling-stroke` is the
+ * tempting one-line change here and it is wrong: it freezes every bone at the same pixel
+ * width and throws away the taper — torso heavier than thigh, thigh heavier than shin — that
+ * is the whole difference between a body and a diagram.
+ */
+.dancer {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.dancer__bone {
+  stroke: var(--dance-figure, #f3ece3);
+  stroke-linecap: round;
+}
+
+.dancer__joint,
+.dancer__hand {
+  fill: var(--dance-figure, #f3ece3);
+}
+
+.dancer__head {
+  fill: none;
+  stroke: var(--dance-figure, #f3ece3);
+  stroke-width: 0.055;
+}
+
+/* Behind something else — the shape to aim at, under a live preview. */
+.dancer--ghost .dancer__bone,
+.dancer--ghost .dancer__head {
+  stroke: var(--dance-ghost, rgb(243 236 227 / 22%));
+}
+
+.dancer--ghost .dancer__joint,
+.dancer--ghost .dancer__hand {
+  fill: var(--dance-ghost, rgb(243 236 227 / 22%));
+}
+
+/* ------------------------------------------------------------------ motion */
 
 @media (prefers-reduced-motion: reduce) {
   .step,
   .verdict__bar > span {
     transition: none;
   }
-  .step__figure,
+
   .floor__count {
     animation: none;
   }
-  /* The beat stays: it is information, not decoration, and somebody who cannot see it
-     cannot keep time. It is slowed rather than stopped. */
+
+  /* The beat stays. It is information rather than decoration, and somebody who cannot see it
+     cannot keep time — but the click carries it now, so the visual can afford to be a gentle
+     fade rather than a pulse. */
   .floor__beat {
     animation-name: beat-fade;
   }
@@ -395,49 +682,4 @@
   60% {
     opacity: 0.4;
   }
-}
-
-/* The stage before anything starts. */
-.floor__empty {
-  position: relative;
-  display: grid;
-  justify-items: center;
-  gap: 0.375rem;
-  padding: 2rem 1.5rem;
-  text-align: center;
-  color: rgba(255, 255, 255, 0.75);
-}
-
-.floor__empty p {
-  margin: 0;
-  font-size: 0.9375rem;
-  line-height: 1.45;
-}
-
-.floor__emptySub {
-  color: rgba(255, 255, 255, 0.45);
-  font-size: 0.8125rem;
-}
-
-/* A phone leaning against something, drawn in two boxes. Cheaper than an illustration and
-   says the one thing that matters: stand it up, do not hold it. */
-.floor__emptyIcon {
-  width: 2.75rem;
-  height: 4rem;
-  margin-bottom: 0.75rem;
-  border-radius: 0.375rem;
-  border: 2px solid rgba(255, 255, 255, 0.35);
-  transform: rotate(-8deg);
-  position: relative;
-}
-
-.floor__emptyIcon::after {
-  content: '';
-  position: absolute;
-  left: -1.25rem;
-  right: -1.25rem;
-  bottom: -0.5rem;
-  height: 2px;
-  background: rgba(255, 255, 255, 0.22);
-  transform: rotate(8deg);
 }

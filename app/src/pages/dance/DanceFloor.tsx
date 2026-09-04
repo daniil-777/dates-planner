@@ -1,34 +1,48 @@
 /**
- * One attempt at a routine: count in, dance, get told one thing.
+ * One pass at a routine: watch it, try it, be told one thing.
  *
- * ## The shape of it
+ * ## The stage that was missing
  *
- * `ready → counting → dancing → judging → done`. The count-in is not decoration. Somebody
- * who starts recording and *then* looks for the beat has already lost the first bar, and the
- * first bar is where the scorer decides what your timing looks like. Four beats of "three,
- * two, one" is the difference between a fair score and an unfair one.
+ * `watch → counting → dancing → judging → done`. The first version began at `counting`: it
+ * held the exact intended pose at every beat of every routine and showed the learner none of
+ * them, then scored the attempt. Observational modelling is the oldest result in motor
+ * learning and the effect is much larger for how a movement is *shaped* than for whether it
+ * hits a target — which is all a dance is.
  *
- * ## What is on screen while dancing, and what is deliberately not
+ * So the demonstration comes first, it loops until the learner says they are ready, and it is
+ * available again from the result. Nobody is made to watch a fixed number of repetitions:
+ * letting learners choose when to see the model beats a fixed schedule, and the number people
+ * choose for themselves is usually about right.
  *
- * A preview of yourself, a ring that empties, and a dot that pulses on the beat. Nothing
- * else — no live score, no skeleton overlay, no per-limb meter.
+ * ## Back view by default
  *
- * That is a considered omission. A live score makes people watch the number instead of
- * moving, and a skeleton overlay makes them watch the skeleton; both produce somebody
- * standing very still trying to make a graph go up, which is the opposite of dancing. The
- * feedback comes afterwards, when it can be acted on.
+ * The figure is shown from behind, so the learner copies directly rather than translating.
+ * That is not the obvious choice — mirroring is the folk answer — but a preregistered study
+ * of dancers learning choreography from video found back view beat both front-mirrored and
+ * front-opposite on accuracy, spatial skills and rhythm. Front is one tap away for anybody who
+ * prefers it, and the scorer accepts either, so nothing rides on the default being right for
+ * everybody.
  *
- * The preview is mirrored, because a preview that is not mirrored is unusable — everybody
- * has spent their life in mirrors and a lateral flip makes people move the wrong way.
+ * ## Nothing is drawn over the learner while they dance
+ *
+ * No ghost, no skeleton overlay, no live score. Two independent reasons, and they agree.
+ * Concurrent augmented feedback reliably improves performance *during* practice and degrades
+ * it on retention — the learner outsources error detection to the display instead of building
+ * their own. And dancers asked about exactly this rejected it: an overlay covers the thing
+ * you are trying to look at. So the attempt screen shows the learner, a ring that empties, and
+ * the beat. The judgement comes afterwards, when it can be acted on.
  */
 import { useCallback, useEffect, useRef, useState } from 'react'
 
+import { Dancer } from './Dancer'
 import { CameraError, FPS, capture, closeCamera, openCamera } from './camera'
-import { toSkeleton, type Landmarks } from './pose'
-import { secondsFor, toSequence, type Routine } from './routines'
+import { createMetronome, type Metronome } from './metronome'
+import { VIEW_TURN } from './kinematics'
+import { toSkeleton } from './pose'
+import { beatsIn, callAt, poseAt, secondsFor, toSequence, type Routine } from './routines'
 import { scoreRoutine, type Verdict } from './score'
 
-type Stage = 'ready' | 'counting' | 'dancing' | 'judging' | 'done' | 'failed'
+type Stage = 'watch' | 'counting' | 'dancing' | 'judging' | 'done' | 'failed'
 
 /** Beats of count-in. Four is one bar, which is what a person expects. */
 const COUNT_IN = 4
@@ -39,23 +53,72 @@ export interface DanceFloorProps {
 }
 
 export function DanceFloor({ routine, onLeave }: DanceFloorProps): React.ReactElement {
-  const [stage, setStage] = useState<Stage>('ready')
+  const [stage, setStage] = useState<Stage>('watch')
   const [count, setCount] = useState(COUNT_IN)
   const [through, setThrough] = useState(0)
   const [verdict, setVerdict] = useState<Verdict | null>(null)
   const [problem, setProblem] = useState<string | null>(null)
   const [seen, setSeen] = useState(true)
+  /** Seen from behind by default — see the header. */
+  const [facing, setFacing] = useState(false)
+  const [beat, setBeat] = useState(0)
 
   const video = useRef<HTMLVideoElement>(null)
   const stream = useRef<MediaStream | null>(null)
+  const clock = useRef<Metronome | null>(null)
 
   const seconds = secondsFor(routine)
+  const span = beatsIn(routine)
+  const sequence = useRef(toSequence(routine, 8)).current
 
   // The camera light staying on after somebody leaves is the kind of thing people notice
-  // once and never forgive.
+  // once and never forgive. The metronome has to stop for the same reason.
   useEffect(() => {
-    return () => closeCamera(stream.current)
+    return () => {
+      closeCamera(stream.current)
+      clock.current?.stop()
+    }
   }, [])
+
+  /* ------------------------------------------------------------- the demo */
+
+  // Driven by a clock rather than a frame counter, so a phone that drops frames shows the
+  // dance late rather than slow — and stays with the click, which is on the audio clock and
+  // does not drift.
+  useEffect(() => {
+    if (stage !== 'watch') return
+
+    const metronome = createMetronome({
+      bpm: routine.bpm,
+      perBar: Math.max(2, Math.round(span)),
+    })
+    clock.current = metronome
+    let live = true
+    let frame = 0
+
+    // Autoplay policy means this may be refused until the person has tapped something. The
+    // figure still moves; only the click is missing, so it fails quietly.
+    void metronome.start().catch(() => undefined)
+
+    const tick = (): void => {
+      if (!live) return
+      const at = metronome.elapsed()
+      if (at !== null) setBeat(((at / 60) * routine.bpm) % span)
+      frame = requestAnimationFrame(tick)
+    }
+    frame = requestAnimationFrame(tick)
+
+    return () => {
+      live = false
+      cancelAnimationFrame(frame)
+      metronome.stop()
+      clock.current = null
+    }
+  }, [stage, routine.bpm, span])
+
+  const turn = facing ? VIEW_TURN : Math.PI + VIEW_TURN
+
+  /* ---------------------------------------------------------- the attempt */
 
   const run = useCallback(async () => {
     setProblem(null)
@@ -72,35 +135,41 @@ export function DanceFloor({ routine, onLeave }: DanceFloorProps): React.ReactEl
       return
     }
 
-    // Count in.
+    // One metronome for the count-in and the attempt, so the four beats somebody is counted
+    // in on are the same four beats the routine then runs at.
+    const metronome = createMetronome({ bpm: routine.bpm, perBar: Math.max(2, Math.round(span)) })
+    clock.current = metronome
+    await metronome.start().catch(() => undefined)
+
     setStage('counting')
-    const beat = (60 / routine.bpm) * 1000
+    const beatMs = (60 / routine.bpm) * 1000
     for (let left = COUNT_IN; left > 0; left -= 1) {
       setCount(left)
-      await new Promise(resolve => setTimeout(resolve, beat))
+      await new Promise(resolve => setTimeout(resolve, beatMs))
     }
 
     setStage('dancing')
-    const frames: Landmarks[] = []
     const taken = await capture(video.current!, seconds, (landmarks, done) => {
       setThrough(done)
       // Told once, quietly, while there is still time to step back into frame — rather than
       // afterwards, when the only thing left to say is "that did not work".
       setSeen(landmarks !== null)
-      if (landmarks !== null) frames.push(landmarks)
     })
 
     closeCamera(stream.current)
     stream.current = null
+    metronome.stop()
+    clock.current = null
     setStage('judging')
 
-    // Off the render path: this is a few hundred frames of arithmetic and it must not
-    // happen inside a state update.
+    // Off the render path: this is a few hundred frames of arithmetic and it must not happen
+    // inside a state update.
     await new Promise(resolve => setTimeout(resolve, 0))
 
     const learner = taken.frames
       .map(toSkeleton)
       .filter((one): one is NonNullable<typeof one> => one !== null)
+
     if (learner.length < FPS) {
       setProblem(
         'Not enough of you was in shot to score that. Step back so your head and feet are both in the picture.',
@@ -111,10 +180,12 @@ export function DanceFloor({ routine, onLeave }: DanceFloorProps): React.ReactEl
 
     setVerdict(scoreRoutine(toSequence(routine, FPS), learner))
     setStage('done')
-    // The landmarks go out of scope here and are never stored. See the note in camera.ts:
-    // a time series of joint positions is a gait signature.
-    frames.length = 0
-  }, [routine, seconds])
+    // The landmarks go out of scope here and are never stored. See the note in camera.ts: a
+    // time series of joint positions is a gait signature.
+  }, [routine, seconds, span])
+
+  const watching = stage === 'watch'
+  const call = callAt(routine, beat)
 
   return (
     <section className="floor">
@@ -124,27 +195,50 @@ export function DanceFloor({ routine, onLeave }: DanceFloorProps): React.ReactEl
 
       <header className="floor__head">
         <h2 className="floor__name">{routine.name}</h2>
-        {stage === 'ready' && <p className="floor__hint">{routine.hint}</p>}
+        {watching && <p className="floor__hint">{routine.hint}</p>}
       </header>
 
       <div className="floor__stage">
         <video
           ref={video}
-          className={`floor__video${stage === 'ready' || stage === 'failed' ? ' floor__video--off' : ''}`}
+          className={`floor__video${watching || stage === 'failed' ? ' floor__video--off' : ''}`}
           playsInline
           muted
         />
 
-        {/* Not a black rectangle. Somebody looking at an empty stage does not know whether
-            to stand up, and the two things that actually decide whether a capture works —
-            where the phone goes and where they stand — belong here rather than in a
-            paragraph underneath that they will read afterwards. */}
-        {(stage === 'ready' || stage === 'failed') && (
+        {watching && (
+          <div className="floor__demo">
+            <div className="floor__demoFigure">
+              <Dancer
+                pose={poseAt(routine.keys, beat)}
+                extent={sequence}
+                turn={turn}
+                label={`A figure demonstrating ${routine.name}`}
+              />
+            </div>
+            <div className="floor__demoFoot">
+              {/* The words a teacher says, rather than a number. "Forward, side, together" is
+                  what people remember; "one, two, three" is what they lose. */}
+              <span className={`floor__call${call === '' ? ' floor__callDim' : ''}`}>
+                {call === '' ? `${Math.floor(beat) + 1}` : call}
+              </span>
+              <button
+                type="button"
+                className="floor__viewToggle"
+                onClick={() => setFacing(one => !one)}
+              >
+                {facing ? 'Show me from behind' : 'Turn to face me'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {stage === 'failed' && (
           <div className="floor__empty">
-            <span className="floor__emptyIcon" aria-hidden="true" />
-            <p>Prop the phone against something at about waist height.</p>
+            <p>{problem}</p>
             <p className="floor__emptySub">
-              Stand back until your head and feet are both in the picture.
+              Prop the phone at about waist height and stand back until your head and feet are both
+              in the picture.
             </p>
           </div>
         )}
@@ -180,57 +274,29 @@ export function DanceFloor({ routine, onLeave }: DanceFloorProps): React.ReactEl
         {stage === 'judging' && <p className="floor__judging">Working it out…</p>}
       </div>
 
-      {stage === 'ready' && (
-        <button type="button" className="floor__go" onClick={() => void run()}>
-          Start — {Math.round(seconds)} seconds
-        </button>
+      {watching && (
+        <div className="floor__actions">
+          <button type="button" className="floor__go" onClick={() => void run()}>
+            I’ll try it — {Math.round(seconds)}s
+          </button>
+        </div>
       )}
 
       {stage === 'failed' && (
-        <div className="floor__failed">
-          <p role="alert">{problem}</p>
-          <button type="button" className="floor__go" onClick={() => setStage('ready')}>
-            Try again
+        <div className="floor__actions">
+          <button type="button" className="floor__go" onClick={() => setStage('watch')}>
+            Watch it again
           </button>
         </div>
       )}
 
       {stage === 'done' && verdict !== null && (
-        <div className="floor__verdict">
-          <div className="verdict__score">
-            <span className="verdict__number">{verdict.score}</span>
-            <span className="verdict__outOf">out of 100</span>
-          </div>
-
-          {/* The sentence is the point, and it is bigger than the number on purpose. */}
-          <p className="verdict__note">{verdict.note}</p>
-
-          <ul className="verdict__limbs">
-            {verdict.limbs
-              // Limbs the routine never asks to move say nothing, and a row reading "your
-              // legs: 100" for a dance with no legs in it is noise dressed as information.
-              .filter(one => one.asked >= 0.1)
-              .sort((a, b) => a.score - b.score)
-              .map(limb => (
-                <li key={limb.limb} className="verdict__limb">
-                  <span className="verdict__limbName">{LABEL[limb.limb]}</span>
-                  <span className="verdict__bar" aria-hidden="true">
-                    <span style={{ width: `${limb.score}%` }} />
-                  </span>
-                  <span className="verdict__limbScore">{limb.score}</span>
-                </li>
-              ))}
-          </ul>
-
-          <div className="floor__after">
-            <button type="button" className="floor__go" onClick={() => void run()}>
-              Again
-            </button>
-            <button type="button" className="floor__leave" onClick={onLeave}>
-              Pick another
-            </button>
-          </div>
-        </div>
+        <Result
+          verdict={verdict}
+          onAgain={() => void run()}
+          onWatch={() => setStage('watch')}
+          onLeave={onLeave}
+        />
       )}
     </section>
   )
@@ -243,4 +309,65 @@ const LABEL: Record<string, string> = {
   leftLeg: 'Left leg',
   rightLeg: 'Right leg',
   torso: 'Upper body',
+}
+
+function Result({
+  verdict,
+  onAgain,
+  onWatch,
+  onLeave,
+}: {
+  verdict: Verdict
+  onAgain: () => void
+  onWatch: () => void
+  onLeave: () => void
+}): React.ReactElement {
+  // The bars are mounted empty and filled on the next frame. Without this the transition in
+  // the stylesheet never plays — a width set at mount has nothing to grow from, and this was
+  // one of four animations in these chapters that were written and never ran.
+  const [grown, setGrown] = useState(false)
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => setGrown(true))
+    return () => cancelAnimationFrame(frame)
+  }, [])
+
+  const graded = verdict.limbs.filter(one => one.asked >= 0.1).sort((a, b) => a.score - b.score)
+
+  return (
+    <div className="floor__verdict">
+      <div className="verdict__score">
+        <span className="verdict__number">{verdict.score}</span>
+        <span className="verdict__outOf">out of 100</span>
+      </div>
+
+      {/* The sentence is the point, and it is bigger than the number on purpose. */}
+      <p className="verdict__note">{verdict.note}</p>
+
+      <ul className="verdict__limbs">
+        {/* Limbs the routine never asks to move say nothing, and a row reading "your legs:
+            100" for a dance with no legs in it is noise dressed as information. */}
+        {graded.map(limb => (
+          <li key={limb.limb} className="verdict__limb">
+            <span className="verdict__limbName">{LABEL[limb.limb]}</span>
+            <span className="verdict__bar" aria-hidden="true">
+              <span style={{ width: grown ? `${limb.score}%` : '0%' }} />
+            </span>
+            <span className="verdict__limbScore">{limb.score}</span>
+          </li>
+        ))}
+      </ul>
+
+      <div className="floor__after">
+        <button type="button" className="floor__go" onClick={onAgain}>
+          Again
+        </button>
+        <button type="button" className="floor__second" onClick={onWatch}>
+          Watch it
+        </button>
+        <button type="button" className="floor__leave" onClick={onLeave}>
+          Pick another
+        </button>
+      </div>
+    </div>
+  )
 }

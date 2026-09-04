@@ -82,6 +82,15 @@
   /* Faint. A heavy track competes with the fill and makes an empty ring look like a
      disabled control. */
   opacity: 0.22;
+  transition: opacity 400ms ease;
+}
+
+/* With nothing in it, the ring carries the whole figure on its own, so it is drawn a little
+   more present — and warm rather than grey, so an empty dial reads as new rather than as
+   switched off. */
+.arc__track--empty {
+  stroke: var(--arc-from);
+  opacity: 0.3;
 }
 
 .arc__fill {

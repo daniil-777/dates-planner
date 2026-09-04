@@ -29,7 +29,8 @@ import {
   type Skeleton,
 } from './pose'
 import { noteFor, scoreRoutine } from './score'
-import { REST, ROUTINES, beatsIn, poseAt, secondsFor, toSequence } from './routines'
+import { REST, ROUTINES, beatsIn, callAt, poseAt, secondsFor, toSequence } from './routines'
+import { signaturePose } from './Dancer'
 
 /* ------------------------------------------------------------- fixtures */
 
@@ -516,6 +517,78 @@ describe('the routines that ship', () => {
         routine.id,
       ).toBe(true)
       expect(verdict.score, routine.id).toBeGreaterThanOrEqual(95)
+    }
+  })
+})
+
+/* ------------------------------------------------------------ the calling */
+
+describe('the words a teacher says', () => {
+  it('holds a word until the next one, rather than blinking out between beats', () => {
+    // At 118bpm a caption that appeared only on the instant of the beat would be unreadable.
+    const box = ROUTINES.find(one => one.id === 'box')!
+    expect(callAt(box, 1)).toBe('Forward')
+    expect(callAt(box, 1.6)).toBe('Forward')
+    expect(callAt(box, 2)).toBe('Side')
+  })
+
+  it('says nothing rather than inventing a vocabulary for a routine without one', () => {
+    const wordless = { ...ROUTINES[0]!, calls: undefined }
+    expect(callAt(wordless, 3)).toBe('')
+  })
+
+  it('names the box step after the words it is named after', () => {
+    // "Forward, side, together" is the routine's whole identity, and for most of this
+    // chapter's life the representation could not express any of the three.
+    const box = ROUTINES.find(one => one.id === 'box')!
+    const said = (box.calls ?? []).map(one => one.say.toLowerCase())
+    for (const word of ['forward', 'side', 'together', 'back']) {
+      expect(said, word).toContain(word)
+    }
+  })
+
+  it('never puts a call past the end of its own routine', () => {
+    // A word on a beat the routine never reaches is a word nobody sees.
+    for (const routine of ROUTINES) {
+      for (const call of routine.calls ?? []) {
+        expect(call.beat, `${routine.id}: "${call.say}"`).toBeLessThan(beatsIn(routine) + 1e-6)
+      }
+    }
+  })
+})
+
+describe('the pose that represents a routine on its card', () => {
+  it('picks something other than the resting pose', () => {
+    // Four identical thumbnails tell the eye four things are interchangeable. The signature
+    // has to actually differ from the average, or every card shows the same standing body.
+    for (const routine of ROUTINES) {
+      const sequence = toSequence(routine, 8)
+      const signature = signaturePose(sequence)
+
+      const fromRest = (Object.keys(REST) as (keyof typeof REST)[]).reduce((most, name) => {
+        const value = signature[name]
+        return Number.isFinite(value) ? Math.max(most, Math.abs(value - REST[name])) : most
+      }, 0)
+      expect(fromRest, `${routine.id} looks like it is just standing there`).toBeGreaterThan(0.25)
+    }
+  })
+
+  it('gives four different routines four different pictures', () => {
+    const signatures = ROUTINES.map(one => signaturePose(toSequence(one, 8)))
+    const names = Object.keys(REST) as (keyof typeof REST)[]
+
+    for (let i = 0; i < signatures.length; i += 1) {
+      for (let j = i + 1; j < signatures.length; j += 1) {
+        const apart = names.reduce((sum, name) => {
+          const a = signatures[i]![name]
+          const b = signatures[j]![name]
+          return Number.isFinite(a) && Number.isFinite(b) ? sum + Math.abs(a - b) : sum
+        }, 0)
+        expect(
+          apart,
+          `${ROUTINES[i]!.id} and ${ROUTINES[j]!.id} draw the same body`,
+        ).toBeGreaterThan(0.4)
+      }
     }
   })
 })
