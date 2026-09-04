@@ -17,6 +17,7 @@
  * @see docs/AUTH_BTP.md for the XSUAA alternative to the basic auth below.
  */
 import cds from '@sap/cds'
+import type { Service } from '@sap/cds'
 import bcrypt from 'bcryptjs'
 
 /**
@@ -101,6 +102,7 @@ import {
 } from './lib/groups'
 import { readBuildStamp, type BuildStamp } from './lib/build-stamp'
 import { getDocAiClient } from './lib/documentai'
+import { attachAwards } from './wallet-service'
 // Relative rather than '#cds-models/twowaymatch': package.json carries no "imports"
 // mapping for that subpath, so the alias resolves at neither compile nor run time.
 import { People } from '../@cds-models/twowaymatch'
@@ -1692,6 +1694,25 @@ cds.on('served', async () => {
  */
 const store = configureDatabase()
 if (store === 'postgres') cds.log('server').info('database: postgres')
+
+/**
+ * Hang the points awards off the acts that earn them.
+ *
+ * `served` because it reaches across services and every one of them has to exist first, and
+ * `after` handlers because a failed act must earn nothing. The services are looked up by
+ * name and each is optional: a deployment that has not enabled the commons still boots, and
+ * still awards points for everything else.
+ *
+ * Points are minted here and nowhere a client can reach — see `srv/wallet-service.ts`. An
+ * endpoint that took "award me for X" would be an infinite points endpoint about ten minutes
+ * after somebody opened the network tab.
+ */
+cds.on('served', (services: Record<string, unknown>) => {
+  attachAwards({
+    commons: services.CommonsService as Service | undefined,
+    ledger: services.LedgerService as Service | undefined,
+  })
+})
 
 cds.on('bootstrap', configureApp)
 cds.on('served', verifyLoginMapping)

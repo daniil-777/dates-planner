@@ -782,3 +782,203 @@ entity Ideas : cuid {
   seeded    : Boolean default true;
   createdAt : Timestamp;
 }
+
+
+/* ------------------------------------------------------------------ *
+ *  Cards   (TWM-ADR-004, CONTRACTS.md §16)
+ *
+ *  What a household has told the payment provider about, reduced to the
+ *  handful of facts we are allowed to hold.
+ *
+ *  READ THIS BEFORE ADDING A COLUMN. There is no card number here, and there
+ *  is no column a card number would fit in. That is deliberate and it is the
+ *  entire security posture of the feature:
+ *
+ *    - `token` is the provider's handle. It is worthless to anybody without
+ *      our secret API key, cannot be replayed against another merchant, and
+ *      cannot be turned back into a card.
+ *    - `last4`, `brand` and the expiry are what a bank app prints on its own
+ *      cards screen — enough to tell two cards apart, not enough to be one.
+ *    - `fingerprint` is the *provider's* hash, stored so that adding the same
+ *      physical card twice is noticed. We do not compute it and cannot invert
+ *      it.
+ *
+ *  A `pan`, `cvv`, `cardholderName` or `expiryFull` column added here would
+ *  put every backup of this database, and every machine that has ever held
+ *  one, into PCI DSS audit scope. If a feature seems to need one, the feature
+ *  is wrong — see ADR-004 §3.
+ * ------------------------------------------------------------------ */
+
+/** How a setup ended. Mirrors `CardSetupOutcome` in srv/lib/payments/types.ts. */
+type CardSetupStatus : String(12) enum {
+  pending;
+  succeeded;
+  declined;
+}
+
+/**
+ * One card a household has authorised for later use.
+ *
+ * Tenant-scoped like everything else a household owns. Rows are never deleted
+ * on removal — `removedAt` is stamped instead — because "when did that card
+ * stop being on file" is a question worth being able to answer, and the row
+ * holds nothing sensitive enough to make keeping it a liability.
+ */
+@singular: 'PaymentMethod'
+@plural  : 'PaymentMethods'
+entity PaymentMethods : cuid, managed, tenant {
+  /** The provider's handle for the card. Never a card number. */
+  @mandatory
+  token         : String(200);
+  /** Which vault issued the token, so a provider switch cannot mix handles up. */
+  @mandatory
+  provider      : String(20);
+  /** Visa, Mastercard, … Lower-case; see `CardBrand`. */
+  brand         : String(20) default 'unknown';
+  /** Four digits, as a string — leading zeros are real. */
+  last4         : String(4);
+  expMonth      : Integer;
+  expYear       : Integer;
+  /** The provider's stable hash of the underlying card. Used to spot duplicates. */
+  fingerprint   : String(120);
+  /** Cosmetic, from the issuer BIN table where the provider offers it. */
+  issuer        : String(120);
+  country       : String(2);
+  /**
+   * True when the issuer authenticated the cardholder while the card was being
+   * stored. Under PSD2 this is what a later off-session charge relies on, so it
+   * is evidence rather than decoration.
+   */
+  authenticated : Boolean default false;
+  /** A name the household chose, e.g. "the joint one". Never the cardholder name. */
+  label         : String(60);
+  /** Exactly one per household, enforced in the handler. */
+  isDefault     : Boolean default false;
+  /** Set when removed; the row stays for the audit trail. */
+  removedAt     : Timestamp null;
+  /** Who added it, so a shared household can see whose card is on file. */
+  addedBy       : Association to People;
+}
+
+/**
+ * An attempt to add a card, from opening the form to whatever became of it.
+ *
+ * Separate from `PaymentMethods` because most attempts do not produce a card,
+ * and the ones that fail are the interesting ones. It holds the provider's
+ * reference so `finishCardSetup` can be re-asked safely — the flow has a gap in
+ * the middle where the browser is away at the issuer, and a refresh, a lost
+ * connection or a second tab must all be able to land on the same answer
+ * instead of starting a second setup.
+ *
+ * Contains no card data, and by construction cannot: the only provider value in
+ * it is a setup reference that expires.
+ */
+@singular: 'CardSetup'
+@plural  : 'CardSetups'
+entity CardSetups : cuid, managed, tenant {
+  /** The provider's id for the setup. */
+  @mandatory
+  ref            : String(200);
+  @mandatory
+  provider       : String(20);
+  status         : CardSetupStatus default 'pending';
+  /** Written for a person, shown verbatim when a card is refused. */
+  declineReason  : String(240);
+  /** The card this produced, when it produced one. */
+  paymentMethod  : Association to PaymentMethods null;
+  startedBy      : Association to People;
+  completedAt    : Timestamp null;
+}
+
+
+/* ------------------------------------------------------------------ *
+ *  The ledger   (TWM-ADR-004, CONTRACTS.md §17)
+ *
+ *  Double-entry, in whole minor units, with no balance column anywhere.
+ *
+ *  READ THIS BEFORE ADDING A `balance` FIELD. A stored balance is a cache of
+ *  a sum, and a cache that money depends on will one day disagree with the
+ *  thing it caches — after a crash between two writes, after a retry that
+ *  applied twice, after a migration that missed a row. When it does, nothing
+ *  can say which of the two is right. A balance derived by summing postings
+ *  cannot drift, because there is nothing for it to drift from. It costs one
+ *  aggregate query. Pay it.
+ *
+ *  `amount` is `Integer` rather than the `Decimal(10,2)` CLAUDE.md specifies
+ *  for money, and that is stricter rather than looser: a decimal still rounds
+ *  when divided, and a ledger divides constantly. Integers force the rounding
+ *  to be a decision somebody wrote down (`allocate()` in srv/lib/money/ledger)
+ *  instead of something the database does quietly. `Expenses.amount` keeps its
+ *  decimal — that column records what a receipt said, and a receipt is a
+ *  decimal.
+ * ------------------------------------------------------------------ */
+
+/**
+ * One balanced movement. Its postings sum to zero in every currency, which is
+ * checked in `srv/lib/money/ledger.ts` before anything is written.
+ */
+@singular: 'LedgerTransfer'
+@plural  : 'LedgerTransfers'
+entity LedgerTransfers : cuid {
+  /**
+   * The caller's own idea of this movement, unique forever.
+   *
+   * Not a convenience. A provider delivers the same webhook twice, a phone
+   * retries a request whose response was lost, a queue replays after a restart.
+   * This column, and the unique index on it, are what make the second delivery
+   * a no-op instead of a second transfer.
+   */
+  @mandatory
+  idempotencyKey : String(120);
+  /** What happened, in words, for the statement line and the audit. */
+  reason         : String(120);
+  at             : Timestamp @cds.on.insert: $now;
+  postings       : Composition of many LedgerPostings
+                     on postings.transfer = $self;
+}
+
+/** One side of a movement. Positive into the account, negative out of it. */
+@singular: 'LedgerPosting'
+@plural  : 'LedgerPostings'
+entity LedgerPostings : cuid {
+  transfer : Association to LedgerTransfers;
+  /**
+   * `household:<groupId>`, `external:points-treasury`, `fees:stripe`.
+   *
+   * Deliberately a string rather than an association to `Groups`. Accounts
+   * outside this app — the world's side of a movement — have no group to point
+   * at, and a nullable association that is null for half the rows is worse than
+   * a well-formed key. `accountId()` is the only thing that spells one.
+   */
+  @mandatory
+  account  : String(80);
+  /** Whole minor units. See the block above for why this is not a Decimal. */
+  @mandatory
+  amount   : Integer64;
+  /** ISO 4217, or 'PTS' for points. Accounts never mix currencies. */
+  @mandatory
+  currency : String(3);
+  at       : Timestamp @cds.on.insert: $now;
+}
+
+/**
+ * One award, so a daily cap can be applied and an act cannot pay twice.
+ *
+ * Separate from the ledger because the cap is a question about *acts* ("how
+ * many places has this household rated today"), and answering it from postings
+ * would mean parsing a reason string.
+ */
+@singular: 'PointsAward'
+@plural  : 'PointsAwards'
+entity PointsAwards : cuid, tenant {
+  /** A key from EARN_RULES. Never an arbitrary string; the mint gate checks it. */
+  @mandatory
+  reason    : String(40);
+  /** The act this paid for. Unique, so one act mints once however often it arrives. */
+  @mandatory
+  eventKey  : String(120);
+  points    : Integer;
+  /** Local date, for the per-day cap. */
+  onDate    : Date;
+  at        : Timestamp @cds.on.insert: $now;
+}
