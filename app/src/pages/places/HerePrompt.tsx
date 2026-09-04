@@ -35,9 +35,16 @@ export function HerePrompt({ status, onLocate, onPick }: HerePromptProps): React
         The commons is arranged by what is near you. Where is that?
       </p>
 
-      {status !== 'refused' && (
+      {/* Not offered after a refusal — asking again is nagging — and not offered when the
+          page is not on a secure origin, because the browser will not even put the prompt up
+          and the button would simply do nothing twice. */}
+      {status !== 'refused' && status !== 'insecure' && (
         <Button design="Emphasized" icon="geographic-bubble-chart" onClick={onLocate}>
-          {status === 'locating' ? 'Finding you…' : 'Use my location'}
+          {status === 'locating'
+            ? 'Finding you…'
+            : status === 'timeout'
+              ? 'Try again'
+              : 'Use my location'}
         </Button>
       )}
 
@@ -47,9 +54,26 @@ export function HerePrompt({ status, onLocate, onPick }: HerePromptProps): React
           No problem — your browser is set to keep that private. Type a place instead.
         </p>
       )}
+      {status === 'insecure' && (
+        <p className="here-prompt__note">
+          {/* The commonest reason this never works, and the one the old copy could not
+              explain: geolocation needs a secure origin. `localhost` counts, a plain-http LAN
+              address does not — which is exactly how somebody opens the dev server on their
+              phone. "Could not work out where you are" was true and useless. */}
+          This page is not on a secure connection, so the browser will not share your location. Open
+          it over https, or on localhost — or just type a place below.
+        </p>
+      )}
+      {status === 'timeout' && (
+        <p className="here-prompt__note">
+          Your device took too long to find a position — that is usually a computer with no GPS
+          rather than anything wrong. Try again, or type a place below.
+        </p>
+      )}
       {status === 'unavailable' && (
         <p className="here-prompt__note">
-          Your browser could not work out where you are. Typing a place works just as well.
+          Your browser could not work out where you are. On a Mac this is often macOS Location
+          Services being off for the browser itself. Typing a place works just as well.
         </p>
       )}
 

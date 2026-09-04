@@ -47,6 +47,9 @@
  * genuinely needs to destroy something, that is a different function with a different
  * name and a backup taken first.
  */
+import { existsSync, readFileSync } from 'node:fs'
+import { join } from 'node:path'
+
 import cds from '@sap/cds'
 
 import { databaseKind, type DatabaseKind } from './database'
@@ -308,6 +311,105 @@ const MONEY_TABLES: readonly string[] = [
   'twowaymatch_PointsAwards',
 ]
 
+/**
+ * Load a seed CSV into a table a *migration* created.
+ *
+ * ## The gap this closes
+ *
+ * CAP loads `db/data/*.csv` on `cds deploy`, and only then. Every table added since the first
+ * deployment has arrived through `createMissing` here instead — which creates the table and
+ * stops. So `twowaymatch_Ideas` existed, was correctly shaped, and held **nothing**, while its
+ * 44-row seed file sat in `db/data` doing nothing at all. The Ideas deck was empty on every
+ * database that had ever migrated rather than been deployed fresh, which is every real one,
+ * including the volume in production.
+ *
+ * Only ever fills an **empty** table. A household that has added its own ideas must not have
+ * the seed poured on top of them, and this runs on every boot that reaches an unmigrated
+ * database.
+ */
+async function seedFromCsv(
+  db: MigrationDb,
+  has: SchemaFacts,
+  table: string,
+  file: string,
+): Promise<string[]> {
+  if (!hasTable(has, table)) return []
+
+  const rows = (await db.run(`SELECT count(*) as n FROM ${table}`)) as Array<{ n?: number }>
+  const existing = Number(rows?.[0]?.n ?? 0)
+  if (existing > 0) return [`${table} already has ${existing} rows — left alone`]
+
+  const path = join(cds.root ?? process.cwd(), 'db', 'data', file)
+  if (!existsSync(path)) return [`no seed file at ${file}`]
+
+  const parsed = parseCsv(readFileSync(path, 'utf8'))
+  if (parsed.length === 0) return []
+
+  const [header, ...body] = parsed
+  if (header === undefined) return []
+
+  for (const row of body) {
+    const columns = header.join(', ')
+    const values = header
+      .map((_name, index) => {
+        const cell = row[index] ?? ''
+        if (cell === '') return 'NULL'
+        if (cell === 'true') return 'TRUE'
+        if (cell === 'false') return 'FALSE'
+        return `'${cell.replace(/'/g, "''")}'`
+      })
+      .join(', ')
+    await db.run(`INSERT INTO ${table} (${columns}) VALUES (${values})`)
+  }
+
+  return [`seeded ${body.length} rows into ${table}`]
+}
+
+/**
+ * A CSV reader that understands quoted fields.
+ *
+ * Small on purpose rather than a dependency, and not a naive `split(',')` — the seed's
+ * summaries contain commas inside quotes ("Pick the dish one of you always orders out, find a
+ * recipe…"), which a split would tear in half and shift every later column by one.
+ */
+function parseCsv(text: string): string[][] {
+  const rows: string[][] = []
+  let row: string[] = []
+  let cell = ''
+  let quoted = false
+
+  for (let i = 0; i < text.length; i += 1) {
+    const ch = text[i]
+
+    if (quoted) {
+      if (ch === '"') {
+        // A doubled quote inside a quoted field is one literal quote.
+        if (text[i + 1] === '"') {
+          cell += '"'
+          i += 1
+        } else quoted = false
+      } else cell += ch
+      continue
+    }
+
+    if (ch === '"') quoted = true
+    else if (ch === ',') {
+      row.push(cell)
+      cell = ''
+    } else if (ch === '\n' || ch === '\r') {
+      if (ch === '\r' && text[i + 1] === '\n') i += 1
+      row.push(cell)
+      cell = ''
+      if (row.some(one => one !== '')) rows.push(row)
+      row = []
+    } else cell += ch
+  }
+
+  row.push(cell)
+  if (row.some(one => one !== '')) rows.push(row)
+  return rows
+}
+
 /** The private journal from CONTRACTS §18. */
 const REFLECT_TABLES: readonly string[] = ['twowaymatch_Reflections']
 
@@ -448,6 +550,13 @@ const STEPS: ReadonlyArray<Step> = [
   {
     id: 'adr-004-money',
     run: (db, has, ddl) => createMissing(db, has, ddl, MONEY_TABLES),
+  },
+  {
+    // Separate from `adr-003-commons`, which created the table: that step is already
+    // recorded on every database, so widening it would never run again. See the `always`
+    // flag for the other half of this lesson.
+    id: 'seed-ideas',
+    run: (db, has) => seedFromCsv(db, has, 'twowaymatch_Ideas', 'twowaymatch-Ideas.csv'),
   },
   {
     id: 'reflections',

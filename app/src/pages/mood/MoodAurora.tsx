@@ -75,6 +75,7 @@ export function MoodAurora({
           '--aurora-core': colour.core,
           '--aurora-echo': colour.echo,
           '--aurora-ground': colour.ground,
+          '--aurora-wander': colour.wander,
           '--aurora-drift': `${colour.drift}s`,
         } as React.CSSProperties
       }
@@ -85,6 +86,11 @@ export function MoodAurora({
         <span className="aurora__bloom aurora__bloom--one" />
         <span className="aurora__bloom aurora__bloom--two" />
         <span className="aurora__bloom aurora__bloom--three" />
+        {/* The wanderers. Same shapes, a neighbouring hue, cross-fading against the three
+            above on a much longer cycle — so the field's colour is never quite what it was a
+            minute ago. Opacity only, which the compositor does for free. */}
+        <span className="aurora__bloom aurora__bloom--four" />
+        <span className="aurora__bloom aurora__bloom--five" />
       </div>
       {/* The grid sits above the colour and below the content, which is what makes the blooms
           read as light behind a surface rather than as paint on top of one. */}

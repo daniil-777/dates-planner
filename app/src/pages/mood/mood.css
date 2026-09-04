@@ -203,6 +203,12 @@
   initial-value: #2b3348;
 }
 
+@property --aurora-wander {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #3d4a63;
+}
+
 @property --aurora-ground {
   syntax: '<color>';
   inherits: true;
@@ -588,4 +594,89 @@
 .aurora__actions ui5-button:focus-within::part(button) {
   outline: 2px solid rgb(255 255 255 / 85%);
   outline-offset: 2px;
+}
+
+/* ====================================================== the colour wander */
+
+/**
+ * The field's colour moves, not just its blooms.
+ *
+ * Three blooms drifted in position over 17–46s and the colour never changed at all — a fixed
+ * triple, sliding about. Over the few seconds anybody actually looks at a screen that reads
+ * as static, and on the journal, where the level is pinned, it was one unchanging teal for
+ * as long as the page stayed open.
+ *
+ * Two more blooms in a neighbouring hue cross-fade against the first three on a much longer
+ * cycle, so the colour of the field is never quite what it was a minute ago. It is done with
+ * **opacity**, not by interpolating a gradient or rotating a hue: opacity is composited, so
+ * this costs no repaint, while `filter: hue-rotate()` on a full-bleed layer re-rasterises the
+ * whole surface every frame — the thing this file's header already forbids for `blur()`, for
+ * exactly the same reason.
+ */
+.aurora__bloom--four,
+.aurora__bloom--five {
+  /* Deliberately much slower than the position drift. Two cycles that do not divide into
+     each other mean the field never returns to a state you have already seen. */
+  animation-duration: calc(var(--aurora-drift, 40s) * 2.6);
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+.aurora__bloom--four {
+  width: 95%;
+  height: 85%;
+  left: -5%;
+  top: 0;
+  background: radial-gradient(closest-side, var(--aurora-wander) 0%, transparent 62%);
+  animation-name: aurora-wander-a;
+}
+
+.aurora__bloom--five {
+  width: 80%;
+  height: 95%;
+  right: -8%;
+  bottom: -10%;
+  background: radial-gradient(closest-side, var(--aurora-wander) 0%, transparent 64%);
+  animation-name: aurora-wander-b;
+  /* Offset, so the two never peak together and the wander has no single "moment". */
+  animation-delay: calc(var(--aurora-drift, 40s) * -0.9);
+}
+
+@keyframes aurora-wander-a {
+  0%,
+  100% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    opacity: 0.72;
+    transform: translate3d(-9%, 6%, 0) scale(1.15);
+  }
+}
+
+@keyframes aurora-wander-b {
+  0%,
+  100% {
+    opacity: 0.05;
+    transform: translate3d(0, 0, 0) scale(1.08);
+  }
+  50% {
+    opacity: 0.66;
+    transform: translate3d(7%, -8%, 0) scale(0.94);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Held at a fixed blend rather than switched off: the point of the wander is that the
+     colour is not one flat value, and stopping it dead would put back the thing being
+     fixed. It simply stops moving. */
+  .aurora__bloom--four {
+    animation: none;
+    opacity: 0.4;
+  }
+
+  .aurora__bloom--five {
+    animation: none;
+    opacity: 0.28;
+  }
 }

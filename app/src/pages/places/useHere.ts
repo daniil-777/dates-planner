@@ -57,7 +57,16 @@ function store(here: Here): void {
   }
 }
 
-export type HereStatus = 'idle' | 'locating' | 'ready' | 'refused' | 'unavailable'
+export type HereStatus =
+  | 'idle'
+  | 'locating'
+  | 'ready'
+  | 'refused'
+  /** The page is not on https or localhost, so the browser will not even ask. */
+  | 'insecure'
+  /** It asked and nothing came back in time — usually a desktop with no GPS. */
+  | 'timeout'
+  | 'unavailable'
 
 export interface HereState {
   here: Here | null
@@ -91,21 +100,61 @@ export function useHere(): HereState {
       setStatus('unavailable')
       return
     }
+
+    /*
+     * The commonest reason this never works, and the one the old copy could not explain.
+     *
+     * Geolocation is gated on a secure context. `http://localhost` counts; `http://` on a LAN
+     * address does not — so opening the dev server from a phone on the same wifi, which is
+     * exactly how somebody would test a page about restaurants, silently fails. Chrome
+     * rejects it with POSITION_UNAVAILABLE, indistinguishable from "no GPS", and the page
+     * used to answer "your browser could not work out where you are" — true, unhelpful, and
+     * not something the person can act on.
+     */
+    if (typeof window !== 'undefined' && window.isSecureContext === false) {
+      setStatus('insecure')
+      return
+    }
+
     setStatus('locating')
-    navigator.geolocation.getCurrentPosition(
-      position => {
-        const next = { lat: position.coords.latitude, lon: position.coords.longitude }
-        setPoint(next)
-        setStatus('ready')
-        store(next)
-      },
-      error => {
-        // Told apart on purpose: "you said no" and "it did not work" want different words,
-        // and offering to try again after a refusal is nagging.
-        setStatus(error.code === error.PERMISSION_DENIED ? 'refused' : 'unavailable')
-      },
-      { enableHighAccuracy: false, timeout: 8_000, maximumAge: 5 * 60_000 },
-    )
+
+    const accept = (position: GeolocationPosition): void => {
+      const next = { lat: position.coords.latitude, lon: position.coords.longitude }
+      setPoint(next)
+      setStatus('ready')
+      store(next)
+    }
+
+    /*
+     * Two attempts, because the first one is cheap and often enough.
+     *
+     * A coarse fix from wifi or a cell tower usually returns in under a second and is far
+     * more accuracy than "what is near me" needs. When that times out — a desktop with no
+     * radio to triangulate from, which is where this failed — it is worth one more go with
+     * the GPS actually switched on and a minute to find a satellite, rather than reporting
+     * failure after eight seconds and making somebody type their own city.
+     */
+    const onError = (error: GeolocationPositionError): void => {
+      if (error.code === error.PERMISSION_DENIED) {
+        // Not retried. Offering the same request again after a refusal is nagging.
+        setStatus('refused')
+        return
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        accept,
+        second => {
+          setStatus(second.code === second.TIMEOUT ? 'timeout' : 'unavailable')
+        },
+        { enableHighAccuracy: true, timeout: 25_000, maximumAge: 5 * 60_000 },
+      )
+    }
+
+    navigator.geolocation.getCurrentPosition(accept, onError, {
+      enableHighAccuracy: false,
+      timeout: 8_000,
+      maximumAge: 5 * 60_000,
+    })
   }, [])
 
   return { here, status, locate, setHere }
