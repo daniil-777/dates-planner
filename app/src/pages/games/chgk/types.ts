@@ -81,14 +81,7 @@ export const WINNING_SCORE = 6
  * the best moment in this game, and giving it a second and a half of anticipation is most of
  * why people ask for another one.
  */
-export type Phase =
-  | 'idle'
-  | 'spinning'
-  | 'reading'
-  | 'discussing'
-  | 'timeUp'
-  | 'revealed'
-  | 'over'
+export type Phase = 'idle' | 'spinning' | 'reading' | 'discussing' | 'timeUp' | 'revealed' | 'over'
 
 export interface Round {
   question: Question

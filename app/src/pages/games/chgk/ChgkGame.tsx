@@ -28,13 +28,7 @@ import '@ui5/webcomponents-icons/dist/restart.js'
 import { SpinningTop } from './SpinningTop'
 import { Timer } from './Timer'
 import { useGame } from './useGame'
-import {
-  THEMES,
-  THEME_LABEL,
-  WINNING_SCORE,
-  type Question,
-  type Theme,
-} from './types'
+import { THEMES, THEME_LABEL, WINNING_SCORE, type Question, type Theme } from './types'
 
 export interface ChgkGameProps {
   bank: readonly Question[]
@@ -70,7 +64,9 @@ export function ChgkGame({ bank }: ChgkGameProps): React.ReactElement {
     const won = game.team >= WINNING_SCORE
     return (
       <section className={`chgk chgk--over${won ? ' chgk--won' : ''}`}>
-        <p className="chgk-verdict__kicker">{won ? 'The table takes it' : 'The questions take it'}</p>
+        <p className="chgk-verdict__kicker">
+          {won ? 'The table takes it' : 'The questions take it'}
+        </p>
         <h2 className="chgk-verdict">
           {game.team} : {game.questions}
         </h2>
@@ -188,8 +184,8 @@ export function ChgkGame({ bank }: ChgkGameProps): React.ReactElement {
           <p className="chgk-themes__note">
             {/* Said here rather than discovered later: a filter that silently empties the
                 bank is a filter that looks like a broken game. */}
-            Choose none and you get everything. A question already played does not come back
-            until the rest have.
+            Choose none and you get everything. A question already played does not come back until
+            the rest have.
           </p>
         </details>
       )}
@@ -208,10 +204,7 @@ function QuestionFace({
   left: number
   revealed: boolean
 }): React.ReactElement {
-  const timer = useMemo(
-    () => <Timer left={left} idle={phase === 'reading'} />,
-    [left, phase],
-  )
+  const timer = useMemo(() => <Timer left={left} idle={phase === 'reading'} />, [left, phase])
 
   return (
     <div className={`chgk-card${revealed ? ' chgk-card--revealed' : ''}`}>

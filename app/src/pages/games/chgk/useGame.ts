@@ -20,7 +20,13 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
-import { DISCUSSION_SECONDS, WINNING_SCORE, type GameState, type Question, type Theme } from './types'
+import {
+  DISCUSSION_SECONDS,
+  WINNING_SCORE,
+  type GameState,
+  type Question,
+  type Theme,
+} from './types'
 
 const PLAYED_KEY = 'twm.chgk.played.v1'
 
@@ -32,7 +38,9 @@ function readPlayed(): Set<string> {
     const raw = window.localStorage.getItem(PLAYED_KEY)
     if (raw === null) return new Set()
     const parsed: unknown = JSON.parse(raw)
-    return Array.isArray(parsed) ? new Set(parsed.filter(one => typeof one === 'string')) : new Set()
+    return Array.isArray(parsed)
+      ? new Set(parsed.filter(one => typeof one === 'string'))
+      : new Set()
   } catch {
     return new Set()
   }

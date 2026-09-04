@@ -25,5 +25,25 @@
 import type { Question } from '../types'
 
 import { WORDS } from './words'
+import { SCIENCE } from './science'
+import { HISTORY } from './history'
+import { GEOGRAPHY } from './geography'
+import { ARTS } from './arts'
+import { EVERYDAY } from './everyday'
+import { FOOD } from './food'
+import { NATURE } from './nature'
+import { NUMBERS } from './numbers'
+import { SPORT } from './sport'
 
-export const BANK: readonly Question[] = [...WORDS]
+export const BANK: readonly Question[] = [
+  ...WORDS,
+  ...SCIENCE,
+  ...HISTORY,
+  ...GEOGRAPHY,
+  ...ARTS,
+  ...EVERYDAY,
+  ...FOOD,
+  ...NATURE,
+  ...NUMBERS,
+  ...SPORT,
+]

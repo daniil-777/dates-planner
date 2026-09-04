@@ -47,7 +47,9 @@ export function SpinningTop({ spinning, seed }: SpinningTopProps): React.ReactEl
           return (
             <path
               key={index}
-              className={index % 2 === 0 ? 'chgk-top__sector' : 'chgk-top__sector chgk-top__sector--alt'}
+              className={
+                index % 2 === 0 ? 'chgk-top__sector' : 'chgk-top__sector chgk-top__sector--alt'
+              }
               d={`M 60 60 L ${point(from)} A 52 52 0 0 1 ${point(to)} Z`}
             />
           )
