@@ -95,10 +95,16 @@ describe('recognising a card number in a payload', () => {
     // This is the property that decides whether the guard survives contact with production.
     // A guard that flags order numbers and timestamps gets disabled, and a disabled guard
     // protects nothing.
+    // Fixed values, every one checked against Luhn by hand.
+    //
+    // This list used to contain `String(Date.now()) + '000'`, which is a *time-dependent*
+    // fixture: about one run in ten produced a timestamp that happens to satisfy Luhn, and
+    // the suite failed for no reason anybody could reproduce. It failed on
+    // 1788535563967000. A test whose outcome depends on the clock is worse than no test,
+    // because it teaches people to re-run until it passes.
     const innocents = [
       'order 1234567890123456',
       'invoice 9999999999999',
-      String(Date.now()) + '000',
       '+41 79 123 45 67',
       'IBAN CH93 0076 2011 6238 5295 7',
       'a'.repeat(40),
@@ -107,6 +113,27 @@ describe('recognising a card number in a payload', () => {
     for (const value of innocents) {
       expect(looksLikePan(value), value).toBe(false)
     }
+  })
+})
+
+describe('what the guard admits it will get wrong', () => {
+  it('does flag a long number that happens to satisfy Luhn', () => {
+    // Stated rather than hidden, because pretending otherwise is what produced a flaky test
+    // above. Roughly one in ten random digit runs of card length passes Luhn, so an order
+    // number or a millisecond timestamp will occasionally trip this.
+    //
+    // That is the direction the guard is deliberately wrong in. A false positive costs
+    // somebody a rephrased support message; a false negative puts a card number in a log
+    // file and every backup taken since. The asymmetry is the whole design.
+    expect(looksLikePan('1788535563967000')).toBe(true)
+  })
+
+  it('is a shape check, not a card check — it cannot know an issuer', () => {
+    // A Luhn-valid string in the right length band is all this can see, and no brand prefix
+    // check is applied on purpose: matching `4` for Visa would miss every scheme the app has
+    // not heard of, which is the wrong direction to be wrong in.
+    expect(looksLikePan('4242424242424242')).toBe(true)
+    expect(looksLikePan('0000000000000000')).toBe(true)
   })
 })
 
