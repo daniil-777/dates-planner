@@ -308,6 +308,9 @@ const MONEY_TABLES: readonly string[] = [
   'twowaymatch_PointsAwards',
 ]
 
+/** The private journal from CONTRACTS §18. */
+const REFLECT_TABLES: readonly string[] = ['twowaymatch_Reflections']
+
 /**
  * The indexes the ledger needs to be fast, and the two it needs to be *correct*.
  *
@@ -347,6 +350,14 @@ const MONEY_INDEXES: ReadonlyArray<{ name: string; ddl: string }> = [
     name: 'twm_points_awards_event',
     ddl: `CREATE UNIQUE INDEX IF NOT EXISTS twm_points_awards_event
             ON twowaymatch_PointsAwards (eventKey)`,
+  },
+  {
+    // Every read of the journal is "this person's, newest first", and it is the only index
+    // on it that matters. On `author_ID` rather than `group_ID`, because the author is the
+    // access rule here and the household is not.
+    name: 'twm_reflections_author',
+    ddl: `CREATE INDEX IF NOT EXISTS twm_reflections_author
+            ON twowaymatch_Reflections (author_ID, createdAt DESC)`,
   },
   {
     // The daily-cap question: "how many of these has this household had today".
@@ -437,6 +448,10 @@ const STEPS: ReadonlyArray<Step> = [
   {
     id: 'adr-004-money',
     run: (db, has, ddl) => createMissing(db, has, ddl, MONEY_TABLES),
+  },
+  {
+    id: 'reflections',
+    run: (db, has, ddl) => createMissing(db, has, ddl, REFLECT_TABLES),
   },
   {
     // Separate from the table step on purpose: an index can be added to a database that

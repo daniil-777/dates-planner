@@ -144,6 +144,18 @@ export function HomePage() {
         caption: t('tile.wallet.caption', 'and cards on file'),
       },
     },
+    // Static, and deliberately says nothing about what is in there. A count of entries on
+    // the household's most public screen would be a number about somebody's private
+    // journal, which is the one figure this tile must never carry.
+    reflect: {
+      status: 'ready',
+      figure: {
+        kind: 'text',
+        value: t('tile.reflect.value', 'Write'),
+        emphasis: 'number',
+        caption: t('tile.reflect.caption', 'just for you'),
+      },
+    },
     games: {
       status: 'ready',
       figure: {

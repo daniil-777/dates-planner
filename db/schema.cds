@@ -982,3 +982,54 @@ entity PointsAwards : cuid, tenant {
   onDate    : Date;
   at        : Timestamp @cds.on.insert: $now;
 }
+
+
+/* ------------------------------------------------------------------ *
+ *  Reflections   (CONTRACTS.md §18)
+ *
+ *  A private journal that writes something back.
+ *
+ *  THIS IS THE MOST PRIVATE TEXT IN THE APP and it is private in a way
+ *  nothing else here is: not from the world, but from *the other people in
+ *  the household*. A shared ledger is the point of this app; a shared journal
+ *  would be a diary with the lock taken off.
+ *
+ *  So `author` is not decoration and not an audit column. It is the access
+ *  rule: a row is readable by the person who wrote it and by nobody else,
+ *  enforced in the handler on every read. The `tenant` aspect is here only so
+ *  the row belongs somewhere and can be removed with a household — it is NOT
+ *  the access boundary, and narrowing to the group alone would show two
+ *  people each other's diaries.
+ *
+ *  One thing is stated here rather than only in the ADR, because it is a
+ *  promise this app makes carefully elsewhere and deliberately breaks here:
+ *  **the entry text IS sent to a language model.** That is the feature. Touch
+ *  maps are never sent to a model (CONTRACTS §13.4); reflections are, and the
+ *  screen says so before anybody writes a word. If that ever needs to change,
+ *  it changes in the UI copy first.
+ * ------------------------------------------------------------------ */
+
+@singular: 'Reflection'
+@plural  : 'Reflections'
+entity Reflections : cuid, managed, tenant {
+  /** What the person wrote. Never shown to anybody but them. */
+  @mandatory
+  entry      : LargeString;
+  /** What was written back. Empty when no model was configured. */
+  reply      : LargeString;
+  /**
+   * True when the safety check fired and a human-written response was shown
+   * instead of a model's. Kept so the screen can render the entry the same way
+   * it was first seen, and so nothing tries to "regenerate" a reply that was
+   * never generated.
+   */
+  concerned  : Boolean default false;
+  /** Which provider answered, or 'none'. Never a credential. */
+  engine     : String(30);
+  /**
+   * The one person who may read this row. Enforced on every read.
+   * Null only for rows written before a session could be resolved to a person,
+   * which the handler treats as unreadable rather than as readable by all.
+   */
+  author     : Association to People;
+}

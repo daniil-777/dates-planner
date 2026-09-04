@@ -962,3 +962,54 @@ however many times the handler runs.
 
 Nothing it cannot do. Cash conversion is unavailable, and the screen says so in a sentence
 rather than offering a button that fails.
+
+---
+
+## 18. On your mind — `srv/lib/reflect`, `srv/reflect-service.ts`
+
+A private journal that writes something back. **Not therapy, not a therapist, no diagnosis** —
+and those are constraints on the prompt rather than disclaimers under it.
+
+### 18.1 Safety comes first, literally
+
+`checkSafety()` runs on the raw text **before** the model and short-circuits it. If it fires,
+the model is never called — not called and overridden — and the person gets
+`CONCERNED_REPLY` plus `HELPLINES`, both written by a person and stored as constants.
+
+**A model may never produce a phone number.** A hallucinated crisis line is the worst output
+this feature could have, and the only certain prevention is that the numbers never pass
+through one.
+
+It is a **trigger for showing help, not a risk assessment**, and must never be described as
+one. It over-fires by design: showing help to somebody having a bad week costs a moment's
+irritation, and the other error costs something that cannot be undone.
+
+### 18.2 The access rule
+
+A reflection is readable by **its author** and by nobody else. Every read filters on
+`author_ID`, never on `group_ID`. This is the one entity where narrowing to the household
+would be the privacy failure: sharing a ledger is the point of this app, sharing a diary is
+not.
+
+`writer()` rejects rather than guessing. Elsewhere an unresolved caller falls back to the
+default household harmlessly; here a wrong answer shows one person another's diary.
+
+### 18.3 What reaches the model
+
+The entry, and nothing else. No names, no ledger, no moods, no events, no touch map. A
+journal that quietly knows what you spent last week is a surveillance product wearing a
+friendly face.
+
+**The entry is never logged**, at any level. Log lines carry ids and character counts.
+
+### 18.4 The promise this feature breaks, deliberately
+
+Touch maps are never sent to a model (§13.4). **Reflections are** — that is the feature. The
+screen says so in its second line, before anybody types, not in small print afterwards. If
+that ever changes, the UI copy changes first.
+
+### 18.5 Degrading
+
+No model configured is not a reason to fake a reply. The template provider is treated as *no
+model*: the entry is saved and the screen says nothing will write back. A canned "that sounds
+hard" would be worse than silence, because it would look like it had been read.

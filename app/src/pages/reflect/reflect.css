@@ -1,0 +1,350 @@
+/**
+ * The reflective journal.
+ *
+ * Sits inside the same aurora as the mood picker, so everything here is drawn for a dark,
+ * drifting field rather than for the theme's light surfaces: fixed light inks and glassy
+ * panels, exactly as `mood.css` does, and for the same reason — a theme token that resolves
+ * to a dark grey would vanish against the field.
+ *
+ * The typography is the point of this screen. Long measure, generous leading, a serif for
+ * what the person wrote so that their own words look like writing rather than like input.
+ */
+
+.reflect {
+  padding: 1.5rem 1.25rem 3rem;
+  max-width: 40rem;
+  margin: 0 auto;
+  color: rgba(255, 255, 255, 0.92);
+  /* Both of these are load-bearing rather than tidy. The aurora clips its children, so
+     anything that makes this wider than the viewport is not merely scrolled — it is cut
+     off, invisibly, at whatever width the field happens to be. `box-sizing` keeps the
+     padding inside the width; `min-height` makes the field cover the screen rather than
+     ending in a band of the theme's grey halfway down a journal. */
+  box-sizing: border-box;
+  width: 100%;
+  /* Tall enough that the field reaches the navigation bar. A journal that ends in a band
+     of the theme's grey two thirds down looks like a component on a page rather than a
+     place to sit. */
+  min-height: 86vh;
+}
+
+.reflect *,
+.reflect *::before,
+.reflect *::after {
+  box-sizing: border-box;
+}
+
+.reflect__head {
+  margin-bottom: 1.75rem;
+}
+
+.reflect__title {
+  margin: 0;
+  font-size: 1.625rem;
+  font-weight: 300;
+  letter-spacing: -0.01em;
+  color: #fff;
+}
+
+.reflect__lede {
+  margin: 0.5rem 0 0;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.62);
+  max-width: 34rem;
+}
+
+/* ------------------------------------------------------------- composing */
+
+.reflect__composer {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.reflect__box {
+  width: 100%;
+  min-height: 9rem;
+  resize: none;
+  padding: 1.125rem 1.25rem;
+  border-radius: 0.875rem;
+  /* The frosted panel of the aurora's own language — a translucent surface that picks up
+     the colour drifting behind it, rather than an opaque box sitting on top of it. */
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  color: #fff;
+  font-family: Georgia, 'Iowan Old Style', 'Times New Roman', serif;
+  font-size: 1.0625rem;
+  line-height: 1.7;
+  transition:
+    border-color 200ms ease,
+    background 200ms ease;
+}
+
+.reflect__box::placeholder {
+  color: rgba(255, 255, 255, 0.34);
+}
+
+.reflect__box:focus {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.32);
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.reflect__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.reflect__count {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.45);
+  font-variant-numeric: tabular-nums;
+}
+
+.reflect__send {
+  margin-inline-start: auto;
+  padding: 0.625rem 1.375rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-size: 0.9375rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition:
+    background 180ms ease,
+    transform 180ms ease;
+}
+
+.reflect__send:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.reflect__send:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.reflect__note,
+.reflect__problem {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.reflect__problem {
+  color: #ffb4a6;
+}
+
+/* -------------------------------------------------------------- answered */
+
+.reflect__answered {
+  display: grid;
+  gap: 1.5rem;
+}
+
+/* What the person wrote, set as writing. The left rule and the serif are what stop it
+   reading as a form field played back at them. */
+.reflect__yours {
+  margin: 0;
+  padding: 0 0 0 1.25rem;
+  border-inline-start: 2px solid rgba(255, 255, 255, 0.22);
+  font-family: Georgia, 'Iowan Old Style', 'Times New Roman', serif;
+  font-size: 1.0625rem;
+  line-height: 1.75;
+  color: rgba(255, 255, 255, 0.72);
+  white-space: pre-wrap;
+}
+
+.reflect__reply {
+  padding: 1.25rem 1.375rem;
+  border-radius: 0.875rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  /* Arrives rather than appears. 400 ms is enough to feel considered and not enough to
+     make anybody wait for it. */
+  animation: reflect-arrive 400ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.reflect__reply p {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.reflect__reply p:last-child {
+  margin-bottom: 0;
+}
+
+/* The help card. Warmer and brighter than an ordinary reply, but deliberately NOT red:
+   somebody who has just written the hardest thing they have written all year must not have
+   an alarm colour flashed at them. The same argument as the mood palette's low end. */
+.reflect__reply--help {
+  background: rgba(255, 214, 170, 0.12);
+  border-color: rgba(255, 214, 170, 0.32);
+}
+
+@keyframes reflect-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+.helplines {
+  list-style: none;
+  margin: 1.25rem 0 0;
+  padding: 1rem 0 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+  display: grid;
+  gap: 0.75rem;
+}
+
+.helpline {
+  display: flex;
+  align-items: baseline;
+  gap: 0.875rem;
+}
+
+.helpline__contact {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #ffd6aa;
+  font-variant-numeric: tabular-nums;
+  min-width: 3.5rem;
+}
+
+.helpline__body {
+  display: grid;
+  gap: 0.125rem;
+}
+
+.helpline__name {
+  font-size: 0.9375rem;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.helpline__detail {
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.58);
+}
+
+.reflect__again {
+  justify-self: start;
+  border: none;
+  background: none;
+  padding: 0;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 0.875rem;
+  font-family: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+}
+
+.reflect__again:hover {
+  color: #fff;
+}
+
+/* ------------------------------------------------------------------ past */
+
+.reflect__past {
+  margin-top: 2.5rem;
+}
+
+.reflect__h3 {
+  margin: 0 0 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.42);
+}
+
+.entries {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.25rem;
+}
+
+.entry {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.entry__open {
+  flex: 1;
+  display: flex;
+  align-items: baseline;
+  gap: 0.875rem;
+  padding: 0.75rem 0.25rem;
+  border: none;
+  background: none;
+  text-align: start;
+  cursor: pointer;
+  font-family: inherit;
+  min-width: 0;
+}
+
+.entry__when {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.45);
+  white-space: nowrap;
+  min-width: 5.5rem;
+}
+
+.entry__peek {
+  /* `min-width: 0` is what actually makes the ellipsis work. Without it a `nowrap` span is
+     a flex item at its full intrinsic width, so instead of truncating it pushes the row —
+     and then every ancestor, and then the aurora — wider than the screen, and the field
+     silently clips the whole page. It cost a screenshot to find and one line to fix. */
+  flex: 1;
+  min-width: 0;
+  font-size: 0.9375rem;
+  color: rgba(255, 255, 255, 0.78);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.entry__open:hover .entry__peek {
+  color: #fff;
+}
+
+.entry__forget {
+  border: none;
+  background: none;
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 1.25rem;
+  line-height: 1;
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+}
+
+.entry__forget:hover {
+  color: #ffb4a6;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reflect__reply {
+    animation: none;
+  }
+  .reflect__send,
+  .reflect__box {
+    transition: none;
+  }
+}

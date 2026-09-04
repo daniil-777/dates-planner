@@ -24,6 +24,7 @@
  *
  * | Between us | `#B02A6F` | **not from that palette** — see below |
  * | Wallet | `#3D4C8A` | **not from that palette** — see below |
+ * | On your mind | `#1F6F6A` | **not from that palette** — see below |
  *
  * `Between us` and `Wallet` are the exceptions, and both are deliberate: the ten category colours
  * were all spoken for by the time it arrived, and this tile is not a spending category
@@ -42,6 +43,7 @@ export type HomeTileId =
   | 'tonight'
   | 'games'
   | 'wallet'
+  | 'reflect'
   | 'ledger'
   | 'events'
   | 'calendar'
@@ -214,6 +216,17 @@ export const HOME_TILES: readonly HomeTileSpec[] = [
     icon: 'da',
     accent: '#C87200',
     hint: 'How are you doing today?',
+  },
+  {
+    id: 'reflect',
+    section: 'us',
+    to: '/reflect',
+    label: 'On your mind',
+    icon: 'discussion-2',
+    // The fifth and last invented hue. A deep teal: this screen sits in the same aurora as
+    // the mood picker and should read as its neighbour, without being the same tile.
+    accent: '#1F6F6A',
+    hint: 'Write it down, privately',
   },
   {
     id: 'intimacy',
