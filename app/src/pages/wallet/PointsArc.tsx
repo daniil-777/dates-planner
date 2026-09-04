@@ -50,8 +50,14 @@ const STROKE = 13
 const RADIUS = (SIZE - STROKE) / 2
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS
 
-/** A ring at zero shows this much, so "just started" does not look like "broken". */
-const MINIMUM_ARC = 0.012
+/**
+ * A ring at zero shows this much, so "just started" does not look like "broken".
+ *
+ * About 13°. Shorter than that and the round cap makes it a floating dot at twelve o'clock,
+ * which reads as a stray element rather than as the beginning of something — the opposite of
+ * the reassurance it is there for.
+ */
+const MINIMUM_ARC = 0.036
 
 const COUNT_MS = 900
 

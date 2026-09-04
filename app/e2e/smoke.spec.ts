@@ -173,20 +173,25 @@ test.describe('navigation', () => {
   test('every destination in FRONTEND-CONTRACT §6 is reachable from the shell', async ({
     page,
   }, testInfo) => {
+    if (testInfo.project.name !== 'mobile') {
+      // Desktop has no navigation chrome, and that is deliberate rather than missing:
+      // `components.test.tsx` asserts it ("has no side rail: a desktop navigates from the
+      // tile grid and the ShellBar"). This test used to look for a `SideNavigation` that no
+      // longer exists anywhere in the app, and had been asserting a design nobody was
+      // building — so it checks the real one instead: from the launcher, every destination
+      // is one click away.
+      await open(page, '/')
+      for (const route of ROUTES) {
+        const tile = page.locator(`a[href="${route.path}"]`)
+        await expect(tile, `${route.label} is not on the launcher`).toBeVisible()
+      }
+      return
+    }
+
     await open(page, '/ledger')
 
     const nav = page.locator('nav[aria-label="Main navigation"]')
     await expect(nav).toBeVisible()
-
-    if (testInfo.project.name !== 'mobile') {
-      // Desktop: SideNavigation. Its items live in shadow DOM and its accessible roles
-      // vary with the UI5 version, so this checks the labels are present and leaves the
-      // click-through to the mobile project, where the markup is plain anchors.
-      for (const route of ROUTES) {
-        await expect(nav.getByText(route.label, { exact: true })).toBeVisible()
-      }
-      return
-    }
 
     // Mobile: the bar holds four real <a> elements and a "More" button for the rest. It was
     // five links once; `BOTTOM_BAR_SLOTS` in AppShell is the number that decides, and the

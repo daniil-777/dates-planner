@@ -253,6 +253,7 @@ describe('migrating', () => {
               { id: 'adr-003-commons' },
               { id: 'adr-003-indexes' },
               { id: 'adr-004-money' },
+              { id: 'reflections' },
             ]
           : undefined,
     ])

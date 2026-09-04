@@ -172,8 +172,11 @@ async function action<T>(
   payload: Record<string, unknown>,
   expected = 200,
 ): Promise<T> {
-  const response = await request.post(`/ledger/${name}`, { data: payload })
-  return body<T>(response, `POST /ledger/${name}`, expected)
+  // `/api/ledger`, not `/ledger`. The service has been mounted at `/api/ledger` since
+  // CONTRACTS §1.4 named it, and every other call in this file already says so — this
+  // helper did not, so the whole journey has been 404ing at its first step.
+  const response = await request.post(`/api/ledger/${name}`, { data: payload })
+  return body<T>(response, `POST /api/ledger/${name}`, expected)
 }
 
 /* ------------------------------------------------------------------ *
@@ -264,7 +267,7 @@ test.describe('the whole product, over HTTP', () => {
 
     await test.step('the stored receipt image is served back', async () => {
       // The media stream is what the confirm screen shows next to the extracted fields.
-      const image = await request.get(`/ledger/Receipts(${receiptId})/image`)
+      const image = await request.get(`/api/ledger/Receipts(${receiptId})/image`)
       expect(image.status()).toBe(200)
       expect(image.headers()['content-type']).toContain('image/')
       expect((await image.body()).byteLength).toBeGreaterThan(0)
@@ -272,7 +275,7 @@ test.describe('the whole product, over HTTP', () => {
 
     await test.step('the human corrects the draft: who paid, and when', async () => {
       const patched = await body<WireExpense>(
-        await request.patch(`/ledger/Expenses(${expenseId})`, {
+        await request.patch(`/api/ledger/Expenses(${expenseId})`, {
           data: { paidBy_ID: payerId, date: bookingDate, note: 'posted by the e2e journey' },
         }),
         `PATCH /ledger/Expenses(${expenseId})`,
@@ -301,7 +304,7 @@ test.describe('the whole product, over HTTP', () => {
     await test.step('the ledger shows it', async () => {
       const listed = await body<ODataCollection<WireExpense>>(
         await request.get(
-          `/ledger/Expenses?$filter=date ge ${period}-01 and date le ${period}-31&$orderby=date desc`,
+          `/api/ledger/Expenses?$filter=date ge ${period}-01 and date le ${period}-31&$orderby=date desc`,
         ),
         'GET /ledger/Expenses (period filter)',
       )
@@ -331,7 +334,7 @@ test.describe('the whole product, over HTTP', () => {
 
       // The posting is now frozen against that clearing document.
       const cleared = await body<WireExpense>(
-        await request.get(`/ledger/Expenses(${expenseId})`),
+        await request.get(`/api/ledger/Expenses(${expenseId})`),
         'GET the cleared expense',
       )
       expect(cleared.settlement_ID).toBe(settlement.ID)
@@ -362,7 +365,9 @@ test.describe('the whole product, over HTTP', () => {
       // producing two clearing documents for one month.
       const refused = await request.post('/api/ledger/runSettlement', { data: { period } })
       expect(refused.status()).toBe(400)
-      expect(await refused.text()).toContain('already been cleared')
+      // "closed", not "cleared". CONTRACTS §9: the payment run closes a period rather than
+      // squaring anybody up, and the message was rewritten to say so.
+      expect(await refused.text()).toContain('already been closed')
     })
 
     await test.step('a memory is created and shows up in the timeline', async () => {
@@ -384,7 +389,7 @@ test.describe('the whole product, over HTTP', () => {
       expect(created.title).toBe('The e2e dinner')
 
       const timeline = await body<ODataCollection<WireMemory>>(
-        await request.get(`/ledger/Memories?$filter=occurredOn eq ${bookingDate}`),
+        await request.get(`/api/ledger/Memories?$filter=occurredOn eq ${bookingDate}`),
         'GET /ledger/Memories',
       )
       expect(timeline.value.map(m => m.ID)).toContain(created.ID)
@@ -410,7 +415,7 @@ test.describe('the whole product, over HTTP', () => {
       expect(again.ID).toBe(statement.ID)
 
       const stored = await body<ODataCollection<WireStatement>>(
-        await request.get(`/ledger/Statements?$filter=year eq ${year}`),
+        await request.get(`/api/ledger/Statements?$filter=year eq ${year}`),
         'GET /ledger/Statements',
       )
       expect(stored.value).toHaveLength(1)
