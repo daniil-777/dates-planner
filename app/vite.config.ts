@@ -123,6 +123,21 @@ export default defineConfig({
       '/health': { target: CAP, changeOrigin: true },
     },
   },
+  /*
+   * MapLibre resolves its own web worker with `new URL('./maplibre-gl-worker.mjs',
+   * import.meta.url)`. Vite's dependency pre-bundling rewrites the entry into
+   * `node_modules/.vite/deps/` and does not carry the worker with it, so `import.meta.url`
+   * resolves to a directory the worker is not in and the request 404s. There is no error in
+   * the console — the map mounts, the attribution renders, and no tile ever appears, which
+   * reads as a broken tile source rather than a missing file.
+   *
+   * Excluding it from pre-bundling makes Vite serve the package from its real location, with
+   * the worker beside it. Only affects `npm run dev`; the production build resolves it
+   * through Rollup and was always correct.
+   */
+  optimizeDeps: {
+    exclude: ['maplibre-gl'],
+  },
   build: {
     outDir: 'dist',
     sourcemap: true,

@@ -51,18 +51,25 @@ export interface MoodColour {
 /**
  * Indexed 1–5. `0` is the resting state — nothing chosen yet.
  *
- * The resting field is almost colourless and drifts slowest. The screen is asleep until
- * somebody says how they are, which makes the first tap feel like turning a light on.
+ * The resting field is the quietest and drifts slowest: the screen is asleep until somebody
+ * says how they are, which makes the first tap feel like turning a light on.
+ *
+ * **Quiet, though, not absent.** The first version of level 0 was `#3d4a63` on `#141821`, and
+ * the honest description of it on a phone is a dark grey smudge. That matters more than it
+ * sounds: this panel is 21 rem tall on purpose, so that the field has room to be a sky rather
+ * than a stripe, and a sky with no visible colour in it does not read as restraint — it reads
+ * as a component that failed to load. Lifted until the gradient is legible as a deliberate
+ * blue-violet, while staying the least saturated of the six.
  */
 export const MOOD_COLOURS: Record<number, MoodColour> = {
   // `wander` is one step around the wheel from `core`, never across it. Far enough that the
   // field is visibly a different colour a minute later, near enough that it never looks like
   // it changed its mind.
   0: {
-    core: '#3d4a63',
-    echo: '#2b3348',
-    ground: '#141821',
-    wander: '#4a4363',
+    core: '#5a6c94',
+    echo: '#414f77',
+    ground: '#1b2030',
+    wander: '#6a5f95',
     drift: 46,
     word: 'Not said yet',
   },

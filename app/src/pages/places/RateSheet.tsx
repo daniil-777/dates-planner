@@ -37,6 +37,14 @@ export interface RateSheetProps {
   open: boolean
   /** A place already in the corpus, when the sheet was opened from one. */
   place?: PlaceCard | null
+  /**
+   * Somewhere the corpus has never heard of, already chosen — a café tapped on the map.
+   *
+   * The sheet has always been able to rate a place that is not in the corpus; the only way
+   * in was to type its name into the search field. Somebody looking at the map is looking
+   * at the thing they mean, and asking them to spell it is asking them to do the map's job.
+   */
+  candidate?: PlaceCandidate | null
   /** What this household said last time, so the sheet opens on their answer. */
   yourStars?: number | null
   onClose: () => void
@@ -46,6 +54,7 @@ export interface RateSheetProps {
 export function RateSheet({
   open,
   place = null,
+  candidate = null,
   yourStars = null,
   onClose,
   onRated,
@@ -72,9 +81,11 @@ export function RateSheet({
     setTags([])
     setTip('')
     setQuery('')
-    setChosen(null)
+    // A candidate handed in from the map opens the sheet already pointed at it, so the
+    // search field never appears and the first thing anybody touches is a star.
+    setChosen(candidate)
     setProblem(null)
-  }, [open, place?.ID, yourStars, place?.costBand])
+  }, [open, place?.ID, yourStars, place?.costBand, candidate])
 
   const target = place ?? chosen
   const name = place?.name ?? chosen?.name ?? null
@@ -156,7 +167,13 @@ export function RateSheet({
       <div className="rate-sheet__body">
         {problem !== null && <MessageStrip design="Negative">{problem}</MessageStrip>}
 
-        {place === null && (
+        {/*
+          The picker is for finding a place by name. When one arrived from the map, that
+          question is already answered — showing a search field pointed at the thing somebody
+          just tapped invites them to re-answer it, and typing into it silently clears the
+          selection. The header already carries the name.
+        */}
+        {place === null && candidate === null && (
           <section className="rate-sheet__section">
             <Label required>Which place?</Label>
             <Input

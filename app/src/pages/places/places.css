@@ -27,18 +27,236 @@
 
 /* ------------------------------------------------------------------- map */
 
+.places__map-wrap {
+  position: relative;
+}
+
 .places-map {
+  position: relative;
   border-radius: var(--twm-radius-m);
   overflow: hidden;
   border: 1px solid var(--twm-border);
+  /* The basemap draws its own ground; without this the tile canvas flashes white against a
+     grey page for the frame before the first tile lands. */
+  background: #e9e6df;
 }
 
 .places-map__canvas {
-  /* A third of a phone: enough to show where things are, not so much that the list is
-     pushed off the screen. */
-  height: 34vh;
-  min-height: 200px;
+  /* Was 34vh. A map you can only see one block of is a map you scroll rather than read, and
+     the whole point of the new basemap is that there is now something worth looking at. The
+     list is one flick away and the filters sit under it either way. */
+  height: 46vh;
+  min-height: 260px;
+  max-height: 420px;
   width: 100%;
+}
+
+/* MapLibre paints its own focus ring on the canvas, which is a large blue rectangle over the
+   map every time somebody tabs past it. The markers inside are the real tab stops. */
+.places-map__canvas .maplibregl-canvas:focus {
+  outline: none;
+}
+
+/*
+ * The credit line.
+ *
+ * Required by OpenStreetMap's licence, asked for by OpenFreeMap, and owed either way. Under
+ * the map rather than floating over it: the bottom of the map is where the card for a tapped
+ * place goes, and two things cannot both live there. Small and muted, but never hidden behind
+ * a control somebody has to find — 4.6:1 against the surface, which clears WCAG 1.4.3 for
+ * small text.
+ */
+.places-map__credit {
+  margin: 0;
+  padding: 4px var(--twm-space-s);
+  font-size: 0.6875rem;
+  line-height: 1.4;
+  color: var(--twm-muted);
+  background: var(--twm-surface);
+  border-block-start: 1px solid var(--twm-border);
+}
+
+.places-map__credit a {
+  color: inherit;
+}
+
+/*
+ * Back to where I am.
+ *
+ * A map that has been panned away from you needs a way home, and the alternative — snapping
+ * the view back on its own — takes the map away from somebody who was deliberately looking
+ * somewhere else.
+ */
+.places-map__recentre {
+  position: absolute;
+  inset-block-start: var(--twm-space-s);
+  inset-inline-end: var(--twm-space-s);
+  width: var(--twm-touch);
+  height: var(--twm-touch);
+  display: grid;
+  place-items: center;
+  border-radius: var(--twm-radius-m);
+  border: 1px solid var(--twm-border);
+  background: rgb(255 255 255 / 92%);
+  backdrop-filter: blur(8px);
+  color: #1a73e8;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 18%);
+}
+
+/* Nothing is known yet, or what is known is stale — so the button asks rather than centres. */
+.places-map__recentre--ask {
+  color: var(--twm-muted);
+}
+
+.places-map__recentre svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+}
+
+/*
+ * The card for somewhere tapped on the map.
+ *
+ * Over the bottom of the map rather than below it: the thing tapped is in the map, and a card
+ * that opens elsewhere makes somebody look away from the pin to find out what they hit. It
+ * stops short of the bottom edge so the attribution it is legally required to show stays
+ * visible underneath.
+ */
+.map-peek {
+  position: absolute;
+  inset-inline: var(--twm-space-s);
+  inset-block-end: calc(var(--twm-space-s) + 22px);
+  z-index: 400;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--twm-space-s);
+  padding: var(--twm-space-m);
+  border-radius: var(--twm-radius-m);
+  background: var(--twm-surface);
+  border: 1px solid var(--twm-border);
+  box-shadow: 0 6px 20px rgb(0 0 0 / 22%);
+  animation: map-peek-in 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes map-peek-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+.map-peek__body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.map-peek__name {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.map-peek__meta {
+  margin: 2px 0 0;
+  font-size: 0.75rem;
+  color: var(--twm-muted);
+}
+
+.map-peek__note {
+  margin: var(--twm-space-s) 0 0;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--twm-muted);
+}
+
+.map-peek__actions {
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  gap: var(--twm-space-s);
+  flex: 0 0 auto;
+}
+
+.map-peek__go {
+  min-height: var(--twm-touch);
+  padding: 0 var(--twm-space-l);
+  border: 0;
+  border-radius: var(--twm-radius-pill);
+  background: var(--sapButton_Emphasized_Background, #0070f2);
+  color: var(--sapButton_Emphasized_TextColor, #fff);
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.map-peek__close {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--twm-muted);
+  cursor: pointer;
+}
+
+.map-peek__close svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+}
+
+/*
+ * The "where are you?" card, over the map instead of instead of it.
+ *
+ * Bottom-anchored and inset, so the map stays visible around it — the point of showing the
+ * map before anybody has answered is that the page looks like something rather than like a
+ * form. Above the peek card in the stack, because the two never appear together: there is
+ * nothing to tap on a map nobody has located yet.
+ */
+.places__here-over {
+  position: absolute;
+  inset-inline: var(--twm-space-s);
+  inset-block-end: calc(var(--twm-space-s) + 22px);
+  z-index: 420;
+  padding: var(--twm-space-m);
+  border-radius: var(--twm-radius-m);
+  background: rgb(255 255 255 / 94%);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--twm-border);
+  box-shadow: 0 6px 20px rgb(0 0 0 / 22%);
+}
+
+/* No WebGL. The list underneath is the feature; this says so without looking like a fault. */
+.places-map--none {
+  padding: var(--twm-space-l);
+  background: var(--twm-surface);
+}
+
+.places-map--none p {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--twm-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .map-peek {
+    animation: none;
+  }
 }
 
 /*
@@ -88,8 +306,29 @@
   background: currentcolor;
 }
 
+/*
+ * The halo: how sure the browser is, drawn to scale.
+ *
+ * Sized in JavaScript from a projection rather than in CSS, because it is a fixed number of
+ * *metres* and must therefore change size at every zoom. Behind the dot, and low enough in
+ * alpha that a district-sized halo on a laptop tints the map rather than hiding it.
+ */
+.pin-here__halo {
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-start: 50%;
+  width: var(--halo, 0);
+  height: var(--halo, 0);
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: rgb(26 115 232 / 10%);
+  border: 1px solid rgb(26 115 232 / 22%);
+  pointer-events: none;
+}
+
 /* Where the person is. A ring, not a pin: it is not a place and it is not tappable. */
 .pin-here {
+  position: relative;
   display: block;
   width: 14px;
   height: 14px;

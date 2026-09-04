@@ -31,7 +31,9 @@ import { CommonsNav } from './places/CommonsNav'
 import { HerePrompt } from './places/HerePrompt'
 import { PlaceCardView } from './places/PlaceCard'
 import { PlaceDetailPanel } from './places/PlaceDetailPanel'
-import { PlacesMap } from './places/PlacesMap'
+import { MapPeek } from './places/MapPeek'
+import { GoogleMap, googleMapsKey } from './places/GoogleMap'
+import { PlacesMap, type DiscoveredPlace } from './places/PlacesMap'
 import { RateSheet } from './places/RateSheet'
 import { useHere } from './places/useHere'
 import {
@@ -44,29 +46,24 @@ import {
 } from './places/vocabulary'
 import './places/places.css'
 
+/** Chosen once, at module load: swapping map engines mid-session would remount the world. */
+const MapView = googleMapsKey() === null ? PlacesMap : GoogleMap
+
 export function PlacesPage(): React.ReactElement {
   const { t } = useI18n()
-  const { here, status, locate, setHere } = useHere()
+  const { here, status, accuracy, approximate, locate, setHere } = useHere()
   const [kind, setKind] = useState<PlaceKind | null>(null)
   const [tag, setTag] = useState<PlaceTag | null>(null)
   const [selected, setSelected] = useState<string | null>(null)
   const [rating, setRating] = useState(false)
+  // Somewhere tapped on the map that the commons has never heard of. Held apart from
+  // `selected`, which is always a corpus id — conflating them is how a place with no rating
+  // ends up asking the server for its detail and rendering an empty one.
+  const [peeked, setPeeked] = useState<DiscoveredPlace | null>(null)
 
   const nearby = useNearby(here, { kind, tag, radiusM: 5_000, limit: 40 })
   const detail = usePlaceDetail(selected)
   const places = useMemo(() => nearby.data?.items ?? [], [nearby.data])
-
-  if (here === null) {
-    return (
-      <section className="places">
-        <CommonsNav />
-        <header className="places__head">
-          <Title level="H2">{t('commons.places', 'Places')}</Title>
-        </header>
-        <HerePrompt status={status} onLocate={locate} onPick={setHere} />
-      </section>
-    )
-  }
 
   return (
     <section className="places">
@@ -78,7 +75,49 @@ export function PlacesPage(): React.ReactElement {
         </Button>
       </header>
 
-      <PlacesMap places={places} here={here} selected={selected} onSelect={setSelected} />
+      {/*
+        The map is drawn whether or not anybody has said where they are.
+        
+        It used to be replaced wholesale by the "where are you?" prompt, so the first thing a
+        new household saw on a page about places was a form. A map centred on nowhere in
+        particular is still a map: it shows what the app is, it is pleasant to look at, and
+        the prompt sits on top of it as one card rather than standing in for the whole page.
+      */}
+      <div className="places__map-wrap">
+        {/*
+          Google's map when a key is configured, ours otherwise. The two take the same props
+          and raise the same events, so nothing below this line knows which one it got — and
+          an app whose map depends on somebody having set up a billing account is an app with
+          a broken map, so the default is the one that always works.
+        */}
+        <MapView
+          places={places}
+          here={here}
+          accuracy={accuracy}
+          approximate={approximate}
+          onLocate={locate}
+          selected={selected}
+          onSelect={id => {
+            setPeeked(null)
+            setSelected(id)
+          }}
+          onDiscover={found => {
+            setSelected(null)
+            setPeeked(found)
+          }}
+        />
+        <MapPeek
+          place={peeked}
+          here={here}
+          onRate={() => setRating(true)}
+          onClose={() => setPeeked(null)}
+        />
+        {here === null && (
+          <div className="places__here-over">
+            <HerePrompt status={status} onLocate={locate} onPick={setHere} />
+          </div>
+        )}
+      </div>
 
       <div className="places__filters">
         <div className="places__filter-row" role="group" aria-label="Kind of place">
@@ -157,8 +196,29 @@ export function PlacesPage(): React.ReactElement {
       <RateSheet
         open={rating}
         place={rating && selected !== null ? (detail.data?.place ?? null) : null}
+        candidate={
+          peeked === null
+            ? null
+            : {
+                name: peeked.name,
+                label: peeked.name,
+                lat: peeked.lat,
+                lon: peeked.lon,
+                city: null,
+                country: null,
+                kind: peeked.kind as PlaceKind,
+                // The basemap's `poi` layer carries no OSM id — only a name, a class and a
+                // position. `rate` de-duplicates on name and position when these are absent.
+                osmType: null,
+                osmId: null,
+                placeID: null,
+              }
+        }
         yourStars={detail.data?.yourStars ?? null}
-        onClose={() => setRating(false)}
+        onClose={() => {
+          setRating(false)
+          setPeeked(null)
+        }}
       />
     </section>
   )

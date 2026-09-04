@@ -78,6 +78,7 @@ import {
   verifyCredentials,
   verifySessionToken,
 } from './lib/auth'
+import { basemapProxy } from './lib/commons/basemap'
 import { configureDatabase } from './lib/database'
 import { describeProvider } from './lib/llm'
 import { migrate, refreshViews } from './lib/migrate'
@@ -217,6 +218,28 @@ const isProduction = (): boolean => process.env.NODE_ENV === 'production'
  * on a bare express app, which keeps the security assertions independent of whether the
  * ledger service happens to compile today.
  */
+/**
+ * Where the basemap is served from.
+ *
+ * Under `/api/` so it lands on the same side of every proxy rule, cache rule and auth rule
+ * as the rest of the backend, and so Vite's dev proxy forwards it without a new entry.
+ */
+export const BASEMAP_MOUNT = '/api/basemap'
+
+/**
+ * Whether the Places map is Google's rather than ours.
+ *
+ * Read from the same variable the client build reads, so the two cannot disagree: a CSP that
+ * permits Google while the bundle does not use it is a pointlessly weakened policy, and the
+ * reverse is a map that silently refuses to load.
+ */
+function usesGoogleMaps(env: NodeJS.ProcessEnv = process.env): boolean {
+  return (env.VITE_GOOGLE_MAPS_API_KEY ?? '').trim().length > 0
+}
+
+/** The hosts the Maps JavaScript API fetches its code, tiles and fonts from. */
+const GOOGLE_MAPS_HOSTS = ['https://maps.googleapis.com', 'https://maps.gstatic.com']
+
 export function configureApp(app: express.Application): void {
   app.disable('x-powered-by')
 
@@ -238,6 +261,12 @@ export function configureApp(app: express.Application): void {
   app.use(expensiveActionLimits())
 
   app.get('/health', health)
+
+  // Behind the guard on purpose. The tiles themselves are public data and worth nothing to
+  // an attacker, but an unauthenticated proxy is an open proxy: anybody on the internet
+  // could serve their own map through this host's bandwidth. Same-origin also means the
+  // service worker may cache tiles, which `connect-src 'self'` otherwise forbids.
+  app.use(BASEMAP_MOUNT, basemapProxy({ mountedAt: BASEMAP_MOUNT }))
 
   mountSpa(app)
 
@@ -266,7 +295,13 @@ function securityHeaders(): RequestHandler {
         // No inline and no eval. Vite emits hashed module scripts, UI5 web components
         // register themselves from those modules, and nothing in this app builds code
         // from a string — so the strongest form of this directive is also the correct one.
-        scriptSrc: ["'self'"],
+        //
+        // The one exception is opt-in and costs something real. The Google Maps JavaScript
+        // API loads its own code at runtime from Google's hosts, so choosing that map means
+        // giving up `script-src 'self'` — the directive that actually stops XSS. It is
+        // widened only when a key is configured, so a deployment using the default MapLibre
+        // map keeps the strong policy. See app/src/pages/places/GoogleMap.tsx.
+        scriptSrc: usesGoogleMaps() ? ["'self'", ...GOOGLE_MAPS_HOSTS] : ["'self'"],
 
         // UI5 web components inject a <style> element per component into the document (and
         // into each shadow root) at runtime, and the React layer sets style attributes for
@@ -284,12 +319,19 @@ function securityHeaders(): RequestHandler {
         imgSrc: ["'self'", 'data:', 'blob:', 'https:'],
 
         // UI5's icon font ships in the bundle; data: covers the small faces Vite inlines.
-        fontSrc: ["'self'", 'data:'],
+        // Google's map labels want Roboto from their font host.
+        fontSrc: usesGoogleMaps()
+          ? ["'self'", 'data:', 'https://fonts.gstatic.com']
+          : ["'self'", 'data:'],
 
         // Same origin only: every backend call goes to /ledger or /admin on this host. A
         // third-party geocoder or tile-metadata API must be proxied through CAP rather
         // than opened up here, so that a compromised bundle has nowhere to send a ledger.
-        connectSrc: isProduction() ? ["'self'"] : ["'self'", 'ws:', 'http://localhost:5173'],
+        connectSrc: [
+          ...(isProduction() ? ["'self'"] : ["'self'", 'ws:', 'http://localhost:5173']),
+          // The Maps API fetches tiles and Places results by XHR. Same opt-in as `scriptSrc`.
+          ...(usesGoogleMaps() ? GOOGLE_MAPS_HOSTS : []),
+        ],
 
         // The Workbox service worker from vite-plugin-pwa, which it instantiates from a
         // blob during precaching.
