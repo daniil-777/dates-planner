@@ -138,6 +138,23 @@ export function BodyCanvas({ form, marks, highlighted, onPick, baseColour }: Bod
     controls.minPolarAngle = Math.PI * 0.16
     controls.maxPolarAngle = Math.PI * 0.86
     controls.update()
+
+    /*
+     * `pan-y`, and it must be set AFTER OrbitControls — its `connect()` assigns
+     * `touchAction = 'none'` to the element itself, so anything set before this line is
+     * silently overwritten.
+     *
+     * With `none` the canvas claims every gesture, and it is 420px tall and full width — half
+     * the phone. The commonest first gesture on any page, a thumb drag downwards to see what
+     * is below, therefore spun the figure instead of scrolling, and the page felt frozen at
+     * exactly the moment somebody was looking for the response to their first tap.
+     *
+     * `pan-y` hands vertical drags back to the browser and keeps horizontal ones here, which
+     * is the right split: turning the figure is a left-right gesture, and the polar angle is
+     * clamped to a narrow band anyway. Vertical orbiting is lost on touch and was worth
+     * very little.
+     */
+    renderer.domElement.style.touchAction = 'pan-y'
     controlsRef.current = controls
 
     /* --------------------------------------------------------- pointers */

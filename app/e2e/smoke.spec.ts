@@ -460,4 +460,28 @@ test.describe('the private screens still come up', () => {
     // initialise WebGL shows up as a console error rather than as a visible break.
     expect(problems, '/intimacy logged errors').toEqual([])
   })
+
+  test('the figure does not swallow the page scroll', async ({ page }) => {
+    await open(page, '/intimacy')
+    await page.getByRole('heading', { name: 'Between us' }).waitFor()
+    // Three.js, the mesh and the first frame.
+    await expect(page.locator('canvas').first()).toBeVisible({ timeout: 20_000 })
+
+    // The canvas is 420px tall and full width — half a phone. With `touch-action: none` a
+    // downward thumb drag spun the body instead of scrolling, so the page felt frozen at
+    // exactly the moment somebody was looking for the response to their first tap.
+    //
+    // Guarded because the fix is order-dependent and silently reversible: OrbitControls sets
+    // `touchAction = 'none'` on the element inside its own `connect()`, so anything assigned
+    // before it is overwritten with no warning. Moving one line up undoes this.
+    const touchAction = await page
+      .locator('canvas')
+      .first()
+      .evaluate(el => getComputedStyle(el).touchAction)
+
+    expect(
+      touchAction,
+      'the figure must leave vertical drags to the browser — set touch-action AFTER OrbitControls',
+    ).toBe('pan-y')
+  })
 })

@@ -166,7 +166,10 @@
   /* Tall enough that a whole standing body is legible on a phone without scrolling, and
      capped so it does not swallow a desktop window. */
   height: min(62vh, 30rem);
-  touch-action: none;
+  /* `pan-y`, so a downward thumb drag scrolls the page instead of spinning the body. See
+     BodyCanvas.tsx — the canvas is half the phone, and with `none` it swallowed the one
+     gesture everybody tries first. */
+  touch-action: pan-y;
 }
 
 .tmap__hint {
