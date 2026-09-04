@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The Cockpit — launcher concept</title>
+<style>
+  :root{
+  --twm-space-xs:.25rem; --twm-space-s:.5rem; --twm-space-m:.75rem;
+  --twm-space-l:1rem; --twm-space-xl:1.5rem; --twm-space-xxl:2rem;
+  --twm-radius-s:.5rem; --twm-radius-m:.75rem; --twm-radius-l:1rem; --twm-radius-pill:999px;
+  --twm-touch:44px;
+  --ink:#1d2d3e; --muted:#556b82; --line:#dfe4ea;
+  --surface:#fff; --canvas:#f5f6f7; --brand:#0070f2;
+}
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:var(--canvas); color:var(--ink);
+    font:400 15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI","72",Inter,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .ic{width:22px;height:22px;flex:0 0 auto}
+  /* The thesis banner is scaffolding for the review, not part of the design. It is styled to
+     read as an annotation so nobody mistakes it for a header the app would ship. */
+  .thesis{
+    padding:14px 18px;background:#101a24;color:#fff;
+    font-size:12.5px;line-height:1.5;letter-spacing:.01em;
+  }
+  .thesis b{display:block;font-size:13.5px;letter-spacing:.04em;text-transform:uppercase;margin-bottom:4px;color:#8fd0ff}
+  .screen{min-height:844px;padding:0 0 84px}
+  /* The bottom bar, present in every concept because it is present in the app and it costs
+     56px of the screen every one of these is arguing about. */
+  .bar{
+    position:fixed;left:0;right:0;bottom:0;height:56px;display:flex;
+    background:rgba(255,255,255,.92);backdrop-filter:blur(12px);
+    border-top:1px solid var(--line);
+  }
+  .bar a{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:2px;font-size:10px;color:var(--muted);text-decoration:none}
+  .bar a.on{color:var(--brand)}
+  .bar .ic{width:19px;height:19px}
+
+body{background:#eaecee}
+.wrap{max-width:640px;margin:0 auto}
+
+/* The shell bar. Flat, dense, and the one place the brand blue is a ground rather than an
+   accent — which is exactly what Fiori does with it. */
+.shell{background:#354a5f;color:#fff;padding:9px 14px;display:flex;align-items:center;gap:10px}
+.shell .logo{width:22px;height:22px;border-radius:4px;background:#0070f2;display:grid;
+  place-items:center;font-size:10px;font-weight:700;letter-spacing:-.03em}
+.shell b{font-size:14px;font-weight:400;letter-spacing:.01em}
+.shell .sp{margin-left:auto;display:flex;align-items:center;gap:9px;font-size:11.5px;opacity:.85}
+.shell .av{width:24px;height:24px;border-radius:50%;background:#5b738b;display:grid;
+  place-items:center;font-size:9.5px;font-weight:600;opacity:1}
+
+/* The KPI strip: four numbers, no boxes, hairline-separated. A cockpit states its figures
+   before it offers its transactions. */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);background:#fff;border-bottom:1px solid #cfd6dd}
+.kpi{padding:11px 8px 10px;text-align:center;border-left:1px solid #eaeef2;text-decoration:none;color:inherit}
+.kpi:first-child{border-left:0}
+.kpi b{display:block;font-size:16px;font-weight:600;letter-spacing:-.02em;color:#0a2340}
+.kpi span{display:block;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--muted);margin-top:3px}
+.kpi b.q{font-size:13px;font-weight:500}
+
+.strip{background:#fff;border-bottom:1px solid #cfd6dd;padding:9px 14px;display:flex;
+  align-items:center;gap:9px;font-size:12px;color:#0a2340;text-decoration:none}
+.strip .tag{font-size:9.5px;letter-spacing:.07em;text-transform:uppercase;color:#fff;
+  background:#0070f2;padding:2px 6px;border-radius:3px;font-weight:600}
+.strip .r{margin-left:auto;color:var(--muted);font-size:11.5px}
+
+.grp{padding:16px 14px 7px;font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;
+  color:#5b738b;font-weight:600}
+.matrix{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;padding:0 14px}
+
+/* The Fiori tile: square-ish, a hard 4px radius, a flat white ground, and a coloured bar
+   pinned to the bottom rather than the top — which is the detail that makes it read as a
+   launchpad tile instead of a card. */
+.t{position:relative;background:#fff;border:1px solid #d3dae1;border-radius:4px;
+  padding:9px 9px 12px;min-height:88px;display:flex;flex-direction:column;
+  text-decoration:none;color:inherit;overflow:hidden}
+.t::after{content:'';position:absolute;left:0;right:0;bottom:0;height:3px;background:var(--a)}
+.t .ic{width:17px;height:17px;color:var(--a)}
+.t .n{font-size:12.5px;font-weight:600;line-height:1.2;margin-top:6px;letter-spacing:-.01em}
+.t .v{font-size:17px;font-weight:600;letter-spacing:-.025em;margin-top:auto;color:#0a2340;line-height:1.1}
+.t .v.q{font-size:11px;font-weight:400;color:var(--muted);letter-spacing:0;line-height:1.3}
+/* The code: monospaced, tiny, muted. Decoration — the name above it is always larger. */
+.t .c{font:500 9px/1 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.06em;
+  color:#93a3b3;margin-top:4px}
+
+.foot{padding:14px;font-size:11px;color:#7b8b9b;text-align:center}
+
+</style></head>
+<body>
+<div class="thesis"><b>5. The Cockpit</b>The app wears Fiori clothing and tells the joke at half volume. This is the joke at full volume: a KPI header, a dense tile matrix, and a transaction code under every tile. Codes are decoration and never the label — and “Between us” is deliberately not in the matrix.</div>
+<div class="screen"><div class="wrap">
+    <div class="shell">
+      <span class="logo">2W</span><b>Two-Way Match</b>
+      <span class="sp">Sept 2026<span class="av">PA</span></span>
+    </div>
+
+    <div class="kpis">
+      <a class="kpi" href="#"><b>120.00</b><span>CHF month</span></a>
+      <a class="kpi" href="#"><b>0</b><span>Drafts</span></a>
+      <a class="kpi" href="#"><b>2</b><span>Events</span></a>
+      <a class="kpi" href="#"><b class="q">Not run</b><span>Statement</span></a>
+    </div>
+
+    <a class="strip" href="#"><span class="tag">Next</span>Weekend in Vals
+      <span class="r">17 Oct · in 43 days</span></a>
+
+    <div class="grp">Accounting</div>
+      <div class="matrix"><a class="t" href="#" style="--a:#E76500">
+    <svg class="ic " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8.5h2.8L8.2 6h7.6l1.4 2.5H20a1.5 1.5 0 0 1 1.5 1.5v7.5A1.5 1.5 0 0 1 20 19H4a1.5 1.5 0 0 1-1.5-1.5V10A1.5 1.5 0 0 1 4 8.5Z"/><circle cx="12" cy="13.5" r="3.4"/></svg>
+    <span class="n">Scan</span>
+    <span class="v">None</span>
+    <span class="c">ZRECEIPT</span>
+  </a><a class="t" href="#" style="--a:#0070F2">
+    <svg class="ic " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="2"/><circle cx="12" cy="12" r="2.6"/><path d="M6 9.5v5M18 9.5v5"/></svg>
+    <span class="n">Expenses</span>
+    <span class="v">CHF 120.00</span>
+    <span class="c">FB03</span>
+  </a><a class="t" href="#" style="--a:#256F3A">
+    <svg class="ic " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h12v16H4z"/><path d="M16 9h4v9a2 2 0 0 1-4 0"/><path d="M7 8h6M7 11.5h6M7 15h4"/></svg>
+    <span class="n">Statement</span>
+    <span class="v">Not yet</span>
+    <span class="c">ZSTMT01</span>
+  </a></div><div class="grp">Household</div>
+      <div class="matrix"><a class="t" href="#" style="--a:#F5A623">
+    <svg class="ic " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 1 3.6 10.8V16h-7.2v-2.2A6 6 0 0 1 12 3Z"/><path d="M9.5 19h5M10.5 21.5h3"/></svg>
+    <span class="n">Tonight</span>
+    <span class="v q">Three evenings that worked</span>
+    <span class="c">ZEVENING</span>
+  </a><a class="t" href="#" style="--a:#7858FF">
+    <svg class="ic " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+    <span class="n">Calendar</span>
+    <span class="v">in 43 days</span>
+    <span class="c">ZCAL</span>
+  </a><a class="t" href="#" style="--a:#049F9A">
+    <svg class="ic " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="7.5" width="19" height="12" rx="2"/><path d="M9 7.5V6a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 6v1.5M2.5 12.5h19"/></svg>
+    <span class="n">Events</span>
+    <span class="v">2</span>
+    <span class="c">ZTRIP</span>
+  </a><a class="t" href="#" style="--a:#F31DED">
+    <svg class="ic " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20.3C6.2 16.4 3.6 13.2 3.6 10.1A4.3 4.3 0 0 1 12 8.2a4.3 4.3 0 0 1 8.4 1.9c0 3.1-2.6 6.3-8.4 10.2Z"/></svg>
+    <span class="n">Memories</span>
+    <span class="v">10</span>
+    <span class="c">ZMEMO01</span>
+  </a><a class="t" href="#" style="--a:#C9A227">
+    <svg class="ic " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="3.5"/><circle cx="8.5" cy="8.5" r="1.2" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="15.5" cy="15.5" r="1.2" fill="currentColor" stroke="none"/></svg>
+    <span class="n">Games</span>
+    <span class="v q">Play something at the table</span>
+    <span class="c">ZQUIZ</span>
+  </a><a class="t" href="#" style="--a:#6C2F6B">
+    <svg class="ic " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7.5" cy="17.5" r="2.8"/><circle cx="17.5" cy="15.5" r="2.8"/><path d="M10.3 17.5V7.2l10-2v10.3"/></svg>
+    <span class="n">Dance</span>
+    <span class="v q">Learn a step, badly, together</span>
+    <span class="c">ZDANCE</span>
+  </a></div><div class="grp">Personal</div>
+      <div class="matrix"><a class="t" href="#" style="--a:#D20A0A">
+    <svg class="ic " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 5.5h15A1.5 1.5 0 0 1 21 7v8.5a1.5 1.5 0 0 1-1.5 1.5H11l-5 4v-4H4.5A1.5 1.5 0 0 1 3 15.5V7a1.5 1.5 0 0 1 1.5-1.5Z"/></svg>
+    <span class="n">Chat</span>
+    <span class="v q">Say something</span>
+    <span class="c">ZTHREAD</span>
+  </a><a class="t" href="#" style="--a:#C87200">
+    <svg class="ic " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.7"/><circle cx="9.2" cy="10.2" r="1" fill="currentColor" stroke="none"/><circle cx="14.8" cy="10.2" r="1" fill="currentColor" stroke="none"/><path d="M8.4 14.4a4.5 4.5 0 0 0 7.2 0"/></svg>
+    <span class="n">Mood</span>
+    <span class="v q">How are you doing today?</span>
+    <span class="c">ZMOOD</span>
+  </a><a class="t" href="#" style="--a:#1F6F6A">
+    <svg class="ic " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20.2 5.1 16 16.4 4.7a2.1 2.1 0 0 1 3 3L8.1 19 4 20.2Z"/><path d="M14.6 6.5l3 3"/></svg>
+    <span class="n">On your mind</span>
+    <span class="v q">Write it down, privately</span>
+    <span class="c">ZREFLECT</span>
+  </a></div><div class="grp">Administration</div>
+      <div class="matrix"><a class="t" href="#" style="--a:#3D4C8A">
+    <svg class="ic " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10.5h18"/><circle cx="16.8" cy="14.8" r="1.2" fill="currentColor" stroke="none"/></svg>
+    <span class="n">Wallet</span>
+    <span class="v q">Points, and cards on file</span>
+    <span class="c">ZWALLET</span>
+  </a><a class="t" href="#" style="--a:#5B738B">
+    <svg class="ic " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.6v3M12 18.4v3M21.4 12h-3M5.6 12h-3M18.6 5.4l-2.1 2.1M7.5 16.5l-2.1 2.1M18.6 18.6l-2.1-2.1M7.5 7.5 5.4 5.4"/></svg>
+    <span class="n">Settings</span>
+    <span class="v">5</span>
+    <span class="c">SPRO</span>
+  </a><a class="t" href="#" style="--a:#A45D00">
+    <svg class="ic " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 4.5A1.5 1.5 0 0 1 6 3h13.5v18H6a1.5 1.5 0 0 1-1.5-1.5Z"/><path d="M4.5 17.5h15M8.5 7.5h7M8.5 11h5"/></svg>
+    <span class="n">How it works</span>
+    <span class="v">10 sections</span>
+    <span class="c">ZDOC</span>
+  </a></div>
+
+    <div class="foot">Between us · private · from the person menu</div>
+  </div></div>
+<nav class="bar">
+  <a href="#"><svg class="ic " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8.5h2.8L8.2 6h7.6l1.4 2.5H20a1.5 1.5 0 0 1 1.5 1.5v7.5A1.5 1.5 0 0 1 20 19H4a1.5 1.5 0 0 1-1.5-1.5V10A1.5 1.5 0 0 1 4 8.5Z"/><circle cx="12" cy="13.5" r="3.4"/></svg>Scan</a>
+  <a href="#"><svg class="ic " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="2"/><circle cx="12" cy="12" r="2.6"/><path d="M6 9.5v5M18 9.5v5"/></svg>Expenses</a>
+  <a href="#"><svg class="ic " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="7.5" width="19" height="12" rx="2"/><path d="M9 7.5V6a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 6v1.5M2.5 12.5h19"/></svg>Events</a>
+  <a href="#"><svg class="ic " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20.3C6.2 16.4 3.6 13.2 3.6 10.1A4.3 4.3 0 0 1 12 8.2a4.3 4.3 0 0 1 8.4 1.9c0 3.1-2.6 6.3-8.4 10.2Z"/></svg>Memories</a>
+  <a href="#" class="on"><svg class="ic " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="3.5"/><circle cx="8.5" cy="8.5" r="1.2" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="15.5" cy="15.5" r="1.2" fill="currentColor" stroke="none"/></svg>More</a>
+</nav>
+</body></html>

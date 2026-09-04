@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>One Screen — launcher concept</title>
+<style>
+  :root{
+  --twm-space-xs:.25rem; --twm-space-s:.5rem; --twm-space-m:.75rem;
+  --twm-space-l:1rem; --twm-space-xl:1.5rem; --twm-space-xxl:2rem;
+  --twm-radius-s:.5rem; --twm-radius-m:.75rem; --twm-radius-l:1rem; --twm-radius-pill:999px;
+  --twm-touch:44px;
+  --ink:#1d2d3e; --muted:#556b82; --line:#dfe4ea;
+  --surface:#fff; --canvas:#f5f6f7; --brand:#0070f2;
+}
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:var(--canvas); color:var(--ink);
+    font:400 15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI","72",Inter,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .ic{width:22px;height:22px;flex:0 0 auto}
+  /* The thesis banner is scaffolding for the review, not part of the design. It is styled to
+     read as an annotation so nobody mistakes it for a header the app would ship. */
+  .thesis{
+    padding:14px 18px;background:#101a24;color:#fff;
+    font-size:12.5px;line-height:1.5;letter-spacing:.01em;
+  }
+  .thesis b{display:block;font-size:13.5px;letter-spacing:.04em;text-transform:uppercase;margin-bottom:4px;color:#8fd0ff}
+  .screen{min-height:844px;padding:0 0 84px}
+  /* The bottom bar, present in every concept because it is present in the app and it costs
+     56px of the screen every one of these is arguing about. */
+  .bar{
+    position:fixed;left:0;right:0;bottom:0;height:56px;display:flex;
+    background:rgba(255,255,255,.92);backdrop-filter:blur(12px);
+    border-top:1px solid var(--line);
+  }
+  .bar a{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:2px;font-size:10px;color:var(--muted);text-decoration:none}
+  .bar a.on{color:var(--brand)}
+  .bar .ic{width:19px;height:19px}
+
+.wrap{padding:14px 14px 0;max-width:520px;margin:0 auto}
+.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px}
+.top h1{font-size:19px;font-weight:600;letter-spacing:-.02em;margin:0}
+.top .av{width:27px;height:27px;border-radius:50%;background:var(--brand);color:#fff;
+  display:grid;place-items:center;font-size:10.5px;font-weight:600}
+
+.now{display:flex;align-items:center;gap:10px;padding:11px 13px;border-radius:var(--twm-radius-m);
+  background:#0e2537;color:#fff;text-decoration:none;margin-bottom:11px}
+.now .dot{width:7px;height:7px;border-radius:50%;background:#5ac8fa;flex:0 0 auto}
+.now b{font-size:13.5px;font-weight:550}
+.now i{font-style:normal;font-size:11px;opacity:.7;display:block;margin-top:1px}
+.now .r{margin-left:auto;font-size:12.5px;font-weight:600;white-space:nowrap}
+
+/* The four that have something to say. Two columns, because at four across a real figure
+   does not fit and the whole point of these four is that the figure fits. */
+.live{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.card{position:relative;display:flex;flex-direction:column;padding:12px 13px 11px;
+  border-radius:var(--twm-radius-m);background:var(--surface);border:1px solid var(--line);
+  text-decoration:none;color:inherit;overflow:hidden;min-height:84px}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:2.5px;background:var(--a)}
+.card .h{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:10.5px;
+  letter-spacing:.08em;text-transform:uppercase;font-weight:600}
+.card .h .ic{width:14px;height:14px;color:var(--a)}
+.card .v{font-size:21px;font-weight:600;letter-spacing:-.025em;margin-top:auto;line-height:1.1}
+.card .u{font-size:11px;color:var(--muted);margin-top:1px}
+
+.split{display:flex;align-items:center;gap:9px;margin:16px 0 11px}
+.split i{flex:1;height:1px;background:var(--line)}
+.split span{font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:#8ea0b2;font-weight:600}
+
+/* Four across is what a 44px target allows on 390px once the gutters are paid for. These are
+   links, and they are drawn as links: a glyph and a word, nothing pretending to be data. */
+.strip{display:grid;grid-template-columns:repeat(4,1fr);gap:4px 2px}
+.q{display:flex;flex-direction:column;align-items:center;gap:5px;padding:9px 2px 8px;
+  text-decoration:none;color:inherit;border-radius:var(--twm-radius-s);min-height:64px}
+.q .chip{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;
+  background:color-mix(in srgb,var(--a) 12%,transparent);color:var(--a)}
+.q .ic{width:19px;height:19px}
+.q span{font-size:10.5px;line-height:1.2;text-align:center;color:#3d5061;letter-spacing:-.005em}
+
+</style></head>
+<body>
+<div class="thesis"><b>4. One Screen</b>One rule, strictly kept: nothing below the fold on a 390×844 phone, bottom bar included. Paid for by the observation behind all of this — twelve of the sixteen tiles have no live figure, so twelve of them stop paying tile rent for a static word.</div>
+<div class="screen"><div class="wrap">
+    <div class="top"><h1>Two-Way Match</h1><span class="av">PA</span></div>
+    <a class="now" href="#"><span class="dot"></span>
+      <span><b>Weekend in Vals</b><i>Event · Vals · through 18 Oct</i></span>
+      <span class="r">in 43 days</span></a>
+    <div class="live"><a class="card" href="#" style="--a:#0070F2">
+  <span class="h"><svg class="ic " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="2"/><circle cx="12" cy="12" r="2.6"/><path d="M6 9.5v5M18 9.5v5"/></svg>Expenses</span>
+  <span class="v">CHF 120.00</span><span class="u">September</span></a><a class="card" href="#" style="--a:#E76500">
+  <span class="h"><svg class="ic " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8.5h2.8L8.2 6h7.6l1.4 2.5H20a1.5 1.5 0 0 1 1.5 1.5v7.5A1.5 1.5 0 0 1 20 19H4a1.5 1.5 0 0 1-1.5-1.5V10A1.5 1.5 0 0 1 4 8.5Z"/><circle cx="12" cy="13.5" r="3.4"/></svg>Scan</span>
+  <span class="v">None</span><span class="u">drafts waiting</span></a><a class="card" href="#" style="--a:#049F9A">
+  <span class="h"><svg class="ic " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="7.5" width="19" height="12" rx="2"/><path d="M9 7.5V6a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 6v1.5M2.5 12.5h19"/></svg>Events</span>
+  <span class="v">2</span><span class="u">current or upcoming</span></a><a class="card" href="#" style="--a:#F31DED">
+  <span class="h"><svg class="ic " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20.3C6.2 16.4 3.6 13.2 3.6 10.1A4.3 4.3 0 0 1 12 8.2a4.3 4.3 0 0 1 8.4 1.9c0 3.1-2.6 6.3-8.4 10.2Z"/></svg>Memories</span>
+  <span class="v">10</span><span class="u">entries</span></a></div>
+    <div class="split"><i></i><span>Everything</span><i></i></div>
+    <div class="strip"><a class="q" href="#" style="--a:#7858FF">
+  <span class="chip"><svg class="ic " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></span><span>Calendar</span></a><a class="q" href="#" style="--a:#D20A0A">
+  <span class="chip"><svg class="ic " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 5.5h15A1.5 1.5 0 0 1 21 7v8.5a1.5 1.5 0 0 1-1.5 1.5H11l-5 4v-4H4.5A1.5 1.5 0 0 1 3 15.5V7a1.5 1.5 0 0 1 1.5-1.5Z"/></svg></span><span>Chat</span></a><a class="q" href="#" style="--a:#F5A623">
+  <span class="chip"><svg class="ic " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 1 3.6 10.8V16h-7.2v-2.2A6 6 0 0 1 12 3Z"/><path d="M9.5 19h5M10.5 21.5h3"/></svg></span><span>Tonight</span></a><a class="q" href="#" style="--a:#C87200">
+  <span class="chip"><svg class="ic " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.7"/><circle cx="9.2" cy="10.2" r="1" fill="currentColor" stroke="none"/><circle cx="14.8" cy="10.2" r="1" fill="currentColor" stroke="none"/><path d="M8.4 14.4a4.5 4.5 0 0 0 7.2 0"/></svg></span><span>Mood</span></a><a class="q" href="#" style="--a:#C9A227">
+  <span class="chip"><svg class="ic " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="3.5"/><circle cx="8.5" cy="8.5" r="1.2" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="15.5" cy="15.5" r="1.2" fill="currentColor" stroke="none"/></svg></span><span>Games</span></a><a class="q" href="#" style="--a:#6C2F6B">
+  <span class="chip"><svg class="ic " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7.5" cy="17.5" r="2.8"/><circle cx="17.5" cy="15.5" r="2.8"/><path d="M10.3 17.5V7.2l10-2v10.3"/></svg></span><span>Dance</span></a><a class="q" href="#" style="--a:#1F6F6A">
+  <span class="chip"><svg class="ic " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20.2 5.1 16 16.4 4.7a2.1 2.1 0 0 1 3 3L8.1 19 4 20.2Z"/><path d="M14.6 6.5l3 3"/></svg></span><span>On your mind</span></a><a class="q" href="#" style="--a:#B02A6F">
+  <span class="chip"><svg class="ic " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.8" y="10.5" width="14.4" height="9.5" rx="2.2"/><path d="M8.4 10.5V8a3.6 3.6 0 0 1 7.2 0v2.5"/></svg></span><span>Between us</span></a><a class="q" href="#" style="--a:#3D4C8A">
+  <span class="chip"><svg class="ic " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10.5h18"/><circle cx="16.8" cy="14.8" r="1.2" fill="currentColor" stroke="none"/></svg></span><span>Wallet</span></a><a class="q" href="#" style="--a:#256F3A">
+  <span class="chip"><svg class="ic " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h12v16H4z"/><path d="M16 9h4v9a2 2 0 0 1-4 0"/><path d="M7 8h6M7 11.5h6M7 15h4"/></svg></span><span>Statement</span></a><a class="q" href="#" style="--a:#5B738B">
+  <span class="chip"><svg class="ic " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.6v3M12 18.4v3M21.4 12h-3M5.6 12h-3M18.6 5.4l-2.1 2.1M7.5 16.5l-2.1 2.1M18.6 18.6l-2.1-2.1M7.5 7.5 5.4 5.4"/></svg></span><span>Settings</span></a><a class="q" href="#" style="--a:#A45D00">
+  <span class="chip"><svg class="ic " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 4.5A1.5 1.5 0 0 1 6 3h13.5v18H6a1.5 1.5 0 0 1-1.5-1.5Z"/><path d="M4.5 17.5h15M8.5 7.5h7M8.5 11h5"/></svg></span><span>How it works</span></a></div>
+  </div></div>
+<nav class="bar">
+  <a href="#"><svg class="ic " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8.5h2.8L8.2 6h7.6l1.4 2.5H20a1.5 1.5 0 0 1 1.5 1.5v7.5A1.5 1.5 0 0 1 20 19H4a1.5 1.5 0 0 1-1.5-1.5V10A1.5 1.5 0 0 1 4 8.5Z"/><circle cx="12" cy="13.5" r="3.4"/></svg>Scan</a>
+  <a href="#"><svg class="ic " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="2"/><circle cx="12" cy="12" r="2.6"/><path d="M6 9.5v5M18 9.5v5"/></svg>Expenses</a>
+  <a href="#"><svg class="ic " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="7.5" width="19" height="12" rx="2"/><path d="M9 7.5V6a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 6v1.5M2.5 12.5h19"/></svg>Events</a>
+  <a href="#"><svg class="ic " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20.3C6.2 16.4 3.6 13.2 3.6 10.1A4.3 4.3 0 0 1 12 8.2a4.3 4.3 0 0 1 8.4 1.9c0 3.1-2.6 6.3-8.4 10.2Z"/></svg>Memories</a>
+  <a href="#" class="on"><svg class="ic " viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="3.5"/><circle cx="8.5" cy="8.5" r="1.2" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="15.5" cy="15.5" r="1.2" fill="currentColor" stroke="none"/></svg>More</a>
+</nav>
+</body></html>
