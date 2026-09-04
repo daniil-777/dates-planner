@@ -2,13 +2,13 @@
   "name": "twoway-match",
   "version": "1.0.0",
   "private": true,
-  "description": "Two-Way Match — household date management",
+  "description": "Two-Way Match \u2014 household date management",
   "engines": {
     "node": ">=22"
   },
   "scripts": {
     "dev": "concurrently -n cap,web -c blue,magenta \"npm:dev:cap\" \"npm:dev:web\"",
-    "dev:cap": "cds-tsx watch",
+    "dev:cap": "cds-tsx serve",
     "dev:web": "npm --prefix app run dev",
     "start": "cds-serve",
     "build": "npm run build:web && cds build --production",
@@ -27,7 +27,8 @@
     "deploy": "scripts/deploy.sh",
     "backup": "cds-tsx run scripts/backup.ts",
     "db:to-postgres": "tsx scripts/migrate-to-postgres.ts",
-    "hash": "cds-tsx run scripts/hash-password.ts"
+    "hash": "cds-tsx run scripts/hash-password.ts",
+    "dev:cap:watch": "cds-tsx watch"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.122.0",
