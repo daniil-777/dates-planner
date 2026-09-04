@@ -27,7 +27,22 @@
  * Angles are radians, and the values are what the body actually does — a relaxed arm hangs
  * at about 0.2 rad from the torso, not 0.
  */
-import type { Skeleton } from './pose'
+import { CIRCULAR, type Skeleton } from './pose'
+
+/** The signed short way from `a` to `b` around the circle, in (−π, π]. */
+function shortWay(a: number, b: number): number {
+  let delta = (b - a) % (2 * Math.PI)
+  if (delta > Math.PI) delta -= 2 * Math.PI
+  if (delta < -Math.PI) delta += 2 * Math.PI
+  return delta
+}
+
+/** Back into (−π, π]. */
+function wrap(angle: number): number {
+  let a = (angle + Math.PI) % (2 * Math.PI)
+  if (a < 0) a += 2 * Math.PI
+  return a - Math.PI
+}
 
 /** A pose held at a moment in the bar, `beat` counted from zero. */
 export interface Keyframe {
@@ -61,21 +76,62 @@ export interface Routine {
   keys: Keyframe[]
 }
 
-/** A body at rest: arms down, knees straight, upright. Every keyframe is a change from this. */
+/**
+ * A body at rest: arms hanging, knees straight, upright.
+ *
+ * ## The convention, which the first version got wrong
+ *
+ * Every number here is in the frame `pose.ts` extracts, and the values were **measured from
+ * synthetic landmarks** rather than guessed — because the first version guessed and was
+ * wrong in a way nothing caught.
+ *
+ * Shoulder elevation is measured from the spine pointing *up*, so:
+ *
+ * | pose | elevation |
+ * |---|---|
+ * | arm straight overhead | `0` |
+ * | arm horizontal | `π/2` ≈ 1.57 |
+ * | arm hanging by the side | `π` ≈ 3.0 |
+ *
+ * The old `REST` said `leftShoulder: 0.18`, which is a person standing with both arms
+ * straight above their head. Every routine was therefore written against a reference pose no
+ * camera would ever report, and the arm comparison in the one routine that moved its arms
+ * was measuring the difference between a real body and a scarecrow.
+ *
+ * Knees and elbows are flexion, so `π` is straight. Hip elevation is measured from the spine
+ * pointing *down*, so a standing leg is `0` and a lifted one grows from there.
+ */
 export const REST: Skeleton = {
-  leftElbow: 2.9,
-  rightElbow: 2.9,
-  leftShoulder: 0.18,
-  rightShoulder: 0.18,
-  leftArmSwing: 0,
-  rightArmSwing: 0,
-  leftKnee: 3.0,
-  rightKnee: 3.0,
-  leftHip: 0.12,
-  rightHip: 0.12,
-  lean: 0,
+  leftElbow: 3.0,
+  rightElbow: 3.0,
+  // Hanging, not overhead.
+  leftShoulder: 2.95,
+  rightShoulder: 2.95,
+  // A hanging arm points nowhere in particular, so the direction is only meaningful once it
+  // leaves the side. Zero is "out to its own side", which is where it drifts to first.
+  leftArmAround: 0,
+  rightArmAround: 0,
+  leftKnee: 3.1,
+  rightKnee: 3.1,
+  leftHip: 0.05,
+  rightHip: 0.05,
+  leftLegAround: 0,
+  rightLegAround: 0,
+  roll: 0,
+  pitch: 0,
   twist: 0,
 }
+
+/**
+ * How big a movement has to be before a camera can tell it from noise.
+ *
+ * Pose estimation jitters by something like five to ten degrees on a good frame. The first
+ * set of routines moved through 6–28°, which is at or under that floor, and the result was
+ * that **standing perfectly still scored 99 or 100 on three of the four of them**. Anything
+ * shipped has to clear this by a comfortable margin on at least one limb, and a test enforces
+ * it.
+ */
+export const MIN_DEMAND = 0.6
 
 export const ROUTINES: readonly Routine[] = [
   {
@@ -84,14 +140,67 @@ export const ROUTINES: readonly Routine[] = [
     blurb: 'Weight from one foot to the other, in time. The whole of slow dancing.',
     bpm: 72,
     reps: 3,
-    hint: 'It is in the hips, not the shoulders. Let your head stay still.',
+    hint: 'It is in the hips. Let your shoulders follow rather than lead.',
+    // Four beats each way. The signed roll is what makes this a dance rather than a wobble —
+    // with the unsigned tilt this file used to be written against, leaning left and leaning
+    // right were the same number and the whole routine was unscoreable.
     keys: [
-      { beat: 0, pose: { twist: 0, lean: 0, leftKnee: 3.0, rightKnee: 3.0 } },
-      // Weight onto the left: that knee softens, the body leans a little that way.
-      { beat: 2, pose: { lean: 0.14, leftKnee: 2.75, rightKnee: 3.05, twist: 0.05 } },
-      { beat: 4, pose: { twist: 0, lean: 0, leftKnee: 3.0, rightKnee: 3.0 } },
-      { beat: 6, pose: { lean: -0.14, leftKnee: 3.05, rightKnee: 2.75, twist: -0.05 } },
-      { beat: 8, pose: { twist: 0, lean: 0, leftKnee: 3.0, rightKnee: 3.0 } },
+      {
+        beat: 0,
+        pose: {
+          roll: 0,
+          leftKnee: 3.1,
+          rightKnee: 3.1,
+          twist: 0,
+          leftShoulder: 2.95,
+          rightShoulder: 2.95,
+        },
+      },
+      {
+        beat: 2,
+        // Onto the left foot: that knee straightens, the right softens, the body tips left.
+        pose: {
+          roll: 0.42,
+          leftKnee: 3.1,
+          rightKnee: 2.6,
+          twist: 0.16,
+          leftShoulder: 2.72,
+          rightShoulder: 2.95,
+        },
+      },
+      {
+        beat: 4,
+        pose: {
+          roll: 0,
+          leftKnee: 3.1,
+          rightKnee: 3.1,
+          twist: 0,
+          leftShoulder: 2.95,
+          rightShoulder: 2.95,
+        },
+      },
+      {
+        beat: 6,
+        pose: {
+          roll: -0.42,
+          leftKnee: 2.6,
+          rightKnee: 3.1,
+          twist: -0.16,
+          leftShoulder: 2.95,
+          rightShoulder: 2.72,
+        },
+      },
+      {
+        beat: 8,
+        pose: {
+          roll: 0,
+          leftKnee: 3.1,
+          rightKnee: 3.1,
+          twist: 0,
+          leftShoulder: 2.95,
+          rightShoulder: 2.95,
+        },
+      },
     ],
   },
   {
@@ -99,19 +208,80 @@ export const ROUTINES: readonly Routine[] = [
     name: 'The box step',
     blurb: 'Forward, side, together — then back the same way. Waltz, and half of everything else.',
     bpm: 96,
-    reps: 5,
-    hint: 'Small steps. The box is about the size of a bath mat, not a room.',
+    reps: 4,
+    hint: 'Small steps, but commit to the direction. Forward means forward, not vaguely.',
+    // `leftLegAround` is what makes this a box. Without a direction for the leg — which is
+    // what this file used to have — a step forward, a step to the side and a step backwards
+    // were an identical number, and the routine named after the difference between them could
+    // not express any of it.
     keys: [
-      { beat: 0, pose: { leftHip: 0.12, rightHip: 0.12, leftKnee: 3.0, rightKnee: 3.0, twist: 0 } },
-      // Left foot forward.
-      { beat: 1, pose: { leftHip: 0.42, leftKnee: 2.7, rightHip: 0.05, twist: 0.06 } },
-      // Right foot to the side.
-      { beat: 2, pose: { leftHip: 0.15, rightHip: 0.3, rightKnee: 2.85, twist: -0.04 } },
-      { beat: 3, pose: { leftHip: 0.12, rightHip: 0.12, leftKnee: 3.0, rightKnee: 3.0, twist: 0 } },
-      // Right foot back.
-      { beat: 4, pose: { rightHip: -0.18, rightKnee: 2.8, leftHip: 0.14, twist: -0.06 } },
-      { beat: 5, pose: { leftHip: 0.28, leftKnee: 2.85, rightHip: 0.08, twist: 0.04 } },
-      { beat: 6, pose: { leftHip: 0.12, rightHip: 0.12, leftKnee: 3.0, rightKnee: 3.0, twist: 0 } },
+      {
+        beat: 0,
+        pose: { leftHip: 0.05, rightHip: 0.05, leftKnee: 3.1, rightKnee: 3.1, pitch: 0, twist: 0 },
+      },
+      {
+        beat: 1,
+        // Left foot FORWARD: azimuth +π/2.
+        pose: { leftHip: 0.62, leftLegAround: 1.5, leftKnee: 2.85, pitch: 0.12, twist: 0.1 },
+      },
+      {
+        beat: 2,
+        // Right foot to the SIDE: azimuth 0, out from its own side.
+        pose: {
+          leftHip: 0.1,
+          rightHip: 0.55,
+          rightLegAround: 0,
+          rightKnee: 2.95,
+          pitch: 0,
+          twist: -0.08,
+        },
+      },
+      {
+        beat: 3,
+        // Feet together. The azimuths are restored explicitly: keyframes accumulate, so a
+        // direction set on beat 1 is still set on beat 6 unless something clears it, and the
+        // repetition would then start from a pose the first beat never described.
+        pose: {
+          leftHip: 0.05,
+          rightHip: 0.05,
+          leftLegAround: 0,
+          rightLegAround: 0,
+          leftKnee: 3.1,
+          rightKnee: 3.1,
+          pitch: 0,
+          twist: 0,
+        },
+      },
+      {
+        beat: 4,
+        // Right foot BACK: azimuth −π/2.
+        pose: { rightHip: 0.6, rightLegAround: -1.5, rightKnee: 2.85, pitch: -0.12, twist: -0.1 },
+      },
+      {
+        beat: 5,
+        // Left foot to the SIDE, closing the box.
+        pose: {
+          rightHip: 0.1,
+          leftHip: 0.55,
+          leftLegAround: 0,
+          leftKnee: 2.95,
+          pitch: 0,
+          twist: 0.08,
+        },
+      },
+      {
+        beat: 6,
+        pose: {
+          leftHip: 0.05,
+          rightHip: 0.05,
+          leftLegAround: 0,
+          rightLegAround: 0,
+          leftKnee: 3.1,
+          rightKnee: 3.1,
+          pitch: 0,
+          twist: 0,
+        },
+      },
     ],
   },
   {
@@ -119,18 +289,21 @@ export const ROUTINES: readonly Routine[] = [
     name: 'The underarm turn',
     blurb: 'One of you lifts a hand, the other goes under it. Four counts, and it always works.',
     bpm: 110,
-    reps: 6,
+    reps: 5,
     hint: 'The lifted arm stays still. It is a doorway, not a lever — the turn is in the feet.',
+    // The one routine that worked before, now written in the right convention: the arm starts
+    // hanging (≈π) and comes up overhead (≈0.5), rather than starting overhead as the old
+    // REST implied and going nowhere a body could follow.
     keys: [
-      { beat: 0, pose: { leftShoulder: 0.2, leftElbow: 2.9, twist: 0 } },
-      // The hand goes up and the elbow bends: the frame that makes the doorway.
-      { beat: 1, pose: { leftShoulder: 2.4, leftElbow: 1.7, twist: 0.1 } },
-      { beat: 2, pose: { leftShoulder: 2.6, leftElbow: 1.5, twist: 0.5 } },
-      // Through, and the body has turned under it.
-      { beat: 3, pose: { leftShoulder: 2.6, leftElbow: 1.6, twist: 0.9 } },
-      { beat: 4, pose: { leftShoulder: 2.3, leftElbow: 1.9, twist: 0.4 } },
-      { beat: 5, pose: { leftShoulder: 0.4, leftElbow: 2.7, twist: 0 } },
-      { beat: 6, pose: { leftShoulder: 0.2, leftElbow: 2.9, twist: 0 } },
+      { beat: 0, pose: { leftShoulder: 2.95, leftArmAround: 0, leftElbow: 3.0, twist: 0 } },
+      // Up and forward into the frame: elevation drops as the arm rises, azimuth swings to
+      // the front.
+      { beat: 1, pose: { leftShoulder: 1.5, leftArmAround: 1.1, leftElbow: 2.0, twist: 0.15 } },
+      { beat: 2, pose: { leftShoulder: 0.7, leftArmAround: 1.4, leftElbow: 1.6, twist: 0.6 } },
+      { beat: 3, pose: { leftShoulder: 0.6, leftArmAround: 1.4, leftElbow: 1.6, twist: 1.05 } },
+      { beat: 4, pose: { leftShoulder: 1.4, leftArmAround: 1.0, leftElbow: 2.2, twist: 0.45 } },
+      { beat: 5, pose: { leftShoulder: 2.6, leftArmAround: 0.3, leftElbow: 2.9, twist: 0.1 } },
+      { beat: 6, pose: { leftShoulder: 2.95, leftArmAround: 0, leftElbow: 3.0, twist: 0 } },
     ],
   },
   {
@@ -138,44 +311,46 @@ export const ROUTINES: readonly Routine[] = [
     name: 'Shoulder bounce',
     blurb: 'Nothing but shoulders and a bit of knee. Impossible to do badly, hard to stop.',
     bpm: 118,
-    reps: 18,
+    reps: 16,
     hint: 'Let your arms be heavy. They should swing because your body moved, not on purpose.',
-    // A two-beat loop, and the last keyframe is the first: anything else leaves a jump
-    // where the repetition joins, which the reference then teaches as part of the step.
+    // A two-beat loop, and the last keyframe is the first: anything else leaves a jump where
+    // the repetition joins, which the reference then teaches as part of the step.
     //
     // Both knees are named in every keyframe on purpose. Keyframes accumulate — a joint not
-    // mentioned keeps whatever the last keyframe that named it set — so bending only the
-    // left knee here would leave it bent for the rest of the routine and end up with a
-    // reference doing the whole dance in a permanent half-squat.
+    // mentioned keeps whatever the last keyframe that named it set — so bending only the left
+    // knee here would leave it bent for the rest of the routine.
     keys: [
       {
         beat: 0,
         pose: {
-          twist: 0.18,
-          leftShoulder: 0.3,
-          rightShoulder: 0.14,
-          leftKnee: 2.85,
-          rightKnee: 3.0,
+          twist: 0.5,
+          roll: 0.16,
+          leftShoulder: 2.7,
+          rightShoulder: 2.95,
+          leftKnee: 2.8,
+          rightKnee: 3.1,
         },
       },
       {
         beat: 1,
         pose: {
-          twist: -0.18,
-          leftShoulder: 0.14,
-          rightShoulder: 0.3,
-          leftKnee: 3.0,
-          rightKnee: 2.85,
+          twist: -0.5,
+          roll: -0.16,
+          leftShoulder: 2.95,
+          rightShoulder: 2.7,
+          leftKnee: 3.1,
+          rightKnee: 2.8,
         },
       },
       {
         beat: 2,
         pose: {
-          twist: 0.18,
-          leftShoulder: 0.3,
-          rightShoulder: 0.14,
-          leftKnee: 2.85,
-          rightKnee: 3.0,
+          twist: 0.5,
+          roll: 0.16,
+          leftShoulder: 2.7,
+          rightShoulder: 2.95,
+          leftKnee: 2.8,
+          rightKnee: 3.1,
         },
       },
     ],
@@ -249,7 +424,12 @@ export function poseAt(keys: readonly Keyframe[], beat: number): Skeleton {
 
   const between = { ...REST }
   for (const name of Object.keys(REST) as (keyof Skeleton)[]) {
-    between[name] = before[name] + (after[name] - before[name]) * eased
+    between[name] = CIRCULAR.has(name)
+      ? // The short way round. Interpolating an azimuth from +170° to −170° the long way
+        // sweeps the limb through the entire front of the body over one beat, which is a
+        // movement nobody wrote and the learner cannot copy.
+        wrap(before[name] + shortWay(before[name], after[name]) * eased)
+      : before[name] + (after[name] - before[name]) * eased
   }
   return between
 }

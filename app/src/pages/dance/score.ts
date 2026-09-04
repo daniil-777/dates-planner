@@ -33,7 +33,7 @@
  * and the better one is kept. Doing anything else produces a coach that tells half its users
  * their arms are on the wrong side, which is the fastest way to be uninstalled.
  */
-import { STILL, align, limbOffset, rangeOf, salience, type Alignment } from './dtw'
+import { STILL, align, limbOffset, rangeOf, salience, stillnessError, type Alignment } from './dtw'
 import {
   ANGLES,
   LIMBS,
@@ -58,14 +58,18 @@ const INDICES_OF: Record<Limb, number[]> = LIMBS.reduce(
 )
 
 /**
- * Radians of mean error that count as "perfect" and "hopeless".
+ * The scale, in units of "the error you would make by not moving at all".
  *
- * About 6° and 50°. The low end is not zero on purpose: pose estimation is noisy, two people
- * of different builds never match exactly, and a scale where nobody can reach the top is a
- * scale nobody believes. The high end is where a limb is unrecognisably elsewhere.
+ * These are **relative** rather than radians, which is the whole point — see
+ * `stillnessError` in `dtw.ts` for the bug that forced it: with absolute thresholds, standing
+ * still through a small routine scored 100.
+ *
+ * `PERFECT` is not zero on purpose. Pose estimation is noisy, two people of different builds
+ * never match exactly, and a scale nobody can top is a scale nobody believes. `HOPELESS` is
+ * exactly 1: making the same error as somebody who did not move is, definitionally, no marks.
  */
-const PERFECT = 0.1
-const HOPELESS = 0.87
+const PERFECT = 0.25
+const HOPELESS = 1.0
 
 /** A shift of fewer than this many frames is human timing, not a fault. */
 const TIMING_SLACK = 2
@@ -111,10 +115,20 @@ export interface Verdict {
   frames: number
 }
 
-/** Mean error in radians to a score out of 100. */
-function toScore(error: number): number {
+/**
+ * Mean error to a score out of 100, measured against what the routine asks for.
+ *
+ * `baseline` is the error a motionless learner would make. Dividing by it is what makes the
+ * same scale work for a 17-degree sway and a 138-degree turn.
+ */
+function toScore(error: number, baseline: number): number {
   if (Number.isNaN(error)) return 0
-  const through = (error - PERFECT) / (HOPELESS - PERFECT)
+  // No baseline means the routine asks for nothing measurable here; the caller has already
+  // decided such a limb is ungraded, so this is only reached defensively.
+  if (Number.isNaN(baseline) || baseline <= 0) return 100
+
+  const relative = error / baseline
+  const through = (relative - PERFECT) / (HOPELESS - PERFECT)
   return Math.round(100 * Math.min(1, Math.max(0, 1 - through)))
 }
 
@@ -145,11 +159,12 @@ function judge(
     // Note this cannot hide a flail: salience takes the *larger* of the two ranges, so a
     // learner waving through a still passage gives the limb weight and gets graded on it.
     const nothingAsked = offset.weight < STILL
+    const baseline = stillnessError(reference, indices, weights)
 
     // The score uses the *unshifted* error, because being out of time is a real fault and
     // scoring the shifted version would give full marks for a beautiful arm on the wrong
     // beat. The shift is used to *explain* the loss, not to forgive it.
-    const score = nothingAsked ? 100 : toScore(offset.costAtZero)
+    const score = nothingAsked ? 100 : toScore(offset.costAtZero, baseline)
 
     let size = 1
     let sized = 0

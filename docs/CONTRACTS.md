@@ -1038,10 +1038,37 @@ identifies people about as well as a face does. Landmarks live in memory for one
 
 What may be kept is a score and a sentence.
 
-### 19.3 The algorithm, and why each step is there
+### 19.3 The representation
 
-1. **Angles, not positions.** Twelve joint angles (`pose.ts`). Invariant to build, distance
-   and facing, which positions are not.
+**Fifteen angles** (`pose.ts`), and the shape of them is load-bearing. Each limb gets
+*elevation* (how far off the body axis) **and** *azimuth* (where around the body); the torso
+gets signed *roll* and *pitch* rather than one unsigned tilt.
+
+It began as twelve unsigned magnitudes, and that was half a coordinate. Measured:
+
+| what was asked | what the twelve said |
+|---|---|
+| leg forward / to the side / behind | all `0.537` — identical |
+| lean left / lean right | both `0.3805` — identical |
+| arm to the side / behind | identical; `armSwing` was exactly `±shoulder` |
+
+So the box step, whose whole identity is "forward, side, together", had three identical steps,
+and the sway — which is nothing but alternating lean — was unscoreable. **Any new angle must
+be a full coordinate or it is not worth adding.**
+
+Azimuth is measured **outward from each limb's own side**, so arms out to the sides is `0, 0`
+and mirroring is a plain swap. It is `NaN` when the limb lies along the body axis (a hanging
+arm points nowhere), and the four azimuths are **circular** — comparisons take the short way
+round, or an arm at `+179°` reads as maximally wrong against one at `−179°`.
+
+**The convention is measured, not guessed.** Shoulder elevation is from the spine pointing
+up: overhead `0`, horizontal `π/2`, hanging `π`. The first `REST` said `0.18` for a hanging
+arm — a person standing with both arms above their head — so every routine was written
+against a pose no camera can report.
+
+### 19.3a The algorithm, and why each step is there
+
+1. **Angles, not positions.** Invariant to build, distance and facing, which positions are not.
 2. **Dynamic time warping** (`dtw.ts`). Being slightly slow is *not a mistake*; getting there
    in the wrong order is. A frame-by-frame comparison measures tempo, not dancing.
 3. **A Sakoe–Chiba band.** Not an optimisation — without it, forty frames of standing still
@@ -1050,6 +1077,13 @@ What may be kept is a score and a sentence.
    movement. Weight is the **larger** of the reference's and the learner's range, so both
    "you did not move" and "you moved when you should not have" are caught. Without this, a
    motionless dancer scored 94 out of 100.
+5. **A relative scale.** Scores are measured against `stillnessError` — the error somebody
+   makes by not moving at all — rather than against fixed radian thresholds. With absolute
+   thresholds (`perfect` was 0.1 rad) any routine whose whole movement was smaller than the
+   threshold scored a motionless learner at 100. **Three of the four shipped routines did
+   exactly that**, and told the person "that was really close". A relative scale is
+   self-calibrating: ten degrees out is excellent on a routine that swings through a hundred
+   and forty, and total failure on one that moves through twelve.
 5. **Per-limb rigid shift** (`limbOffset`). A limb that fits better shifted is *out of time*,
    which is a different fault from being in the wrong shape. This is what makes "your left
    arm is late" possible.
@@ -1071,4 +1105,10 @@ rather than a film shoot. Two invariants, both enforced by test:
 
 - **A routine ends where it begins**, or every repetition teaches a jump.
 - **Keyframes accumulate**, so a joint bent in one keyframe stays bent until another names
-  it. Name both sides.
+  it. Name both sides, and clear an azimuth before the loop repeats.
+- **Every routine must demand at least `MIN_DEMAND` (0.6 rad) somewhere**, and standing still
+  must score under 25 against it. Pose estimation jitters by five to ten degrees; the first
+  set of routines moved through 6–28° and was measuring noise.
+- **Test against the real routines, not a synthetic fixture.** The scoring tests used a wave
+  five times larger than any shipped routine, which is precisely why none of the above was
+  caught.

@@ -78,29 +78,62 @@ export type Landmarks = readonly Point[]
 export const VISIBLE = 0.55
 
 /**
- * The twelve angles a pose is reduced to.
+ * The fifteen angles a pose is reduced to.
  *
- * Radians throughout — degrees only at the point of display, so no conversion can creep into
- * the arithmetic.
+ * ## Why fifteen, and why not the twelve this started with
+ *
+ * The first version kept an *unsigned* magnitude for every limb: how far the arm is from the
+ * torso, how far the thigh is lifted, how far the body is tilted. That is half a coordinate,
+ * and the missing half turned out to be the half dances are made of. Measured on the routines
+ * that shipped:
+ *
+ *  - A leg **forward**, **out to the side** and **behind** all produced the same number
+ *    (0.537 rad). The box step is called "forward, side, together" and all three of its steps
+ *    were identical to the scorer.
+ *  - Leaning **left** and leaning **right** both produced 0.3805. The sway is nothing but
+ *    alternating those two.
+ *  - `armSwing` was exactly `±shoulder` — two of the twelve angles carrying one number and a
+ *    sign bit — so an arm out to the side and an arm behind the back were the same pose.
+ *
+ * So the representation is now a proper one: for each limb, **how far off the body axis**
+ * (elevation) and **where around the body** (azimuth); for the torso, roll and pitch as
+ * signed angles rather than one unsigned tilt.
+ *
+ * ## The azimuth convention
+ *
+ * Measured *outward from that limb's own side*, so it is symmetric: azimuth `0` means
+ * straight out to the left for a left limb and straight out to the right for a right limb,
+ * `+π/2` is forward for both, `−π/2` is behind for both. Arms out to the sides is `0, 0`
+ * rather than `π, 0`, and mirroring becomes a plain swap.
+ *
+ * Azimuth is **undefined when the limb lies along the body axis** — a hanging arm points
+ * nowhere in particular — so it is `NaN` there rather than a number made of noise. See
+ * {@link AZIMUTH_FLOOR}.
  */
 export interface Skeleton {
-  /** Elbow flexion: shoulder–elbow–wrist. */
+  /** Elbow flexion: shoulder–elbow–wrist. π is straight. */
   leftElbow: number
   rightElbow: number
-  /** Shoulder elevation: how far the upper arm is raised from the torso. */
+  /** How far the upper arm is off the spine. 0 straight up, π/2 out, π hanging down. */
   leftShoulder: number
   rightShoulder: number
-  /** Shoulder rotation: where the arm is around the body, front to back. */
-  leftArmSwing: number
-  rightArmSwing: number
+  /** Where the arm points around the body. 0 out to its own side, +π/2 forward, −π/2 back. */
+  leftArmAround: number
+  rightArmAround: number
   /** Knee flexion: hip–knee–ankle. */
   leftKnee: number
   rightKnee: number
-  /** Hip flexion: how far the thigh is lifted. */
+  /** How far the thigh is lifted off the body's down-axis. */
   leftHip: number
   rightHip: number
-  /** Torso lean from vertical, and rotation of the shoulders against the hips. */
-  lean: number
+  /** Where the leg points around the body, same convention as the arms. */
+  leftLegAround: number
+  rightLegAround: number
+  /** Side-to-side tilt, signed: positive leans towards the person's own left. */
+  roll: number
+  /** Front-to-back tilt, signed: positive leans forward. */
+  pitch: number
+  /** Shoulders against hips, signed. */
   twist: number
 }
 
@@ -110,36 +143,83 @@ export const ANGLES = [
   'rightElbow',
   'leftShoulder',
   'rightShoulder',
-  'leftArmSwing',
-  'rightArmSwing',
+  'leftArmAround',
+  'rightArmAround',
   'leftKnee',
   'rightKnee',
   'leftHip',
   'rightHip',
-  'lean',
+  'leftLegAround',
+  'rightLegAround',
+  'roll',
+  'pitch',
   'twist',
 ] as const
 
 export type AngleName = (typeof ANGLES)[number]
 
 /**
+ * Which angles wrap around.
+ *
+ * The azimuths live on a circle: an arm at +179° and one at −179° are two degrees apart, and
+ * subtracting them naively says they are 358° apart — which would make a limb pointing
+ * straight forward look maximally wrong against one a hair to its other side. Every
+ * comparison has to take the short way round for these, and only for these.
+ *
+ * Roll, pitch and twist are signed but bounded by anatomy well short of ±π, so they are
+ * ordinary numbers.
+ */
+export const CIRCULAR: ReadonlySet<AngleName> = new Set([
+  'leftArmAround',
+  'rightArmAround',
+  'leftLegAround',
+  'rightLegAround',
+])
+
+/** `CIRCULAR` as a mask over {@link ANGLES}, for the distance functions. */
+export const CIRCULAR_MASK: readonly boolean[] = ANGLES.map(name => CIRCULAR.has(name))
+
+/**
+ * The shortest angular distance between two directions on a circle.
+ *
+ * Never more than π, which is the whole point.
+ */
+export function circularDistance(a: number, b: number): number {
+  const raw = Math.abs(a - b) % (2 * Math.PI)
+  return raw > Math.PI ? 2 * Math.PI - raw : raw
+}
+
+/**
+ * Below this much sine of elevation, a limb is treated as lying along the body and its
+ * azimuth is reported as unknown.
+ *
+ * About 14°. An arm hanging by somebody's side points nowhere in particular; the azimuth it
+ * computes is the direction of the noise, and comparing two people's noise is worse than
+ * comparing nothing.
+ */
+export const AZIMUTH_FLOOR = 0.25
+
+/**
  * Which limb an angle belongs to.
  *
  * This is what turns a number into a sentence: the feedback says "your left arm", not
- * "leftElbow and leftShoulder and leftArmSwing".
+ * "leftElbow and leftShoulder and leftArmAround".
  */
 export const LIMB_OF: Record<AngleName, Limb> = {
   leftElbow: 'leftArm',
   leftShoulder: 'leftArm',
-  leftArmSwing: 'leftArm',
+  leftArmAround: 'leftArm',
   rightElbow: 'rightArm',
   rightShoulder: 'rightArm',
-  rightArmSwing: 'rightArm',
+  rightArmAround: 'rightArm',
   leftKnee: 'leftLeg',
   leftHip: 'leftLeg',
+  leftLegAround: 'leftLeg',
   rightKnee: 'rightLeg',
   rightHip: 'rightLeg',
-  lean: 'torso',
+  rightLegAround: 'rightLeg',
+  roll: 'torso',
+  pitch: 'torso',
   twist: 'torso',
 }
 
@@ -169,6 +249,12 @@ function dot(a: Vec, b: Vec): number {
 
 function length(a: Vec): number {
   return Math.sqrt(dot(a, a))
+}
+
+/** Normalised, or a zero vector when there is nothing to normalise. */
+function unit(a: Vec): Vec {
+  const size = length(a)
+  return size < 1e-9 ? [0, 0, 0] : [a[0] / size, a[1] / size, a[2] / size]
 }
 
 function cross(a: Vec, b: Vec): Vec {
@@ -250,15 +336,45 @@ export function toSkeleton(landmarks: Landmarks): Skeleton | null {
   const hips = midpoint(lh, rh)
 
   /** Up the spine. The body's own vertical, which is not the world's when somebody leans. */
-  const spine: Vec = sub(shoulders, hips)
+  const up = unit(sub(shoulders, hips))
+  /** Across the shoulders, towards the person's own right. */
+  const across = unit(sub(rs, ls))
+  /** Out of the chest. Completes a right-handed frame with `across` and `up`. */
+  const forward = unit(cross(across, up))
+
   /**
-   * Across the shoulders, left to right.
+   * Where a limb points, in the body's own frame.
    *
-   * Also the axis arm swing is signed around: swinging an arm forward or back rotates it in
-   * the sagittal plane, and that plane's normal is the body's left-right axis. Signing
-   * around the spine instead would give the same number for an arm in front and behind.
+   * Returns elevation off the reference axis and azimuth around it, measured outward from
+   * the limb's own side so that left and right are symmetric. Azimuth is `NaN` when the limb
+   * lies close to the axis, because then it is the direction of the noise.
    */
-  const across: Vec = sub(rs, ls)
+  const direction = (
+    from: Point,
+    to: Point | undefined,
+    axis: Vec,
+    side: 'left' | 'right',
+  ): { elevation: number; azimuth: number } => {
+    if (to === undefined || !seen(to)) return { elevation: Number.NaN, azimuth: Number.NaN }
+
+    const limb = unit(sub(to, from))
+    const elevation = angleBetween(limb, axis)
+    if (Number.isNaN(elevation)) return { elevation: Number.NaN, azimuth: Number.NaN }
+
+    // Outward is the person's own left for a left limb, their own right for a right one, so
+    // "arms out to the sides" is the same azimuth on both.
+    const outward: Vec = side === 'right' ? across : [-across[0], -across[1], -across[2]]
+    const along = dot(limb, axis)
+    // The part of the limb perpendicular to the axis — the only part that has a direction.
+    const flat: Vec = [
+      limb[0] - axis[0] * along,
+      limb[1] - axis[1] * along,
+      limb[2] - axis[2] * along,
+    ]
+    if (length(flat) < AZIMUTH_FLOOR) return { elevation, azimuth: Number.NaN }
+
+    return { elevation, azimuth: Math.atan2(dot(flat, forward), dot(flat, outward)) }
+  }
 
   const le = at(JOINT.leftElbow)
   const lw = at(JOINT.leftWrist)
@@ -269,15 +385,16 @@ export function toSkeleton(landmarks: Landmarks): Skeleton | null {
   const rk = at(JOINT.rightKnee)
   const ra = at(JOINT.rightAnkle)
 
-  const armSwing = (shoulder: Point, elbow: Point | undefined): number =>
-    elbow === undefined || !seen(elbow)
-      ? Number.NaN
-      : signedAngle(sub(elbow, shoulder), spine, across)
+  const down: Vec = [-up[0], -up[1], -up[2]]
+  const leftArm = direction(ls, le, up, 'left')
+  const rightArm = direction(rs, re, up, 'right')
+  const leftLeg = direction(lh, lk, down, 'left')
+  const rightLeg = direction(rh, rk, down, 'right')
 
-  const legLift = (hip: Point, knee: Point | undefined): number =>
-    knee === undefined || !seen(knee)
-      ? Number.NaN
-      : angleBetween(sub(knee, hip), [-spine[0], -spine[1], -spine[2]])
+  // The world's vertical. Roll and pitch are the two things that are genuinely about the
+  // body's relation to gravity rather than to itself, so they are the one place the world
+  // frame is used. MediaPipe's world frame has −y up.
+  const worldUp: Vec = [0, -1, 0]
 
   return {
     leftElbow:
@@ -285,27 +402,29 @@ export function toSkeleton(landmarks: Landmarks): Skeleton | null {
     rightElbow:
       re !== undefined && rw !== undefined && seen(re, rw) ? angleAt(re, rs, rw) : Number.NaN,
 
-    leftShoulder: le !== undefined && seen(le) ? angleBetween(sub(le, ls), spine) : Number.NaN,
-    rightShoulder: re !== undefined && seen(re) ? angleBetween(sub(re, rs), spine) : Number.NaN,
-
-    leftArmSwing: armSwing(ls, le),
-    rightArmSwing: armSwing(rs, re),
+    leftShoulder: leftArm.elevation,
+    rightShoulder: rightArm.elevation,
+    leftArmAround: leftArm.azimuth,
+    rightArmAround: rightArm.azimuth,
 
     leftKnee:
       lk !== undefined && la !== undefined && seen(lk, la) ? angleAt(lk, lh, la) : Number.NaN,
     rightKnee:
       rk !== undefined && ra !== undefined && seen(rk, ra) ? angleAt(rk, rh, ra) : Number.NaN,
 
-    leftHip: legLift(lh, lk),
-    rightHip: legLift(rh, rk),
+    leftHip: leftLeg.elevation,
+    rightHip: rightLeg.elevation,
+    leftLegAround: leftLeg.azimuth,
+    rightLegAround: rightLeg.azimuth,
 
-    // Lean is measured against the *world's* vertical, which is the one thing here that is
-    // not body-relative — because leaning is precisely a change in the body's relation to
-    // gravity. MediaPipe's world frame has −y up.
-    lean: angleBetween(spine, [0, -1, 0]),
+    // Signed, both of them. The unsigned tilt this replaces gave leaning left and leaning
+    // right the same number, which made the sway — a dance that is nothing but alternating
+    // those two — literally unscoreable.
+    roll: Math.atan2(dot(up, [-across[0], -across[1], -across[2]]), dot(up, worldUp)),
+    pitch: Math.atan2(dot(up, forward), dot(up, worldUp)),
     // Shoulders against hips. The one angle that needs both, and the one that catches a
     // whole class of "your feet are right but your body is not" errors.
-    twist: signedAngle(across, sub(rh, lh), spine),
+    twist: signedAngle(across, unit(sub(rh, lh)), up),
   }
 }
 
@@ -313,12 +432,13 @@ export function toSkeleton(landmarks: Landmarks): Skeleton | null {
  * The same pose as seen in a mirror.
  *
  * Somebody copying a video facing the camera lifts the opposite arm. They are not wrong, and
- * a coach that told them so would be useless. Every routine is therefore scored both ways
- * and the better reading is kept — see `score.ts`.
+ * a coach that told them so would be useless. Every routine is therefore scored both ways and
+ * the better reading is kept — see `score.ts`.
  *
- * Mirroring is a swap of left and right plus a sign flip on everything that is signed. The
- * sign flips are the part that is easy to forget and the part that makes a mirrored score
- * silently slightly wrong rather than obviously broken.
+ * Because azimuth is measured *outward from each limb's own side*, mirroring is now a plain
+ * swap for the limbs: a person raising their left arm forward and their mirror image raising
+ * the right arm forward have the same azimuth. Only the torso's two lateral angles flip,
+ * because roll and twist are measured against the body rather than per side.
  */
 export function mirror(skeleton: Skeleton): Skeleton {
   return {
@@ -326,13 +446,16 @@ export function mirror(skeleton: Skeleton): Skeleton {
     rightElbow: skeleton.leftElbow,
     leftShoulder: skeleton.rightShoulder,
     rightShoulder: skeleton.leftShoulder,
-    leftArmSwing: -skeleton.rightArmSwing,
-    rightArmSwing: -skeleton.leftArmSwing,
+    leftArmAround: skeleton.rightArmAround,
+    rightArmAround: skeleton.leftArmAround,
     leftKnee: skeleton.rightKnee,
     rightKnee: skeleton.leftKnee,
     leftHip: skeleton.rightHip,
     rightHip: skeleton.leftHip,
-    lean: skeleton.lean,
+    leftLegAround: skeleton.rightLegAround,
+    rightLegAround: skeleton.leftLegAround,
+    roll: -skeleton.roll,
+    pitch: skeleton.pitch,
     twist: -skeleton.twist,
   }
 }

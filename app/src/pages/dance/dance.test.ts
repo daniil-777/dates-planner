@@ -26,7 +26,7 @@ import {
   type Skeleton,
 } from './pose'
 import { noteFor, scoreRoutine } from './score'
-import { ROUTINES, beatsIn, poseAt, secondsFor, toSequence } from './routines'
+import { REST, ROUTINES, beatsIn, poseAt, secondsFor, toSequence } from './routines'
 
 /* ------------------------------------------------------------- fixtures */
 
@@ -37,13 +37,16 @@ function still(): Skeleton {
     rightElbow: Math.PI,
     leftShoulder: 0.2,
     rightShoulder: 0.2,
-    leftArmSwing: 0,
-    rightArmSwing: 0,
+    leftArmAround: 0,
+    rightArmAround: 0,
     leftKnee: Math.PI,
     rightKnee: Math.PI,
     leftHip: 0.1,
     rightHip: 0.1,
-    lean: 0,
+    leftLegAround: 0,
+    rightLegAround: 0,
+    roll: 0,
+    pitch: 0,
     twist: 0,
   }
 }
@@ -107,14 +110,18 @@ describe('reading a body', () => {
     expect(toSkeleton(hidden)).toBeNull()
   })
 
-  it('mirrors by swapping sides and flipping every signed angle', () => {
+  it('mirrors by swapping sides, flipping only what is measured against the body', () => {
     // The sign flips are what make a mirrored score subtly wrong rather than obviously
     // broken when they are forgotten.
-    const one: Skeleton = { ...still(), leftArmSwing: 0.4, twist: 0.3, leftElbow: 1 }
+    const one: Skeleton = { ...still(), leftArmAround: 0.4, twist: 0.3, roll: 0.2, leftElbow: 1 }
     const other = mirror(one)
     expect(other.rightElbow).toBe(1)
-    expect(other.rightArmSwing).toBe(-0.4)
+    // Azimuth is measured outward from each limb's own side, so a mirrored left-arm-forward
+    // is a right-arm-forward with the SAME number — the swap carries it, no sign flip.
+    expect(other.rightArmAround).toBe(0.4)
+    // Roll and twist are measured against the body rather than per side, so they do flip.
     expect(other.twist).toBe(-0.3)
+    expect(other.roll).toBe(-0.2)
     expect(mirror(other)).toEqual(one)
   })
 })
@@ -333,6 +340,50 @@ describe('the routines that ship', () => {
       })
       // Almost every frame should differ from the one before it.
       expect(moved.length / frames.length, routine.id).toBeGreaterThan(0.9)
+    }
+  })
+
+  it('can tell standing still from dancing — on the real routines, not a synthetic one', () => {
+    // The test that should have existed from the start, and the one this file was missing.
+    //
+    // Every other scoring test here uses a synthetic `wave` with a 0.9 rad amplitude. Real
+    // routines are far smaller — the sway moves a knee through 0.30 rad and the shoulder
+    // bounce a shoulder through 0.16 — and the scale used to be absolute, with anything under
+    // 0.1 rad counting as perfect. So three of the four SHIPPED routines scored somebody who
+    // stood completely still at 99 or 100 out of 100 and told them "that was really close".
+    //
+    // A synthetic fixture five times larger than the real content cannot catch that. This
+    // asserts the property on the actual routines.
+    for (const routine of ROUTINES) {
+      const reference = toSequence(routine, 20)
+      const motionless = reference.map(() => ({ ...REST }))
+
+      const danced = scoreRoutine(reference, reference).score
+      const stood = scoreRoutine(reference, motionless).score
+
+      expect(danced, routine.id).toBeGreaterThanOrEqual(95)
+      expect(stood, `${routine.id}: standing still must not score well`).toBeLessThan(25)
+      expect(danced - stood, `${routine.id}: too little separation`).toBeGreaterThan(70)
+    }
+  })
+
+  it('rewards a bigger attempt more than a timid one, on every real routine', () => {
+    // Monotonic in effort. Without it, a scale could satisfy the test above by being harsh
+    // everywhere rather than by discriminating.
+    for (const routine of ROUTINES) {
+      const reference = toSequence(routine, 20)
+      const at = (fraction: number) =>
+        reference.map(frame => {
+          const scaled = { ...REST }
+          for (const name of Object.keys(REST) as (keyof typeof REST)[]) {
+            scaled[name] = REST[name] + (frame[name] - REST[name]) * fraction
+          }
+          return scaled
+        })
+
+      const big = scoreRoutine(reference, at(0.8)).score
+      const small = scoreRoutine(reference, at(0.3)).score
+      expect(big, `${routine.id}: 80% should beat 30%`).toBeGreaterThan(small)
     }
   })
 

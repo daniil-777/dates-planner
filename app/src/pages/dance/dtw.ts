@@ -37,6 +37,8 @@
  * 71" is not.
  */
 
+import { CIRCULAR_MASK, circularDistance } from './pose'
+
 /** One step of the alignment: reference frame `i` goes with learner frame `j`. */
 export interface Step {
   i: number
@@ -95,17 +97,42 @@ export function salience(
   return weights
 }
 
-/** How far one angle travels over a sequence. `NaN` frames are skipped; all-NaN is zero. */
+/** The distance between two values of angle `index`, the short way round if it is circular. */
+function gap(index: number, a: number, b: number): number {
+  return CIRCULAR_MASK[index] === true ? circularDistance(a, b) : Math.abs(a - b)
+}
+
+/**
+ * How far one angle travels over a sequence. `NaN` frames are skipped; all-NaN is zero.
+ *
+ * For a circular angle this is the largest gap between any two frames rather than
+ * `max − min`: an arm swinging through the ±π seam has values at both ends of the range and
+ * a naive span would report nearly a full turn for a small movement.
+ */
 export function rangeOf(frames: readonly (readonly number[])[], index: number): number {
-  let low = Infinity
-  let high = -Infinity
+  const seenValues: number[] = []
   for (const frame of frames) {
     const value = frame[index]
     if (value === undefined || Number.isNaN(value)) continue
-    if (value < low) low = value
-    if (value > high) high = value
+    seenValues.push(value)
   }
-  return high === -Infinity ? 0 : high - low
+  if (seenValues.length === 0) return 0
+
+  if (CIRCULAR_MASK[index] !== true) {
+    return Math.max(...seenValues) - Math.min(...seenValues)
+  }
+
+  // Circular: the widest short-way gap between any two samples. Sampled rather than
+  // exhaustive when the sequence is long, because this is O(n²) and runs per angle.
+  const step = Math.max(1, Math.floor(seenValues.length / 60))
+  let widest = 0
+  for (let i = 0; i < seenValues.length; i += step) {
+    for (let j = i + step; j < seenValues.length; j += step) {
+      const apart = circularDistance(seenValues[i]!, seenValues[j]!)
+      if (apart > widest) widest = apart
+    }
+  }
+  return widest
 }
 
 /**
@@ -150,7 +177,11 @@ export function frameDistance(
 
     // Absolute rather than squared: squaring makes one badly-placed arm dominate the whole
     // frame, and a dancer with one thing wrong should not be told everything is wrong.
-    sum += Math.abs(one - other) * weight
+    //
+    // The azimuths live on a circle, so they take the short way round: an arm at +179° and
+    // one at −179° are two degrees apart, and plain subtraction would call them 358° apart —
+    // which is the largest error the scale can express, for two poses that are the same.
+    sum += gap(index, one, other) * weight
     total += weight
     counted += 1
   }
@@ -264,6 +295,66 @@ function trace(cost: number[][], n: number, m: number, w: number): Step[] {
 }
 
 /**
+ * The error a completely motionless learner would make.
+ *
+ * ## Why the score needs this
+ *
+ * Scoring measured raw radians against fixed thresholds, and that is only meaningful if every
+ * routine asks for roughly the same amount of movement. They do not. The underarm turn swings
+ * a shoulder through 138 degrees; the sway shifts a knee through 17. With an absolute
+ * "under 0.1 rad is perfect" floor, **standing completely still through the sway scored 100
+ * out of 100** — the whole movement was smaller than the threshold, so doing nothing landed
+ * inside it. Three of the four shipped routines behaved that way and congratulated the
+ * motionless.
+ *
+ * The fix is not a smaller constant, which would only move the problem to a smaller routine.
+ * It is to measure error against *what this routine actually asks for*, and the natural unit
+ * is the error somebody makes by not moving at all: the mean absolute deviation of the
+ * reference from its own average pose. That is computed here rather than assumed from the
+ * keyframe shape, so it is exact for any routine anybody writes later.
+ *
+ * A relative scale is self-calibrating. Ten degrees out is excellent on a routine that swings
+ * through a hundred and forty, and total failure on one that moves through twelve.
+ */
+export function stillnessError(
+  reference: readonly (readonly number[])[],
+  indices: readonly number[],
+  weights: readonly number[],
+): number {
+  let sum = 0
+  let total = 0
+
+  for (const index of indices) {
+    const weight = weights[index] ?? 0
+    if (weight < STILL) continue
+
+    // The mean of this angle over the routine — the pose a motionless learner is effectively
+    // holding, if they hold the most forgiving one available to them.
+    let mean = 0
+    let counted = 0
+    for (const frame of reference) {
+      const value = frame[index]
+      if (value === undefined || Number.isNaN(value)) continue
+      mean += value
+      counted += 1
+    }
+    if (counted === 0) continue
+    mean /= counted
+
+    let deviation = 0
+    for (const frame of reference) {
+      const value = frame[index]
+      if (value === undefined || Number.isNaN(value)) continue
+      deviation += gap(index, value, mean)
+    }
+    sum += (deviation / counted) * weight
+    total += weight
+  }
+
+  return total === 0 ? Number.NaN : sum / total
+}
+
+/**
  * How far out of time one limb is, in frames.
  *
  * ## The idea
@@ -317,7 +408,7 @@ export function limbOffset(
 
         const w = weights[index] ?? 0
         if (w < STILL) continue
-        sum += Math.abs(one - other) * w
+        sum += gap(index, one, other) * w
         total += w
       }
     }
