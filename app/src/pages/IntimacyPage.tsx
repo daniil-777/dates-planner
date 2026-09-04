@@ -18,6 +18,7 @@ import { BusyIndicator, MessageStrip } from '@ui5/webcomponents-react'
 
 import { usePeople } from '@/api/hooks'
 import { session, type Session } from '@/api/auth'
+import { HintLamp } from '@/components/HintLamp'
 import { TouchMapCard } from './intimacy/TouchMapCard'
 import {
   addMark,
@@ -171,10 +172,35 @@ export function IntimacyPage() {
     <div className="intimacy">
       <header className="intimacy__head">
         <h1 className="intimacy__title">Between us</h1>
+        {/*
+          The whole answer to "what is this and who sees it", above every control.
+
+          It used to say only that "the people in this household can see it" — immediately
+          followed by five name chips, so the first thing a newcomer learned about the most
+          private screen in the app was that four other people have tabs on it. The half that
+          reassures ("never sent to a language model") was the last element on the page,
+          roughly two thousand pixels down, under nineteen rows of unanswered questions.
+        */}
         <p className="intimacy__sub">
-          Where you like being touched, drawn rather than described. Only the people in this
-          household can see it, and only you can change yours.
+          Colour in where you like being touched, and where you would rather not. Only this
+          household can open it — never a machine, never a notification.
         </p>
+
+        {/*
+          The second layer, and only the second layer. What a screen asks you to do belongs on
+          the screen; the lamp holds what people wonder — see HintLamp's own header for why
+          that split is the rule rather than a preference.
+        */}
+        <HintLamp
+          id="intimacy"
+          label="What people ask"
+          hints={[
+            'Only you can change your own. Everyone here can see everyone’s, which is the point of it.',
+            'Nothing is ever sent to a language model, and none of it appears in a statement, a memory or a notification.',
+            'The figure is a drawing, not a likeness. Pick whichever shape is easiest to point at — it changes the picture and nothing else.',
+            'There is no finishing this. Mark one thing or twenty, and change any of it whenever you like.',
+          ]}
+        />
       </header>
 
       {problem !== null && (
@@ -216,10 +242,8 @@ export function IntimacyPage() {
         onSetLevel={onSetLevel}
       />
 
-      <p className="intimacy__footnote">
-        These are the most private rows in the ledger. They stay on your own server, they are never
-        sent to a language model, and they never appear in a statement, a memory or a notification.
-      </p>
+      {/* The reassurance has moved up into the lede and the lamp, where it is read before
+          anybody decides whether to start rather than after they have finished. */}
     </div>
   )
 }

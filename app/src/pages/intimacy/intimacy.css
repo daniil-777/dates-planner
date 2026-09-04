@@ -41,10 +41,29 @@
 
 /* ------------------------------------------------------------ whose map */
 
+/* One row that scrolls, not two that wrap.
+   
+   Five people wrapped to two rows of chips and pushed the figure a further ~50px down the
+   page, and every household member added another shove. A household is a short list and
+   sideways is the right axis for it. */
 .intimacy__people {
   display: flex;
   gap: var(--twm-space-s);
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+  /* So the first and last chip are not flush against the page edge while scrolling. */
+  padding-inline: 1px;
+  scroll-snap-type: x proximity;
+}
+
+.intimacy__people::-webkit-scrollbar {
+  display: none;
+}
+
+.intimacy__person {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
 }
 
 .intimacy__person {
@@ -52,7 +71,7 @@
   align-items: center;
   gap: 0.45rem;
   min-height: var(--twm-touch);
-  padding: 0 var(--twm-space-l);
+  padding: 0 var(--twm-space-m);
   border: 1px solid var(--twm-border);
   border-radius: var(--twm-radius-pill);
   background: var(--twm-surface);
@@ -165,7 +184,10 @@
   width: 100%;
   /* Tall enough that a whole standing body is legible on a phone without scrolling, and
      capped so it does not swallow a desktop window. */
-  height: min(62vh, 30rem);
+  /* Shorter than it was (62vh / 30rem), so the figure and the palette share the first
+     viewport rather than the palette living below the fold — which was the whole failure of
+     the arrangement this replaced. */
+  height: min(46vh, 22rem);
   /* `pan-y`, so a downward thumb drag scrolls the page instead of spinning the body. See
      BodyCanvas.tsx — the canvas is half the phone, and with `none` it swallowed the one
      gesture everybody tries first. */
@@ -304,4 +326,130 @@
   margin: var(--twm-space-s) 0 0;
   font-size: 0.85rem;
   color: var(--twm-muted);
+}
+
+/* ============================================================== the palette */
+
+/**
+ * Pick a colour, then tap the body.
+ *
+ * Sticky at the bottom, above the tab bar, and always on screen. Both of those are
+ * deliberate. Bottom, because `.twm-shellbar-wrap` is already `sticky; top: 0` with a higher
+ * stacking order — a top-sticky palette slides underneath an opaque header exactly when
+ * somebody scrolls down into the region list, which is the same bug this replaced. Always,
+ * because these four words are the entire vocabulary of the feature and they used to appear
+ * nowhere on the page until after a successful selection.
+ */
+.tmap__palette {
+  position: sticky;
+  bottom: calc(
+    var(--twm-bottomnav-height, 56px) + var(--twm-safe-bottom, 0px) + var(--twm-space-s, 0.5rem)
+  );
+  z-index: 5;
+  margin-top: var(--twm-space-m, 0.75rem);
+  padding: var(--twm-space-s, 0.5rem) var(--twm-space-s, 0.5rem) var(--twm-space-xs, 0.25rem);
+  border-radius: var(--twm-radius-m, 0.75rem);
+  border: 1px solid var(--twm-border, rgb(0 0 0 / 10%));
+  background: var(--twm-surface, #fff);
+  /* Enough to read as floating over the list it scrolls past, and no more. */
+  box-shadow: 0 -2px 12px rgb(34 54 73 / 8%);
+}
+
+.tmap__brushes {
+  display: grid;
+  /* Three across, then "Rather not" alone underneath. zones.ts already argues that it sits
+     "deliberately outside that ramp rather than at the cold end of it: it is not a small
+     amount of yes" — this is that argument, laid out. */
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--twm-space-xs, 0.25rem);
+}
+
+.tmap__brush {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  min-height: var(--twm-touch, 44px);
+  padding: 0.375rem 0.5rem;
+  border-radius: var(--twm-radius-s, 0.5rem);
+  border: 1px solid var(--twm-border, rgb(0 0 0 / 12%));
+  background: none;
+  color: var(--sapTextColor, #1d2d3e);
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 120ms ease,
+    border-color 120ms ease;
+}
+
+.tmap__brush:hover {
+  border-color: var(--sapContent_LabelColor, #5b738b);
+}
+
+/* Its own row, behind a hairline: not the cold end of the scale, a different kind of answer.
+   
+   `order` rather than DOM order, because LEVEL_SPECS runs -1, 1, 2, 3 and that ordering is a
+   contract the rest of the app reads. Without it "Rather not" lands on the first row and
+   leads an ascending scale with its negative — the exact thing zones.ts argues against. */
+.tmap__brush--apart {
+  order: 1;
+  grid-column: 1 / -1;
+  margin-top: var(--twm-space-xs, 0.25rem);
+  padding-top: calc(var(--twm-space-xs, 0.25rem) + 1px);
+  border-top: 1px solid var(--twm-border, rgb(0 0 0 / 10%));
+  border-radius: var(--twm-radius-s, 0.5rem);
+}
+
+.tmap__brushDot {
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: 50%;
+  flex: 0 0 auto;
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 12%);
+}
+
+/* An armed brush fills with its own colour, so the palette is the legend as well as the
+   control — the figure's four hues have never had a key anywhere in the app.
+   
+   The dot then has to stop being that same colour, or it disappears into the fill it is
+   supposed to be naming. It becomes the pill's ink instead, which is already chosen to be
+   legible on it. */
+.tmap__brush[aria-pressed='true'] .tmap__brushDot {
+  background: currentColor !important;
+  box-shadow: none;
+  opacity: 0.9;
+}
+
+.tmap__say {
+  margin: var(--twm-space-xs, 0.25rem) 0 0;
+  padding: 0 0.25rem;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--sapContent_LabelColor, #5b738b);
+  min-height: 1.4em;
+}
+
+.tmap__nofinish {
+  margin: 0.25rem 0 0.25rem;
+  padding: 0 0.25rem;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--sapContent_LabelColor, #5b738b);
+  opacity: 0.85;
+}
+
+/* An unmarked row carries no ring.
+   
+   Nineteen hollow circles read as nineteen unanswered questions — a form somebody is behind
+   on rather than a place to say as much or as little as they like. The swatch appears when
+   there is something to show. */
+.tmap__zone .tmap__swatch {
+  border-color: transparent;
+  background: none;
+}
+
+.tmap__zone .tmap__swatch[data-marked='true'] {
+  border-color: rgb(0 0 0 / 12%);
 }

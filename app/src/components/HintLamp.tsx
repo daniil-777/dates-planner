@@ -37,6 +37,8 @@
  */
 import { useCallback, useEffect, useId, useRef, useState } from 'react'
 
+import './hintLamp.css'
+
 export interface HintLampProps {
   /**
    * Distinguishes this lamp from every other, for remembering whether it has been noticed.
