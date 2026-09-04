@@ -100,6 +100,9 @@ const de: Dictionary = {
   'tile.reflect.caption': 'nur für dich',
   'tile.scan.label': 'Scannen',
   'tile.scan.hint': 'Beleg fotografieren',
+  // The question on the aurora itself. It was the one mood key with no translation,
+  // so a German phone showed 'How is it, right now?' in the middle of German chrome.
+  'mood.prompt': 'Wie ist es gerade?',
   'tile.mood.label': 'Stimmung',
   'tile.mood.hint': 'Wie geht es dir heute?',
   'tile.mood.value': 'Check-in',
@@ -255,6 +258,7 @@ const ru: Dictionary = {
   'tile.reflect.hint': 'Записать, только для себя',
   'tile.reflect.value': 'Записать',
   'tile.reflect.caption': 'только для тебя',
+  'mood.prompt': 'Как сейчас?',
   'tile.mood.label': 'Настроение',
   'tile.mood.hint': 'Как ты сегодня?',
   'tile.mood.value': 'Отметиться',
