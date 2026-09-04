@@ -1,0 +1,601 @@
+/*
+ * The mood sky, the face and the dial.
+ *
+ * Kept out of mood.css deliberately. That file is already 19 KB and carries the aurora,
+ * the ribbon and the list; adding a weather system to it would make the one stylesheet
+ * nobody can hold in their head at once. Everything here belongs to the picker and
+ * nothing here is used anywhere else.
+ *
+ * ## The rule this file follows
+ *
+ * Everything that animates is `transform` or `opacity`, and nothing animates a filter, a
+ * gradient stop, a box-shadow or a layout property. The clouds are the case that matters:
+ * their `feTurbulence` filter is rasterised once because the filtered group never moves —
+ * the *parent* is what drifts. Swap those two and the browser re-runs the whole filter
+ * pipeline every frame, which on a mid-range phone is the difference between free and
+ * unusable.
+ *
+ * Text never sits on the weather directly. It sits on a solid scrim, because a colour that
+ * moves cannot be contrast-tested — see the `--dial-*` inks below, all of them opaque.
+ */
+
+/* ------------------------------------------------------------------ *
+ *  The scene
+ * ------------------------------------------------------------------ */
+
+.sky {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-radius: var(--twm-radius-l, 1rem);
+  /* Tall enough that the sky reads as a sky rather than as a banner. The face needs room
+     above it for cloud and below it for the dial. */
+  min-height: 26rem;
+  display: flex;
+  flex-direction: column;
+  background: var(--sky-top, #19212a);
+}
+
+.sky__scene {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
+.sky__sun {
+  /* Short enough to be invisible while dragging, long enough that a jump — the camera
+     setting a level, or an arrow key — arrives rather than snaps. */
+  transition:
+    opacity 160ms linear,
+    transform 220ms ease-out;
+}
+
+.sky__rays {
+  transform-origin: 0 0;
+  animation: sky-rays 140s linear infinite;
+}
+
+@keyframes sky-rays {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/*
+ * Cloud drift.
+ *
+ * The animation is on the outer group and the filter on the inner one, so the expensive
+ * raster happens once. `--drift-phase` staggers the layers against each other, which is
+ * what stops five clouds moving like one sheet.
+ */
+.sky__cloud {
+  animation: sky-drift calc(var(--sky-drift, 90s) / var(--drift-speed, 1)) linear infinite;
+  animation-delay: calc(var(--drift-phase, 0) * -13s);
+  will-change: transform;
+}
+
+@keyframes sky-drift {
+  from {
+    translate: -22% 0;
+  }
+  to {
+    translate: 22% 0;
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ *  Rain
+ * ------------------------------------------------------------------ */
+
+/*
+ * Two layers of streaks, not a few thousand elements.
+ *
+ * ## Why it takes a gradient *and* a mask
+ *
+ * The obvious version — one repeating gradient, rotated — draws continuous lines from one
+ * edge of the frame to the other, and continuous lines are not rain. They are stripes.
+ * Rain is short falling dashes with gaps between them, and the gap is most of what tells
+ * you it is falling.
+ *
+ * So the two axes are separated. The **background** is vertical hairlines, spaced across
+ * the layer, which sets where the drops fall. The **mask** is horizontal bands, which cuts
+ * each hairline into dashes and sets how long a drop is. Then the whole layer is rotated
+ * so the rain slants.
+ *
+ * That split is also what makes the loop seamless for free: vertical hairlines are
+ * unchanged by vertical translation, so animating `translateY` by exactly one *mask*
+ * period returns the layer to a state identical to where it started. One composited
+ * transform, no repaint, no seam.
+ */
+.sky__rain {
+  position: absolute;
+  inset: -30%;
+  z-index: 1;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.sky__rain--far {
+  background-image: repeating-linear-gradient(
+    90deg,
+    transparent 0 17px,
+    rgb(198 216 236 / 50%) 17px 18px,
+    transparent 18px 35px
+  );
+  -webkit-mask-image: repeating-linear-gradient(180deg, #000 0 11px, transparent 11px 44px);
+  mask-image: repeating-linear-gradient(180deg, #000 0 11px, transparent 11px 44px);
+  opacity: calc(var(--sky-rain, 0) * 0.5);
+  animation: sky-rain-far calc((1.15 - 0.5 * var(--sky-rain, 0)) * 1s) linear infinite;
+}
+
+.sky__rain--near {
+  background-image: repeating-linear-gradient(
+    90deg,
+    transparent 0 31px,
+    rgb(226 238 252 / 72%) 31px 32.5px,
+    transparent 32.5px 63px
+  );
+  -webkit-mask-image: repeating-linear-gradient(180deg, #000 0 19px, transparent 19px 72px);
+  mask-image: repeating-linear-gradient(180deg, #000 0 19px, transparent 19px 72px);
+  opacity: calc(var(--sky-rain, 0) * 0.62);
+  animation: sky-rain-near calc((0.78 - 0.36 * var(--sky-rain, 0)) * 1s) linear infinite;
+}
+
+/* Each translates by exactly its own mask period, which is what makes the loop invisible. */
+@keyframes sky-rain-far {
+  from {
+    transform: rotate(13deg) translateY(0);
+  }
+  to {
+    transform: rotate(13deg) translateY(44px);
+  }
+}
+
+@keyframes sky-rain-near {
+  from {
+    transform: rotate(13deg) translateY(0);
+  }
+  to {
+    transform: rotate(13deg) translateY(72px);
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ *  Lightning
+ * ------------------------------------------------------------------ */
+
+/*
+ * A real flash is not one pulse. It is a short stutter — bright, nearly out, brighter,
+ * then a slow decay — and the stutter is the entire difference between lightning and a
+ * white div fading in.
+ */
+.sky__flash {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: radial-gradient(
+    120% 90% at 55% 0%,
+    rgb(255 253 240 / 88%),
+    rgb(214 228 255 / 34%) 45%,
+    transparent 72%
+  );
+  animation: sky-flash 900ms ease-out 1 both;
+}
+
+@keyframes sky-flash {
+  0% {
+    opacity: 0;
+  }
+  4% {
+    opacity: 1;
+  }
+  11% {
+    opacity: 0.12;
+  }
+  17% {
+    opacity: 0.9;
+  }
+  26% {
+    opacity: 0.28;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.sky__bolt {
+  animation: sky-bolt 900ms ease-out 1 both;
+}
+
+@keyframes sky-bolt {
+  0%,
+  3% {
+    opacity: 0;
+  }
+  5% {
+    opacity: 1;
+  }
+  12% {
+    opacity: 0.1;
+  }
+  18% {
+    opacity: 0.85;
+  }
+  30% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* The warm light the sun throws over everything in front of it. */
+.sky__warm {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: calc(var(--sky-warmth, 0) * 0.55);
+  background: radial-gradient(
+    90% 70% at 72% 22%,
+    rgb(255 226 168 / 55%),
+    rgb(255 206 130 / 12%) 50%,
+    transparent 78%
+  );
+  transition: opacity 200ms linear;
+}
+
+.sky__content {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--twm-space-m, 0.75rem);
+  padding: var(--twm-space-l, 1rem);
+  flex: 1;
+}
+
+/* ------------------------------------------------------------------ *
+ *  The face
+ * ------------------------------------------------------------------ */
+
+.face {
+  display: block;
+  width: min(15rem, 52vw);
+  height: auto;
+  /* Lifts the head off the sky. A flat circle on a gradient reads as a sticker. */
+  filter: drop-shadow(0 1.25rem 1.75rem rgb(10 14 22 / 32%));
+}
+
+/*
+ * The blink.
+ *
+ * `transform-box: fill-box` is load-bearing: without it the scale happens about the origin
+ * of the viewBox and the eyes leave the face. With it, each group scales about its own
+ * bounding box, which is the eye.
+ */
+.face__eyes {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.face__eyes--blink {
+  animation: face-blink 190ms ease-in-out 1;
+}
+
+@keyframes face-blink {
+  0%,
+  100% {
+    transform: scaleY(1);
+  }
+  45%,
+  55% {
+    transform: scaleY(0.08);
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ *  The dial
+ * ------------------------------------------------------------------ */
+
+.dial {
+  width: min(30rem, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: var(--twm-space-s, 0.5rem);
+  /* The scrim.
+     Every ink below is opaque, and every ratio quoted is computed against this scrim
+     composited over PURE WHITE — a backdrop brighter than any sky this page can actually
+     paint, so the figures are a floor rather than a typical case. 86% is the number that
+     makes the 12px tick labels clear 4.5:1; at 82% they came out at 4.32 and failed. */
+  background: rgb(16 20 27 / 86%);
+  backdrop-filter: blur(0.75rem);
+  border-radius: var(--twm-radius-m, 0.75rem);
+  padding: var(--twm-space-m, 0.75rem) var(--twm-space-l, 1rem) var(--twm-space-l, 1rem);
+}
+
+.dial__readout {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--twm-space-m, 0.75rem);
+}
+
+.dial__word {
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.1;
+  /* 12.3:1 worst case. */
+  color: #ffffff;
+}
+
+.dial__level {
+  font-size: 0.875rem;
+  font-weight: 400;
+  /* 7.6:1 worst case — a secondary ink that is quieter by weight and size, not by being
+     faded until it fails. */
+  color: #c3ccd8;
+  font-variant-numeric: tabular-nums;
+}
+
+.dial__rail {
+  position: relative;
+}
+
+/*
+ * The input itself: no appearance, full width, and a 2.75rem box so the target is the
+ * whole band rather than the 12px track inside it.
+ */
+.dial__input {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  width: 100%;
+  height: 2.75rem;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.dial__input:focus {
+  outline: none;
+}
+
+/* The track carries the whole journey — storm at one end, sun at the other — rather than
+   only the part already travelled. It is the map, and the thumb is the position on it. */
+.dial__input::-webkit-slider-runnable-track {
+  height: 0.75rem;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    #2b3441 0%,
+    #4a5a6b 26%,
+    #6f8ba6 48%,
+    #9fbcd2 66%,
+    #ffc95e 88%,
+    #ffd977 100%
+  );
+  box-shadow: inset 0 1px 2px rgb(0 0 0 / 45%);
+}
+
+.dial__input::-moz-range-track {
+  height: 0.75rem;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    #2b3441 0%,
+    #4a5a6b 26%,
+    #6f8ba6 48%,
+    #9fbcd2 66%,
+    #ffc95e 88%,
+    #ffd977 100%
+  );
+  box-shadow: inset 0 1px 2px rgb(0 0 0 / 45%);
+}
+
+/* The fat white circle. */
+.dial__input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  background: radial-gradient(circle at 38% 32%, #ffffff 0%, #ffffff 58%, #e6ebf1 100%);
+  border: none;
+  /* Centres a 36px thumb on a 12px track. */
+  margin-top: -0.75rem;
+  box-shadow:
+    0 0.125rem 0.5rem rgb(6 10 16 / 45%),
+    0 0 0 1px rgb(255 255 255 / 65%);
+  transition: transform 120ms ease-out;
+}
+
+.dial__input::-moz-range-thumb {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  background: radial-gradient(circle at 38% 32%, #ffffff 0%, #ffffff 58%, #e6ebf1 100%);
+  border: none;
+  box-shadow:
+    0 0.125rem 0.5rem rgb(6 10 16 / 45%),
+    0 0 0 1px rgb(255 255 255 / 65%);
+  transition: transform 120ms ease-out;
+}
+
+.dial__input:active::-webkit-slider-thumb {
+  transform: scale(1.08);
+}
+
+.dial__input:active::-moz-range-thumb {
+  transform: scale(1.08);
+}
+
+/* A focus ring that survives on both a dark storm and a bright sun: a white halo with a
+   dark keyline outside it, so one of the two always has contrast. */
+.dial__input:focus-visible::-webkit-slider-thumb {
+  box-shadow:
+    0 0 0 0.1875rem #ffffff,
+    0 0 0 0.3125rem #0a0e14;
+}
+
+.dial__input:focus-visible::-moz-range-thumb {
+  box-shadow:
+    0 0 0 0.1875rem #ffffff,
+    0 0 0 0.3125rem #0a0e14;
+}
+
+.dial__ticks {
+  position: relative;
+  height: 1.75rem;
+  margin-top: 0.125rem;
+}
+
+.dial__tick {
+  position: absolute;
+  left: var(--tick-at, 0%);
+  /* The thumb travels between half a thumb-width in from each end, so the ticks are inset
+     the same way. Without this the outer two sit under the rounded ends of the track. */
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1875rem;
+}
+
+.dial__tick-dot {
+  width: 0.25rem;
+  height: 0.25rem;
+  border-radius: 50%;
+  /* 4.3:1 worst case, against a 3:1 floor for a graphical object. A 4px dot gets margin. */
+  background: #8e9aa8;
+}
+
+.dial__tick-word {
+  font-size: 0.75rem;
+  /* 5.0:1 worst case. */
+  color: #9aa6b4;
+  white-space: nowrap;
+}
+
+.dial__tick--on .dial__tick-dot {
+  background: #ffffff;
+}
+
+.dial__tick--on .dial__tick-word {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+/* The prompt above the face. */
+.sky__prompt {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #ffffff;
+  text-align: center;
+  /* Opaque plate rather than a text-shadow: a shadow is not a contrast guarantee when the
+     thing behind it is a sky that changes. */
+  background: rgb(16 20 27 / 72%);
+  padding: 0.375rem 0.875rem;
+  border-radius: 999px;
+}
+
+/* ------------------------------------------------------------------ *
+ *  The panel under the dial — note, suggestion, actions
+ * ------------------------------------------------------------------ */
+
+.sky__panel {
+  width: min(30rem, 100%);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--twm-space-s, 0.5rem);
+  padding: var(--twm-space-m, 0.75rem);
+  border-radius: var(--twm-radius-m, 0.75rem);
+  background: rgb(16 20 27 / 86%);
+  backdrop-filter: blur(0.75rem);
+  -webkit-backdrop-filter: blur(0.75rem);
+  margin-top: auto;
+}
+
+/*
+ * The note.
+ *
+ * 16px is not a style choice: anything smaller makes iOS zoom the whole page on focus, and
+ * the zoom outlives the focus. mood.css and login.css both say the same.
+ */
+.sky__panel .mood-note {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #ffffff;
+  font: inherit;
+  font-size: 1rem;
+  resize: none;
+}
+
+/* Opaque, and measured: 5.9:1 against the panel composited over white. A placeholder
+   faded with alpha over a moving background has no contrast figure at all, which is the
+   failure this whole file is written to avoid. */
+.sky__panel .mood-note::placeholder {
+  color: #aab4c2;
+}
+
+.sky__panel .mood-note:focus-visible {
+  outline: none;
+}
+
+.sky__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--twm-space-s, 0.5rem);
+  flex-wrap: wrap;
+}
+
+.sky__actions .ui5-button-root,
+.sky__actions ui5-button::part(button) {
+  border-radius: var(--twm-radius-pill, 999px);
+}
+
+.sky__actions ui5-button[design='Emphasized']::part(button) {
+  background: rgb(255 255 255 / 94%);
+  border-color: transparent;
+  color: #10141b;
+}
+
+.sky__actions ui5-button[design='Transparent']::part(button) {
+  color: #ffffff;
+  border-color: rgb(255 255 255 / 42%);
+}
+
+/* ------------------------------------------------------------------ *
+ *  Reduced motion
+ * ------------------------------------------------------------------ */
+
+/*
+ * Everything stops. Nothing is lost, because none of the information on this screen is
+ * carried by the movement — the weather is still the weather, the face is still the face,
+ * and the lightning never fires (MoodSky reads the same query and does not schedule it).
+ */
+@media (prefers-reduced-motion: reduce) {
+  .sky__cloud,
+  .sky__rays,
+  .sky__rain--far,
+  .sky__rain--near,
+  .face__eyes--blink {
+    animation: none;
+  }
+
+  .sky__sun,
+  .sky__warm,
+  .dial__input::-webkit-slider-thumb,
+  .dial__input::-moz-range-thumb {
+    transition: none;
+  }
+}
