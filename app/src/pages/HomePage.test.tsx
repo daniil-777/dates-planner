@@ -240,6 +240,7 @@ describe('the home grid', () => {
     expect(HOME_TILES.map(spec => spec.to)).toEqual([
       '/scan',
       '/ledger',
+      '/wallet',
       '/statement',
       '/tonight',
       '/calendar',
@@ -288,6 +289,10 @@ describe('the home grid', () => {
       ['tonight', '#F5A623'],
       // Gold, for the one screen in the app that is a performance.
       ['games', '#C9A227'],
+      // The fourth, and the last one that should ever be needed: an indigo, because the
+      // money section already holds an orange, a blue and a green and the wallet has to sit
+      // beside the ledger without being mistaken for it.
+      ['wallet', '#3D4C8A'],
     ])
 
     for (const spec of HOME_TILES) {
@@ -386,7 +391,15 @@ describe('the home grid', () => {
     // preference but CONTRACTS.md §13.4: a count of marked regions on the household's
     // first screen would put the most private thing in the app on its most public
     // surface. If a figure ever appears on this tile, this test should fail.
-    const STATIC_FIGURES = new Set(['howItWorks', 'mood', 'chat', 'intimacy', 'tonight', 'games'])
+    const STATIC_FIGURES = new Set([
+      'howItWorks',
+      'mood',
+      'chat',
+      'intimacy',
+      'tonight',
+      'games',
+      'wallet',
+    ])
     const awaited = HOME_TILES.filter(spec => !STATIC_FIGURES.has(spec.id))
     expect(screen.getAllByTestId('home-tile-shimmer')).toHaveLength(awaited.length)
     expect(tile('howItWorks')).not.toHaveAttribute('aria-busy', 'true')

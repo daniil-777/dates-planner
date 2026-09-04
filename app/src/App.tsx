@@ -40,6 +40,7 @@ const PlacesPage = lazyPage(() => import('./pages/PlacesPage'), 'PlacesPage')
 const IdeasPage = lazyPage(() => import('./pages/IdeasPage'), 'IdeasPage')
 // Carries a thousand questions and a stylesheet nothing else uses.
 const GamesPage = lazyPage(() => import('./pages/GamesPage'), 'GamesPage')
+const WalletPage = lazyPage(() => import('./pages/WalletPage'), 'WalletPage')
 const LedgerPage = lazyPage(() => import('./pages/LedgerPage'), 'LedgerPage')
 const EventsPage = lazyPage(() => import('./pages/EventsPage'), 'EventsPage')
 const CalendarPage = lazyPage(() => import('./pages/CalendarPage'), 'CalendarPage')
@@ -111,6 +112,7 @@ export function App() {
               <Route path="/places" element={<PlacesPage />} />
               <Route path="/ideas" element={<IdeasPage />} />
               <Route path="/games" element={<GamesPage />} />
+              <Route path="/wallet" element={<WalletPage />} />
               <Route path="/chat" element={<ChatPage />} />
               <Route path="/how-it-works" element={<HowItWorksPage />} />
               <Route path="*" element={<Navigate to="/" replace />} />

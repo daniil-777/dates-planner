@@ -132,6 +132,18 @@ export function HomePage() {
         caption: t('tile.tonight.caption', 'evenings that worked'),
       },
     },
+    // Static, like `mood` and `tonight`. The points balance would be a lovely live figure
+    // and is not worth a second request on the first screen — the wallet is one tap away
+    // and the number is the first thing on it.
+    wallet: {
+      status: 'ready',
+      figure: {
+        kind: 'text',
+        value: t('tile.wallet.value', 'Points'),
+        emphasis: 'number',
+        caption: t('tile.wallet.caption', 'and cards on file'),
+      },
+    },
     games: {
       status: 'ready',
       figure: {

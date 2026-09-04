@@ -1,0 +1,711 @@
+/**
+ * The wallet.
+ *
+ * Everything here sits on the theme's own tokens rather than fixed colours, so the screen
+ * survives sap_horizon_dark — with two deliberate exceptions, both on the card faces: the
+ * brand gradients are the schemes' own colours and must not be themed, and the ink on them
+ * is white because it has to be legible on a dark gradient in either theme.
+ */
+
+.wallet {
+  padding: 1rem;
+  max-width: 46rem;
+  margin: 0 auto;
+}
+
+.wallet__lede {
+  margin: 0.25rem 0 0;
+  color: var(--sapContent_LabelColor);
+  font-size: 0.875rem;
+}
+
+.wallet__section {
+  margin-top: 2rem;
+}
+
+.wallet__h3 {
+  margin: 0 0 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--sapContent_LabelColor);
+}
+
+/* ------------------------------------------------------------------ points */
+
+.wallet__hero {
+  /* A column on a phone and a row on anything wider. Side by side, a 176px ring leaves a
+     dead half-panel next to it at 430px wide — the figures wrap underneath and the space
+     to the ring's right stays empty, which is what makes a hero look unfinished. */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  margin-top: 1.25rem;
+  padding: 1.5rem 1.25rem;
+  border-radius: 1.125rem;
+  position: relative;
+  overflow: hidden;
+  /* An elevated panel rather than the ring floating on the page's flat grey. The gradient
+     is barely there — two percent of the accent — and does the whole job: it separates the
+     figure people came for from the lists underneath without drawing a box around it. */
+  background:
+    radial-gradient(120% 140% at 15% 0%, rgba(61, 76, 138, 0.1), transparent 60%),
+    var(--sapGroup_ContentBackground, #fff);
+  border: 1px solid var(--sapList_BorderColor);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    0 8px 24px rgba(0, 0, 0, 0.05);
+}
+
+.arc {
+  position: relative;
+  margin: 0;
+  width: 176px;
+  flex: 0 0 auto;
+  /* The two stops of the stroke gradient. Named here rather than in the SVG so the whole
+     palette of this screen lives in one file. */
+  --arc-from: #3d4c8a;
+  --arc-to: #0070f2;
+}
+
+.arc__svg {
+  display: block;
+  /* Start the fill at twelve o'clock rather than at three, which is where a circle's
+     zero angle is and where no progress indicator has ever started. */
+  transform: rotate(-90deg);
+}
+
+.arc__track {
+  stroke: var(--sapField_BorderColor);
+  /* Faint. A heavy track competes with the fill and makes an empty ring look like a
+     disabled control. */
+  opacity: 0.22;
+}
+
+.arc__fill {
+  /* The one animated property, and one the compositor can take. */
+  transition: stroke-dashoffset 900ms cubic-bezier(0.22, 1, 0.36, 1);
+  /* A soft bloom in the ring's own colour. `drop-shadow` on a stroke this thin is cheap —
+     it rasterises a hairline, not a full-bleed surface, which is the distinction drawn in
+     MoodAurora about why `blur()` is usually the wrong tool. */
+  filter: drop-shadow(0 2px 6px rgba(0, 112, 242, 0.35));
+}
+
+.arc__inside {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  /* The ring is 172px tall and the standing line sits below it, so the caption box must
+     not include that line in its centring. */
+  height: 176px;
+  gap: 0.125rem;
+}
+
+.arc__points {
+  font-size: 2.5rem;
+  font-weight: 250;
+  line-height: 1;
+  /* Tabular figures, so the number does not jiggle as it counts up. */
+  font-variant-numeric: tabular-nums;
+  color: var(--sapTextColor);
+}
+
+.arc__unit {
+  font-size: 0.75rem;
+  color: var(--sapContent_LabelColor);
+}
+
+.arc__standing {
+  margin: 0.5rem 0 0;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.arc__standingName {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--sapTextColor);
+}
+
+.arc__toGo {
+  font-size: 0.75rem;
+  color: var(--sapContent_LabelColor);
+}
+
+.wallet__figures {
+  display: flex;
+  margin: 0;
+  width: 100%;
+  position: relative;
+  /* Two equal halves with a hairline between them, rather than two labels floating at the
+     left. A figure with nothing beside it reads as a caption; two in a rule read as a
+     summary. */
+  border-top: 1px solid var(--sapList_BorderColor);
+  padding-top: 1rem;
+}
+
+.wallet__figures > div {
+  flex: 1;
+  text-align: center;
+}
+
+.wallet__figures > div + div {
+  border-inline-start: 1px solid var(--sapList_BorderColor);
+}
+
+@media (min-width: 34rem) {
+  .wallet__hero {
+    flex-direction: row;
+    gap: 2rem;
+    padding: 1.75rem 2rem;
+  }
+
+  .wallet__figures {
+    flex-direction: column;
+    width: auto;
+    flex: 1;
+    gap: 1.25rem;
+    border-top: none;
+    padding-top: 0;
+    border-inline-start: 1px solid var(--sapList_BorderColor);
+    padding-inline-start: 2rem;
+  }
+
+  .wallet__figures > div {
+    text-align: start;
+  }
+
+  .wallet__figures > div + div {
+    border-inline-start: none;
+  }
+}
+
+.wallet__figures dt {
+  font-size: 0.75rem;
+  color: var(--sapContent_LabelColor);
+}
+
+.wallet__figures dd {
+  margin: 0.25rem 0 0;
+  font-size: 1.375rem;
+  font-weight: 300;
+  font-variant-numeric: tabular-nums;
+  color: var(--sapTextColor);
+}
+
+.wallet__cannot {
+  margin: 1.25rem 0 0;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  background: var(--sapInformationBackground, rgba(0, 112, 242, 0.08));
+  border-inline-start: 3px solid var(--sapInformativeElementColor, #0070f2);
+  font-size: 0.8125rem;
+  color: var(--sapTextColor);
+}
+
+/* ---------------------------------------------------------------- earning */
+
+.ways {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.375rem;
+}
+
+.way {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: baseline;
+  gap: 0.75rem;
+  padding: 0.6875rem 0.875rem;
+  border-radius: 0.625rem;
+  background: var(--sapList_Background);
+  border: 1px solid var(--sapList_BorderColor);
+  position: relative;
+  overflow: hidden;
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease;
+}
+
+/* A rail in the accent, its width proportional to what the act is worth — so the list is
+   scannable by shape as well as by number, and the one that helps other households is
+   visibly the biggest thing on it. */
+.way::before {
+  content: '';
+  position: absolute;
+  inset-inline-start: 0;
+  inset-block: 0;
+  width: 3px;
+  background: linear-gradient(180deg, #3d4c8a, #0070f2);
+  opacity: 0.75;
+}
+
+.way:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.way--spent {
+  opacity: 0.5;
+}
+
+.way__label {
+  font-size: 0.875rem;
+  color: var(--sapTextColor);
+}
+
+.way__points {
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--sapPositiveElementColor, #256f3a);
+}
+
+.way__left {
+  font-size: 0.6875rem;
+  color: var(--sapContent_LabelColor);
+  min-width: 6.5rem;
+  text-align: end;
+}
+
+/* ------------------------------------------------------------------ cards */
+
+.cards {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.cards__row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.cards__actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.cards__actions button {
+  border: 1px solid var(--sapButton_BorderColor);
+  background: var(--sapButton_Background);
+  color: var(--sapButton_TextColor);
+  border-radius: 0.5rem;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+
+.cards__actions button:hover {
+  background: var(--sapButton_Hover_Background);
+}
+
+.wallet__empty,
+.wallet__said {
+  margin: 0 0 0.75rem;
+  font-size: 0.875rem;
+  color: var(--sapContent_LabelColor);
+}
+
+.wallet__said {
+  color: var(--sapPositiveElementColor, #256f3a);
+}
+
+.wallet__add {
+  margin-top: 1rem;
+  border: 1px dashed var(--sapField_BorderColor);
+  background: none;
+  color: var(--sapTextColor);
+  border-radius: 0.75rem;
+  padding: 0.75rem 1.25rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  width: 100%;
+}
+
+.wallet__add:hover {
+  border-style: solid;
+  background: var(--sapList_Hover_Background);
+}
+
+/* ------------------------------------------------------------- a card face */
+
+.cardface {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 19rem;
+  max-width: 100%;
+  aspect-ratio: 1.586; /* ID-1, the actual proportion of a bank card. */
+  padding: 1rem 1.125rem;
+  border-radius: 0.875rem;
+  border: none;
+  text-align: start;
+  overflow: hidden;
+  color: var(--card-ink);
+  background: linear-gradient(135deg, var(--card-from), var(--card-to));
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22);
+  font-family: inherit;
+}
+
+.cardface--compact {
+  width: 14rem;
+  padding: 0.75rem 0.875rem;
+  border-radius: 0.75rem;
+}
+
+button.cardface {
+  cursor: pointer;
+}
+
+/* The sheen. One wide, very low-opacity band that slides on hover — a transform, so it
+   costs the compositor nothing and never triggers a repaint of the text above it. */
+.cardface__sheen {
+  position: absolute;
+  inset: -40% -10%;
+  background: linear-gradient(
+    100deg,
+    transparent 35%,
+    rgba(255, 255, 255, 0.16) 50%,
+    transparent 65%
+  );
+  transform: translateX(-30%);
+  transition: transform 900ms cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+}
+
+.cardface:hover .cardface__sheen {
+  transform: translateX(30%);
+}
+
+.cardface__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  position: relative;
+}
+
+.cardface__label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  opacity: 0.95;
+}
+
+.cardface__default {
+  font-size: 0.625rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 0.125rem 0.375rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.22);
+}
+
+/* The chip. What makes the shape read as a card at thumbnail size. */
+.cardface__chip {
+  position: relative;
+  width: 2.125rem;
+  height: 1.625rem;
+  border-radius: 0.25rem;
+  background: linear-gradient(145deg, #e8d9a0, #b99a4e);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
+}
+
+.cardface--compact .cardface__chip {
+  width: 1.625rem;
+  height: 1.25rem;
+}
+
+.cardface__digits {
+  position: relative;
+  font-size: 1.0625rem;
+  letter-spacing: 0.08em;
+  font-variant-numeric: tabular-nums;
+}
+
+.cardface--compact .cardface__digits {
+  font-size: 0.875rem;
+}
+
+.cardface__dots {
+  opacity: 0.7;
+}
+
+.cardface__foot {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  position: relative;
+  font-size: 0.75rem;
+}
+
+.cardface__expiry {
+  font-variant-numeric: tabular-nums;
+  opacity: 0.85;
+}
+
+.cardface__brand {
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  opacity: 0.95;
+}
+
+/* ------------------------------------------------------------ add a card */
+
+.addcard {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+@media (min-width: 40rem) {
+  .addcard {
+    align-items: center;
+  }
+}
+
+.addcard__panel {
+  width: min(30rem, 100%);
+  max-height: 88vh;
+  overflow-y: auto;
+  background: var(--sapGroup_ContentBackground, #fff);
+  border-radius: 1.25rem 1.25rem 0 0;
+  padding: 1.25rem;
+  box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.25);
+  animation: addcard-rise 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes addcard-rise {
+  from {
+    transform: translateY(6%);
+    opacity: 0.6;
+  }
+}
+
+@media (min-width: 40rem) {
+  .addcard__panel {
+    border-radius: 1rem;
+  }
+}
+
+.addcard__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.addcard__title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--sapTextColor);
+}
+
+.addcard__close {
+  border: none;
+  background: none;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--sapContent_LabelColor);
+}
+
+.addcard__body {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.addcard__body--waiting {
+  justify-items: center;
+  padding: 2rem 0;
+}
+
+.addcard__note {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--sapContent_LabelColor);
+}
+
+.addcard__problem {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--sapNegativeElementColor, #d20a0a);
+}
+
+/* Impossible to mistake for the real form. Somebody demoing this must not be able to. */
+.addcard__testbanner {
+  margin: 0;
+  padding: 0.625rem 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--sapCriticalTextColor, #b8590a);
+  background: var(--sapCriticalBackground, rgba(224, 122, 31, 0.12));
+  border: 1px dashed var(--sapCriticalElementColor, #e07a1f);
+}
+
+.addcard__element {
+  min-height: 12rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--sapField_BorderColor);
+}
+
+.addcard__scenarios {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.scenario {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: 0.625rem;
+  border: 1px solid var(--sapList_BorderColor);
+  background: var(--sapList_Background);
+  cursor: pointer;
+  text-align: start;
+  font-family: inherit;
+}
+
+.scenario:hover {
+  background: var(--sapList_Hover_Background);
+}
+
+/* A miniature card rather than a colour chip: the chip and the proportion are what make
+   the shape read as a card at this size, and a plain rectangle reads as a swatch. */
+.scenario__swatch {
+  position: relative;
+  width: 2.75rem;
+  height: 1.75rem;
+  border-radius: 0.3125rem;
+  flex: 0 0 auto;
+  background: linear-gradient(135deg, var(--card-from), var(--card-to));
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.scenario__swatch::after {
+  content: '';
+  position: absolute;
+  top: 0.375rem;
+  inset-inline-start: 0.3125rem;
+  width: 0.5rem;
+  height: 0.375rem;
+  border-radius: 0.09375rem;
+  background: linear-gradient(145deg, #e8d9a0, #b99a4e);
+}
+
+.scenario__text {
+  display: grid;
+  gap: 0.125rem;
+  flex: 1;
+}
+
+.scenario__label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--sapTextColor);
+}
+
+.scenario__detail {
+  font-size: 0.75rem;
+  color: var(--sapContent_LabelColor);
+}
+
+.scenario__last4 {
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--sapContent_LabelColor);
+}
+
+.addcard__spinner {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  border: 3px solid var(--sapField_BorderColor);
+  border-top-color: var(--sapButton_Emphasized_Background, #0070f2);
+  animation: addcard-spin 900ms linear infinite;
+}
+
+@keyframes addcard-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.addcard__waiting {
+  margin: 0.75rem 0 0;
+  font-size: 0.9375rem;
+  color: var(--sapTextColor);
+}
+
+/* ---------------------------------------------------------------- history */
+
+.history {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.25rem;
+}
+
+.history__row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.5rem 0.25rem;
+  border-bottom: 1px solid var(--sapList_BorderColor);
+  font-size: 0.875rem;
+}
+
+.history__reason {
+  color: var(--sapTextColor);
+}
+
+.history__points {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--sapPositiveElementColor, #256f3a);
+}
+
+.history__points--out {
+  color: var(--sapContent_LabelColor);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .arc__fill,
+  .cardface__sheen,
+  .way {
+    transition: none;
+  }
+  .addcard__panel {
+    animation: none;
+  }
+  .addcard__spinner {
+    animation-duration: 2.4s;
+  }
+}

@@ -23,8 +23,9 @@
  * | How it works | `#A45D00` | Cafes |
  *
  * | Between us | `#B02A6F` | **not from that palette** — see below |
+ * | Wallet | `#3D4C8A` | **not from that palette** — see below |
  *
- * `Between us` is the one exception, and it is a deliberate one: the ten category colours
+ * `Between us` and `Wallet` are the exceptions, and both are deliberate: the ten category colours
  * were all spoken for by the time it arrived, and this tile is not a spending category
  * with a colour waiting for it. The rose is picked to sit beside Gifts' magenta without
  * reading as it. If an eleventh category is ever added, it does not get this hue.
@@ -40,6 +41,7 @@ export type HomeTileId =
   | 'intimacy'
   | 'tonight'
   | 'games'
+  | 'wallet'
   | 'ledger'
   | 'events'
   | 'calendar'
@@ -107,6 +109,21 @@ export const HOME_TILES: readonly HomeTileSpec[] = [
     icon: 'money-bills',
     accent: '#0070F2',
     hint: 'Postings and payment runs',
+  },
+  {
+    id: 'wallet',
+    section: 'money',
+    to: '/wallet',
+    label: 'Wallet',
+    // A credit-card icon would be the obvious pick and is the wrong one: the points are
+    // two thirds of that screen and the card is a footnote on it.
+    icon: 'wallet',
+    // A fourth named exception, for the reason the other three exist: the ten category
+    // colours are entirely spoken for. An indigo, because the money section already holds
+    // an orange, a blue and a green, and this sits beside the ledger's blue without being
+    // mistaken for it.
+    accent: '#3D4C8A',
+    hint: 'Points, and cards on file',
   },
   {
     id: 'statement',

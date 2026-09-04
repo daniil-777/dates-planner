@@ -29,6 +29,12 @@ service PaymentsService @(path: '/api/payments') {
   @readonly
   entity Cards as projection on twm.PaymentMethods {
     ID,
+    // Projected because the read handler narrows on it, and CAP can only filter on a
+    // column the projection actually has. Exposing it costs nothing — it is the caller's
+    // own household, which their session already names — and the narrowing is combined
+    // with `and`, so a client filtering for somebody else's group gets an empty list
+    // rather than their cards.
+    group,
     token,
     provider,
     brand,

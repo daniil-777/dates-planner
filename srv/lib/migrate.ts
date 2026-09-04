@@ -98,6 +98,18 @@ export interface MigrationDb {
 
 interface Step {
   id: string
+  /**
+   * Run on every boot rather than once.
+   *
+   * For steps whose whole body is `IF NOT EXISTS` and which therefore cost nothing to
+   * repeat. Indexes are the case that matters: they get *appended to* over time, and a
+   * once-only index step silently stops applying the moment its id is recorded — so a new
+   * index added to an existing list would never reach any database that had already booted.
+   * That is not hypothetical; it is what happened to the ADR-004 indexes, which include the
+   * unique constraint that closes a double-spend race. Nothing here may assume a fresh
+   * database, so the fix belongs in the runner.
+   */
+  always?: boolean
   run(db: MigrationDb, has: SchemaFacts, ddl: TableDdl): Promise<string[]>
 }
 
@@ -287,6 +299,74 @@ const COMMONS_INDEXES: ReadonlyArray<{ name: string; ddl: string }> = [
   },
 ]
 
+/** The card vault and the ledger from ADR-004, absent from every database that predates it. */
+const MONEY_TABLES: readonly string[] = [
+  'twowaymatch_PaymentMethods',
+  'twowaymatch_CardSetups',
+  'twowaymatch_LedgerTransfers',
+  'twowaymatch_LedgerPostings',
+  'twowaymatch_PointsAwards',
+]
+
+/**
+ * The indexes the ledger needs to be fast, and the two it needs to be *correct*.
+ *
+ * The two unique ones are not optimisations, and they guard the same class of bug the
+ * commons' one-vote index guards — a check-then-act race — with rather more at stake.
+ *
+ * `WalletService.post()` reads for an existing `idempotencyKey` and then inserts. Two
+ * deliveries of one webhook, or two taps on a slow connection, can interleave between the
+ * read and the insert and write the movement twice. In the commons that costs a household an
+ * extra vote; here it mints points twice or moves money twice, and no amount of application
+ * care closes it. The index does, in the only place it can be closed.
+ *
+ * `twm_points_awards_event` is the same argument for the award side: one act, one payment,
+ * however many times the handler runs.
+ *
+ * The plain index on `(account, currency)` is the one every balance query in the app is
+ * shaped like. Without it, "how many points has this household" is a full scan of every
+ * posting ever written, which is fine on the first day and ruinous on the thousandth.
+ */
+const MONEY_INDEXES: ReadonlyArray<{ name: string; ddl: string }> = [
+  {
+    name: 'twm_ledger_transfers_idempotency',
+    ddl: `CREATE UNIQUE INDEX IF NOT EXISTS twm_ledger_transfers_idempotency
+            ON twowaymatch_LedgerTransfers (idempotencyKey)`,
+  },
+  {
+    name: 'twm_ledger_postings_account',
+    ddl: `CREATE INDEX IF NOT EXISTS twm_ledger_postings_account
+            ON twowaymatch_LedgerPostings (account, currency)`,
+  },
+  {
+    name: 'twm_ledger_postings_transfer',
+    ddl: `CREATE INDEX IF NOT EXISTS twm_ledger_postings_transfer
+            ON twowaymatch_LedgerPostings (transfer_ID)`,
+  },
+  {
+    name: 'twm_points_awards_event',
+    ddl: `CREATE UNIQUE INDEX IF NOT EXISTS twm_points_awards_event
+            ON twowaymatch_PointsAwards (eventKey)`,
+  },
+  {
+    // The daily-cap question: "how many of these has this household had today".
+    name: 'twm_points_awards_cap',
+    ddl: `CREATE INDEX IF NOT EXISTS twm_points_awards_cap
+            ON twowaymatch_PointsAwards (group_ID, reason, onDate)`,
+  },
+  {
+    name: 'twm_payment_methods_group',
+    ddl: `CREATE INDEX IF NOT EXISTS twm_payment_methods_group
+            ON twowaymatch_PaymentMethods (group_ID, removedAt)`,
+  },
+  {
+    // How `finishCardSetup` finds the setup it is being asked about.
+    name: 'twm_card_setups_ref',
+    ddl: `CREATE INDEX IF NOT EXISTS twm_card_setups_ref
+            ON twowaymatch_CardSetups (ref, group_ID)`,
+  },
+]
+
 /**
  * The composite indexes ADR-002 §1 promised for the household tables and nobody ever built.
  *
@@ -355,13 +435,20 @@ const STEPS: ReadonlyArray<Step> = [
     run: (db, has, ddl) => createMissing(db, has, ddl, COMMONS_TABLES),
   },
   {
+    id: 'adr-004-money',
+    run: (db, has, ddl) => createMissing(db, has, ddl, MONEY_TABLES),
+  },
+  {
     // Separate from the table step on purpose: an index can be added to a database that
-    // already has the tables, and this step is the one that will be re-run — and must be
-    // safe to re-run — every time another index is appended to those two lists.
+    // already has the tables, and this step is re-run — and must be safe to re-run — every
+    // time another index is appended to those lists. `always` is what actually makes that
+    // true; without it the step stopped applying the moment its id was recorded, and the
+    // ADR-004 indexes added later never reached a database that had booted before them.
     id: 'adr-003-indexes',
+    always: true,
     async run(db, has) {
       const done: string[] = []
-      for (const { name, ddl } of [...COMMONS_INDEXES, ...TENANT_INDEXES]) {
+      for (const { name, ddl } of [...COMMONS_INDEXES, ...TENANT_INDEXES, ...MONEY_INDEXES]) {
         const table = /ON\s+(\w+)/i.exec(ddl)?.[1]
         if (table !== undefined && !hasTable(has, table)) continue
         try {
@@ -407,12 +494,20 @@ export async function migrate(db: MigrationDb): Promise<string[]> {
   const notes: string[] = []
   let ddl: TableDdl | null = null
   for (const step of STEPS) {
-    if (applied.has(step.id)) continue
+    const seen = applied.has(step.id)
+    if (seen && step.always !== true) continue
     const facts = await readSchema(db, kind)
     // Generated lazily and once: a database that is already current runs no steps and pays
     // nothing for the compiler.
     ddl ??= await tableDdl(kind)
     const done = await step.run(db, facts, ddl)
+
+    // A step that has run before is being repeated on purpose (`always`), and its DDL is
+    // all `IF NOT EXISTS` — so it changed nothing and must say nothing. Reporting it would
+    // print a dozen "indexed ..." lines on every boot forever, which is how a log stops
+    // being read.
+    if (seen) continue
+
     await db.run(
       `INSERT INTO twm_migrations (id, appliedAt) VALUES ('${step.id}', '${new Date().toISOString()}')`,
     )

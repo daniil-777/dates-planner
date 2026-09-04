@@ -252,13 +252,23 @@ describe('migrating', () => {
               { id: 'touch-maps' },
               { id: 'adr-003-commons' },
               { id: 'adr-003-indexes' },
+              { id: 'adr-004-money' },
             ]
           : undefined,
     ])
     const notes = await migrate(applied)
 
     expect(notes).toEqual([])
-    // One statement to make the ledger table, one to read it, and nothing else at all.
-    expect(applied.sql.filter(sql => !/twm_migrations/.test(sql))).toEqual([])
+    // Nothing is created, nothing is altered, and nothing is said.
+    //
+    // One read of the schema is the whole cost, and it is new: the index step is marked
+    // `always` so that an index appended to its list reaches a database that has already
+    // booted — which is exactly what failed to happen for the ADR-004 indexes, one of which
+    // is the unique constraint closing a double-write race. Forcing that step to run means
+    // asking the database what it has. It then creates nothing, because everything it would
+    // create is `IF NOT EXISTS` against tables this fake reports it does not have.
+    const rest = applied.sql.filter(sql => !/twm_migrations/.test(sql))
+    expect(rest.every(sql => /^SELECT /i.test(sql.trim()))).toBe(true)
+    expect(rest.some(sql => /CREATE TABLE|ALTER TABLE/i.test(sql))).toBe(false)
   })
 })
