@@ -27,6 +27,7 @@ import { useActivePerson } from '@/components/AppShell'
 import { useI18n } from '@/i18n'
 import { ErrorState } from '@/components/ErrorState'
 import { LoadingSkeleton } from '@/components/LoadingSkeleton'
+import { attribute } from './mood/attribution'
 import { MoodAurora } from './mood/MoodAurora'
 import { MoodRibbon } from './mood/MoodRibbon'
 import { ApiError } from '@/api/client'
@@ -96,16 +97,16 @@ export function MoodPage(): ReactElement {
   }, [saved])
 
   const save = useCallback(
-    (chosen: number, source: 'manual' | 'face') => {
-      const fromScan = source === 'face' && suggestion !== null
+    (chosen: number) => {
+      // Whose answer it was is decided by AGREEMENT, not by whether a scan happened — see
+      // `attribution.ts` for the bug that forced the distinction out into its own module.
+      const whose = attribute(suggestion, chosen)
       createMood.mutate(
         {
           personId: person?.ID ?? null,
           level: chosen,
           note: note.trim() === '' ? null : note.trim().slice(0, NOTE_LIMIT),
-          source,
-          detected: fromScan ? suggestion.label : null,
-          confidence: fromScan ? suggestion.confidence : null,
+          ...whose,
         },
         {
           onSuccess: () => {
@@ -217,9 +218,7 @@ export function MoodPage(): ReactElement {
               <Button
                 design="Emphasized"
                 disabled={level === null || createMood.isPending}
-                onClick={() =>
-                  level !== null && save(level, suggestion === null ? 'manual' : 'face')
-                }
+                onClick={() => level !== null && save(level)}
               >
                 {createMood.isPending ? t('mood.saving', 'Saving…') : t('mood.save', 'Save mood')}
               </Button>
